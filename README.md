@@ -1,1 +1,1 @@
-# Homework-Record-Website
+# Homework Record Website
