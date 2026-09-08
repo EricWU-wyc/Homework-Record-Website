@@ -1,8 +1,69 @@
 <!DOCTYPE html>
-
-<html>
-  <title>FDHS 407 線上聯絡簿</title>
+<html lang="zh-Hant">
+  
+  <head>
+    <meta charset="UTF-8">
+    <title>FDHS 407 線上聯絡簿</title>
+  </head>
+  
   <body>
-    <h1>線上聯絡簿</h1>
+    <h1>407 線上聯絡簿</h1>
+    <a href="https://www.youtube.com/">後臺管理頁面</a>
+    
+    <p id="current-time"></p>
+    <script>
+      
+      function CurrentTime(){
+        const now = new Date();
+        const timeString = now.toLocaleString("zh-TW", { 
+          hour12: false
+        });
+        document.getElementById("current-time").textContent = "現在時間： " + timeString;
+      }
+
+      CurrentTime();
+      setInterval(CurrentTime, 1000);
+      
+    </script>
+    
+    <label style="display: inline-flex; align-items: center; gap: 0px;">
+        選擇日期：
+        <input type="date" id="date-picker">
+    </label>
+
+    <script>
+      const today = new Date().toISOString().split('T')[0]
+      document.getElementById('date-picker').value = today
+    </script>
+    
+    <div>
+      <h3>作業</h3>
+    </div>
+    
+    <div>
+      <h3>考試</h3>
+    </div>
+    
+    <div>
+      <h3>注意事項</h3>
+    </div>
+    
+    <div>
+      <h3>缺繳名單</h3>
+    </div>
+    
+    <div>
+      <h3>當日出缺席</h3>
+    </div>
+    
+    <div>
+      <h3>當周衣著</h3>
+    </div>
+    
+    <div>
+      <h3>Blog 班級紀錄</h3>
+    </div>
+    
   </body>
+  
 </html>
