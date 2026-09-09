@@ -14,9 +14,38 @@
   
   <body>
     <h1>407 線上聯絡簿 後臺登入</h1>
+    
     <p>請輸入後臺管理密碼</p>
-    <input type="password" placeholder="password">
-    <button>登入</button>
+    <input type="password" placeholder="password" id="password-blank">
+    <button id="login-btn">登入</button>
+    <script>
+    document.getElementById("login-btn").addEventListener("click", async() =>{
+        const inputPwd = document.getElementById("password-blank").value;
+
+        const {data, error} = await supabaseClient
+          .from("Manager's Password")
+          .select("*")
+          .eq("password", inputPwd);
+
+        if(error){
+          alert("System: " + error.message);
+          return;
+        }
+
+        if(data && data.length > 0){
+          alert("登入成功");
+          // 這裡之後可以改成隱藏登入框、顯示 8 個欄位的編輯表單
+        }else{
+          alert("密碼錯誤");
+        }
+    });
+      
+    document.getElementById("password-blank").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        document.getElementById("login-btn").click();
+      }
+    });
+    </script>
+    
   </body>
-  
 </html>
