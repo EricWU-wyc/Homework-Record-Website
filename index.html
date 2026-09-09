@@ -3,6 +3,11 @@
   
   <head>
     <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+      const SUPABASE_URL = "https://ocwpamhemxddhujichkz.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3BhbWhlbXhkZGh1amljaGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTYzNzUsImV4cCI6MjEwNDQ3MjM3NX0.N4N75_Y7dFNoOiSEBvKEcpHHMdxFfGC0P4PDmlNbTns";
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
     <title>FDHS 407 線上聯絡簿</title>
   </head>
   
@@ -48,7 +53,7 @@
       <h3>注意事項</h3>
     </div>
     
-    <div id="list-section">
+    <div id="failure-section">
       <h3>缺繳名單</h3>
     </div>
     
