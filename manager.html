@@ -13,11 +13,45 @@
   </head>
   
   <body>
-    <h1>407 線上聯絡簿 後臺登入</h1>
+    <div id="login-container">
+      <h1>407 線上聯絡簿 後臺登入</h1>
+      <p>請輸入後臺管理密碼</p>
+      <input type="password" placeholder="password" id="password-blank">
+      <button id="login-btn">登入</button>
+    </div>
     
-    <p>請輸入後臺管理密碼</p>
-    <input type="password" placeholder="password" id="password-blank">
-    <button id="login-btn">登入</button>
+    <div id="homeword-form" style="display: none;">
+      
+    </div>
+    
+    <div id="test-form" style="display: none;"></div>
+    
+    <div id="note-form" style="display: none;"></div>
+    
+    <div id="failure-form" style="display: none;"></div>
+    
+    <div id="present-form" style="display: none;"></div>
+    
+    <div id="clothes-form" style="display: none;"></div>
+    
+    <div id="blog-form" style="display: none;"></div>
+    
+    
+    <div id="admin-container" style="display: none;">
+      <h1>407 線上聯絡簿 後臺管理系統</h1>
+      
+      <label for="status-select">選擇要更新的內容：</label>
+      <select id="status-select">
+        <option value="homeword">作業</option>
+        <option value="test">考試</option>
+        <option value="note">注意事項</option>
+        <option value="failure">缺交名單</option>
+        <option value="present">出缺席</option>
+        <option value="clothes">服裝</option>
+        <option value="blog">Blog 班級紀錄</option>
+      </select>
+    </div>
+    
     <script>
     document.getElementById("login-btn").addEventListener("click", async() =>{
         const inputPwd = document.getElementById("password-blank").value;
@@ -34,7 +68,8 @@
 
         if(data && data.length > 0){
           alert("登入成功");
-          // 這裡之後可以改成隱藏登入框、顯示 8 個欄位的編輯表單
+          document.getElementById("login-container").style.display = "none";
+          document.getElementById("admin-container").style.display = "block";
         }else{
           alert("密碼錯誤");
         }
