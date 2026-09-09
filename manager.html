@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-  
   <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,6 +12,7 @@
   </head>
   
   <body>
+    
     <div id="login-container">
       <h1>407 線上聯絡簿 後臺登入</h1>
       <p>請輸入後臺管理密碼</p>
@@ -20,28 +20,12 @@
       <button id="login-btn">登入</button>
     </div>
     
-    <div id="homeword-form" style="display: none;">
-      
-    </div>
-    
-    <div id="test-form" style="display: none;"></div>
-    
-    <div id="note-form" style="display: none;"></div>
-    
-    <div id="failure-form" style="display: none;"></div>
-    
-    <div id="present-form" style="display: none;"></div>
-    
-    <div id="clothes-form" style="display: none;"></div>
-    
-    <div id="blog-form" style="display: none;"></div>
-    
-    
     <div id="admin-container" style="display: none;">
       <h1>407 線上聯絡簿 後臺管理系統</h1>
       
       <label for="status-select">選擇要更新的內容：</label>
       <select id="status-select">
+        <option value="">-- 請選擇項目 --</option>
         <option value="homeword">作業</option>
         <option value="test">考試</option>
         <option value="note">注意事項</option>
@@ -50,11 +34,76 @@
         <option value="clothes">服裝</option>
         <option value="blog">Blog 班級紀錄</option>
       </select>
+
+      <div id="homework-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定作業</h3>
+        
+        <div id="homework-insert">
+          <h4>新增作業</h4>
+          <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
+          <label>檢查/繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
+          <label>作業內容：<input type="date" id="homework-insert-detail"></label>
+          <button>確認新增</button>
+        </div>
+        
+        <div id="homework-delete">
+          <h4>刪除作業</h4>
+          
+        </div>
+        
+      </div>
+
+      <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定考試</h3>
+        
+        <div id="test-insert">
+          <h4>新增考試</h4>
+          <label>指派日期：<input type="date" id="test-insert-startdate"></label><br><br>
+          <label>考試日期：<input type="date" id="test-insert-enddate"></label><br><br>
+          <label>考試內容：<input type="date" id="test-insert-detail"></label>
+          <button>確認新增</button>
+        </div>
+        
+        <div id="test-delete">
+          <h4>刪除考試</h4>
+          
+        </div>
+        
+      </div>
+
+      <div id="note-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定注意事項</h3>
+        <p>注意事項相關欄位建置中...</p>
+      </div>
+
+      <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定缺繳名單</h3>
+        <p>缺交名單相關欄位建置中...</p>
+      </div>
+
+      <div id="present-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定今日出缺席</h3>
+        <p>出缺席相關欄位建置中...</p>
+      </div>
+
+      <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定本週服裝</h3>
+        <p>服裝相關欄位建置中...</p>
+      </div>
+
+      <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
+        <h3>設定 Blog 班級紀錄</h3>
+        <p>Blog 相關欄位建置中...</p>
+      </div>
     </div>
     
     <script>
-    document.getElementById("login-btn").addEventListener("click", async() =>{
-        const inputPwd = document.getElementById("password-blank").value;
+      const loginBtn = document.getElementById("login-btn");
+      const passwordBlank = document.getElementById("password-blank");
+      const statusSelect = document.getElementById("status-select");
+
+      async function handleLogin() {
+        const inputPwd = passwordBlank.value;
 
         const {data, error} = await supabaseClient
           .from("Manager's Password")
@@ -73,13 +122,31 @@
         }else{
           alert("密碼錯誤");
         }
-    });
-      
-    document.getElementById("password-blank").addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        document.getElementById("login-btn").click();
       }
-    });
+
+      loginBtn.addEventListener("click", handleLogin);
+      
+      passwordBlank.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          loginBtn.click();
+        }
+      });
+
+      statusSelect.addEventListener("change", (event) => {
+        const selectedValue = event.target.value;
+
+        const allForms = document.querySelectorAll(".form-box");
+        allForms.forEach((box) => {
+          box.style.display = "none";
+        });
+
+        if (selectedValue) {
+          const targetForm = document.getElementById(selectedValue + "-form");
+          if (targetForm) {
+            targetForm.style.display = "block";
+          }
+        }
+      });
     </script>
     
   </body>
