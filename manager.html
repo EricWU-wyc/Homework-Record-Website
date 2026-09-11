@@ -55,6 +55,44 @@
           
         </div>
         
+        <script>
+          const homeworkInsertBtn = document.getElementById("homework-insert-btn");
+
+          if(homeworkInsertBtn){
+            homeworkInsertBtn.addEventListener("click", async () => {
+
+              const startdate = document.getElementById("homework-insert-startdate").value;
+              const enddate = document.getElementById("homework-insert-enddate").value;
+              const detail = document.getElementById("homework-insert-detail").value;
+
+              if(!startdate || !enddate || !detail){
+                alert("請完整填寫作業資訊!!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Homework Status")
+                .insert([
+                  { 
+                    starttime: startdate, 
+                    endtime: enddate, 
+                    details: detail 
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("作業新增成功!");
+
+                document.getElementById("homework-insert-startdate").value = "";
+                document.getElementById("homework-insert-enddate").value = "";
+                document.getElementById("homework-insert-detail").value = "";
+
+              }
+            });
+          }
+        </script>
       </div>
 
       <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
