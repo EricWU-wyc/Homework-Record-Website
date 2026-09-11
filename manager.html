@@ -106,7 +106,9 @@
         <h3>設定缺繳名單</h3>
           <div id="failure-insert">
             <h4>新增缺繳名單</h4>
-          
+            <label>缺繳項目：<input id="failure-insert-name" style="width:30%" placeholder="輸入缺繳項目"></label><br><br>
+            <label>缺繳座號：<input id="failure-insert-seat" style="width:30%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
+            <button id="failure-insert-btn">確認新增</button>
           </div>
         
           <div id="failure-edit">
@@ -124,7 +126,63 @@
         <h3>設定服裝</h3>
           <div id="clothes-setting">
             <h4>修改服裝</h4>
-          
+            <table>
+            
+              <tr>
+                <td>星期一</td>
+                <td>
+                  <select id="mon-clothes-select">
+                    <option value="sport">運動服</option>
+                    <option value="uniform">制服</option>
+                    <option value="class-clothes">班服</option>
+                  </select>
+                </td>
+              </tr>
+              
+              <tr>
+              <td>星期二</td>
+                <td>
+                  <select id="tue-clothes-select">
+                    <option value="sport">運動服</option>
+                    <option value="uniform">制服</option>
+                    <option value="class-clothes">班服</option>
+                  </select>
+                </td>
+              </tr>                
+              
+              <tr>
+              <td>星期三</td>
+                <td>
+                  <select id="wed-clothes-select">
+                    <option value="sport">運動服</option>
+                    <option value="uniform">制服</option>
+                    <option value="class-clothes">班服</option>
+                  </select>
+                </td>
+              </tr>    
+              
+              <tr>
+              <td>星期四</td>
+                <td>
+                  <select id="thur-clothes-select">
+                    <option value="sport">運動服</option>
+                    <option value="uniform">制服</option>
+                    <option value="class-clothes">班服</option>
+                  </select>
+                </td>
+              </tr>    
+              
+              <tr>
+              <td>星期五</td>
+                <td>
+                  <select id="fri-clothes-select">
+                    <option value="sport">運動服</option>
+                    <option value="uniform">制服</option>
+                    <option value="class-clothes">班服</option>
+                  </select>
+                </td>
+              </tr>    
+            </table>
           </div>
 
       </div>
