@@ -186,6 +186,7 @@
             <label>缺繳項目：<input id="failure-insert-name" style="width:30%" placeholder="輸入缺繳項目"></label><br><br>
             <label>缺繳座號：<input id="failure-insert-seat" style="width:30%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
             <button id="failure-insert-btn">確認新增</button>
+          
           </div>
         
           <div id="failure-edit">
@@ -197,6 +198,43 @@
             <h4>刪除缺繳名單</h4>
           
           </div>
+        <script>
+          const failureInsertBtn = document.getElementById("failure-insert-btn");
+
+          if(homeworkInsertBtn){
+            homeworkInsertBtn.addEventListener("click", async() =>{
+
+              const failurename = document.getElementById("failure-insert-name").value;
+              const failureseat = document.getElementById("failure-insert-seat").value;
+
+              if(!startdate || !enddate || !detail){
+                alert("請完整填寫缺繳名單資訊!!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Failure Status")
+                .insert([
+                  { 
+                    starttime: startdate, 
+                    endtime: enddate, 
+                    details: detail 
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("缺繳名單新增成功!");
+
+                document.getElementById("test-insert-startdate").value = "";
+                document.getElementById("test-insert-enddate").value = "";
+                document.getElementById("test-insert-detail").value = "";
+
+              }
+            });
+          }
+        </script>
       </div>
 
       <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
