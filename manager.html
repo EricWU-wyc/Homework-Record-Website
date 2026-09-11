@@ -207,7 +207,7 @@
               const failurename = document.getElementById("failure-insert-name").value;
               const failureseat = document.getElementById("failure-insert-seat").value;
 
-              if(!startdate || !enddate || !detail){
+              if(!failurename || !failureseat){
                 alert("請完整填寫缺繳名單資訊!!");
                 return;
               }
@@ -226,9 +226,8 @@
               }else{
                 alert("缺繳名單新增成功!");
 
-                document.getElementById("test-insert-startdate").value = "";
-                document.getElementById("test-insert-enddate").value = "";
-                document.getElementById("test-insert-detail").value = "";
+                document.getElementById("failure-insert-name").value = "";
+                document.getElementById("failure-insert-seat").value = "";
 
               }
             });
