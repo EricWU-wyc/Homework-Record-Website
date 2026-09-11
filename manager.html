@@ -59,7 +59,7 @@
           const homeworkInsertBtn = document.getElementById("homework-insert-btn");
 
           if(homeworkInsertBtn){
-            homeworkInsertBtn.addEventListener("click", async () => {
+            homeworkInsertBtn.addEventListener("click", async() =>{
 
               const startdate = document.getElementById("homework-insert-startdate").value;
               const enddate = document.getElementById("homework-insert-enddate").value;
@@ -115,6 +115,45 @@
           <h4>刪除考試</h4>
           
         </div>
+        
+        <script>
+          const testInsertBtn = document.getElementById("test-insert-btn");
+
+          if(homeworkInsertBtn){
+            homeworkInsertBtn.addEventListener("click", async() =>{
+
+              const startdate = document.getElementById("test-insert-startdate").value;
+              const enddate = document.getElementById("test-insert-enddate").value;
+              const detail = document.getElementById("test-insert-detail").value;
+
+              if(!startdate || !enddate || !detail){
+                alert("請完整填寫考試資訊!!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Test Status")
+                .insert([
+                  { 
+                    starttime: startdate, 
+                    endtime: enddate, 
+                    details: detail 
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("考試新增成功!");
+
+                document.getElementById("test-insert-startdate").value = "";
+                document.getElementById("test-insert-enddate").value = "";
+                document.getElementById("test-insert-detail").value = "";
+
+              }
+            });
+          }
+        </script>
       </div>
         
 
