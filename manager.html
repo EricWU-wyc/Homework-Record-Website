@@ -30,7 +30,6 @@
         <option value="test">考試</option>
         <option value="note">注意事項</option>
         <option value="failure">缺交名單</option>
-        <option value="present">出缺席</option>
         <option value="clothes">服裝</option>
         <option value="blog">Blog 班級紀錄</option>
       </select>
@@ -42,7 +41,7 @@
           <h4>新增作業</h4>
           <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
           <label>檢查/繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
-          <label>作業內容：<input id="homework-insert-detail" style="width:50%" placeholder="輸入作業內容"></label><br><br>
+          <label>作業內容：<input id="homework-insert-detail" style="width:30%" placeholder="輸入作業內容"></label><br><br>
           <button id="homework-insert-btn">確認新增</button>
         </div>
         
@@ -65,7 +64,7 @@
           <h4>新增考試</h4>
           <label>指派日期：<input type="date" id="test-insert-startdate"></label><br><br>
           <label>考試日期：<input type="date" id="test-insert-enddate"></label><br><br>
-          <label>考試內容：<input id="test-insert-detail" style="width:50%" placeholder="輸入考試內容"></label><br><br>
+          <label>考試內容：<input id="test-insert-detail" style="width:30%" placeholder="輸入考試內容"></label><br><br>
           <button id="test-insert-btn">確認新增</button>
         </div>
 
@@ -101,33 +100,6 @@
       <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
         <h3>設定缺繳名單</h3>
         <p>缺交名單相關欄位建置中...</p>
-      </div>
-
-      <div id="present-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定今日出缺席</h3>
-
-        <div id="present-setting">
-          <h4>設定本週服裝</h4>
-          
-          <table border="1" style="width: 100%; border-collapse: collapse; text-align: center;">
-            <thead>
-              <tr style="background-color: #f2f2f2;">
-                <th>指派日期</th>
-                <th>作業內容</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>2026-06-07</td>
-                <td>數學作業 P.20-22</td>
-                <td><button style="color: red;">刪除</button></td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <button id="present-setting-btn">確認設定</button>
-        </div>
       </div>
 
       <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
