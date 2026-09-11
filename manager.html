@@ -90,6 +90,11 @@
           <label>公告內容：<br><br><textarea id="note-insert-detail" rows="6" style="width: 80%; resize: vertical;" placeholder="輸入注意事項，按下 Enter 即可換行"></textarea></label><br><br>
           <button id="note-insert-btn">確認新增</button>
         </div>
+
+        <div id="note-edit">
+          <h4>修改注意事項</h4>
+          
+        </div>        
         
         <div id="note-delete">
           <h4>刪除注意事項</h4>
@@ -99,20 +104,51 @@
 
       <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
         <h3>設定缺繳名單</h3>
-        <p>缺交名單相關欄位建置中...</p>
+          <div id="failure-insert">
+            <h4>新增缺繳名單</h4>
+          
+          </div>
+        
+          <div id="failure-edit">
+            <h4>修改缺繳名單</h4>
+          
+          </div>
+        
+          <div id="failure-delete">
+            <h4>刪除缺繳名單</h4>
+          
+          </div>
       </div>
 
       <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定本週服裝</h3>
-        <p>服裝相關欄位建置中...</p>
+        <h3>設定服裝</h3>
+          <div id="clothes-setting">
+            <h4>修改服裝</h4>
+          
+          </div>
+
       </div>
 
       <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
         <h3>設定 Blog 班級紀錄</h3>
-        <p>Blog 相關欄位建置中...</p>
+          <div id="blog-insert">
+            <h4>新增 Blog</h4>
+          
+          </div>
+        
+          <div id="blog-edit">
+            <h4>修改 Blog</h4>
+          
+          </div>
+        
+          <div id="blog-delete">
+            <h4>刪除 Blog</h4>
+          
+          </div>
       </div>
     </div>
     
+  
     <script>
       const loginBtn = document.getElementById("login-btn");
       const passwordBlank = document.getElementById("password-blank");
