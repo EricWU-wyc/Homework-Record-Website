@@ -21,7 +21,6 @@
         background-color: #fcfcfc;
       }
       
-      /* 置中上方標頭區塊 */
       .header-container {
         text-align: center;
         margin-bottom: 30px;
@@ -39,7 +38,6 @@
         text-decoration: underline;
       }
 
-      /* 網格儀表板佈局 */
       .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -61,15 +59,14 @@
         color: #2c3e50;
       }
 
-      /* 指定區塊跨欄設定 */
       #homework-section { grid-column: 1; }
       #test-section { grid-column: 2; }
       #clothes-section { grid-column: 3; }
 
-      #note-section { grid-column: span 2; }      /* 左下佔兩格寬 */
-      #failure-section { grid-column: span 1; }   /* 右下佔一格寬 */
+      #note-section { grid-column: span 2; }
+      #failure-section { grid-column: span 1; }
 
-      #blog-section { grid-column: span 3; }      /* 最下方 Blog 跨滿三格 */
+      #blog-section { grid-column: span 3; }
 
       ol, ul {
         padding-left: 20px;
@@ -85,7 +82,6 @@
   </head>
   
   <body>
-    <!-- 置中上方標頭與控制項 -->
     <div class="header-container">
       <h1>407 線上聯絡簿</h1>
       <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html">後臺管理頁面</a>
@@ -98,7 +94,6 @@
       </div>
     </div>
     
-    <!-- 網格內容區塊 -->
     <div class="dashboard-grid">
       <div class="section-box" id="homework-section">
         <h3>作業</h3>
@@ -159,12 +154,12 @@
 
       async function fetchHomework(date) {
         const container = document.getElementById('homework-content');
-        // 條件：開始日期 <= 選擇日期 且 選擇日期 < 結束日期 (.lt 代表小於 <)
+        // 條件：starttime <= date 且 endtime > date (包含開始、不包含結束)
         const { data, error } = await supabaseClient
           .from("Homework Status")
           .select("*")
           .lte("starttime", date)
-          .lt("endtime", date);
+          .gt("endtime", date);
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
@@ -174,12 +169,12 @@
 
       async function fetchTest(date) {
         const container = document.getElementById('test-content');
-        // 條件：開始日期 <= 選擇日期 且 選擇日期 < 結束日期
+        // 條件：starttime <= date 且 endtime > date (包含開始、不包含結束)
         const { data, error } = await supabaseClient
           .from("Test Status")
           .select("*")
           .lte("starttime", date)
-          .lt("endtime", date);
+          .gt("endtime", date);
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
