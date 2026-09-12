@@ -35,10 +35,9 @@
       </select>
 
       <div id="homework-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定作業</h3>
         
         <div id="homework-insert">
-          <h4>新增作業</h4>
+          <h3>新增作業</h3>
           <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
           <label>檢查/繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
           <label>作業內容：<input id="homework-insert-detail" style="width:30%" placeholder="輸入作業內容"></label><br><br>
@@ -46,8 +45,18 @@
         </div>
         
         <div id="homework-edit">
-          <h4>現有作業管理</h4>
-          <button id="load-homework-list-btn" style="margin-bottom: 10px;">重新載入作業列表</button>
+          <h3>現有作業管理</h3>
+          <div style="margin-bottom: 10px; padding: 8px; background: #f9f9f9; border: 1px solid #ddd;">
+            <label>篩選欄位：
+              <select id="filter-field">
+                <option value="starttime">指派日期</option>
+                <option value="endtime">繳交日期</option>
+              </select>
+            </label>
+            <label>從：<input type="date" id="filter-start"></label>
+            <label>到：<input type="date" id="filter-end"></label>
+            <button id="load-homework-list-btn">查詢 / 重新載入</button>
+          </div>
           <div id="homework-list-container"></div>
         </div>
         
@@ -79,7 +88,7 @@
 
               if(error){
                 alert("Error: " + error.message);
-              }else{
+              } else {
                 alert("作業新增成功!");
                 document.getElementById("homework-insert-startdate").value = "";
                 document.getElementById("homework-insert-enddate").value = "";
@@ -93,22 +102,20 @@
             if(!homeworkListContainer) return;
             homeworkListContainer.innerHTML = "載入中...";
 
-            const today = new Date();
-            
-            const pastWeek = new Date(today);
-            pastWeek.setDate(today.getDate() - 7);
-            const pastWeekStr = pastWeek.toISOString().split('T')[0];
+            const field = document.getElementById("filter-field").value;
+            const startDateVal = document.getElementById("filter-start").value;
+            const endDateVal = document.getElementById("filter-end").value;
 
-            const futureWeeks = new Date(today);
-            futureWeeks.setDate(today.getDate() + 14);
-            const futureWeeksStr = futureWeeks.toISOString().split('T')[0];
+            let query = supabaseClient.from("Homework Status").select("*");
 
-            const{data, error}= await supabaseClient
-              .from("Homework Status")
-              .select("*")
-              .gte("starttime", pastWeekStr)
-              .lte("starttime", futureWeeksStr)
-              .order("starttime", {ascending: true});
+            if (startDateVal) {
+              query = query.gte(field, startDateVal);
+            }
+            if (endDateVal) {
+              query = query.lte(field, endDateVal);
+            }
+
+            const {data, error} = await query.order("starttime", {ascending: true});
 
             if(error){
               homeworkListContainer.innerHTML = "Error：" + error.message;
@@ -116,7 +123,7 @@
             }
 
             if(!data || data.length === 0) {
-              homeworkListContainer.innerHTML = "<div>目前沒有這區間內的作業資料</div>";
+              homeworkListContainer.innerHTML = "<div>目前沒有符合條件的作業資料</div>";
               return;
             }
 
@@ -195,10 +202,9 @@
       </div>
 
       <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定考試</h3>
         
         <div id="test-insert">
-          <h4>新增考試</h4>
+          <h3>新增考試</h3>
           <label>指派日期：<input type="date" id="test-insert-startdate"></label><br><br>
           <label>考試日期：<input type="date" id="test-insert-enddate"></label><br><br>
           <label>考試內容：<input id="test-insert-detail" style="width:30%" placeholder="輸入考試內容"></label><br><br>
@@ -206,14 +212,9 @@
         </div>
 
         <div id="test-edit">
-          <h4>修改考試</h4>
-
-        </div>        
-
-        <div id="test-delete">
-          <h4>刪除考試</h4>
+          <h3>修改現有考試</h3>
           
-        </div>
+        </div>        
         
         <script>
           const testInsertBtn = document.getElementById("test-insert-btn");
