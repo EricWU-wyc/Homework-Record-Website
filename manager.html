@@ -66,7 +66,7 @@
               const detail = document.getElementById("homework-insert-detail").value;
 
               if(!startdate || !enddate || !detail){
-                alert("請完整填寫作業資訊!!");
+                alert("請完整填寫作業資訊!");
                 return;
               }
 
@@ -127,7 +127,7 @@
               const detail = document.getElementById("test-insert-detail").value;
 
               if(!startdate || !enddate || !detail){
-                alert("請完整填寫考試資訊!!");
+                alert("請完整填寫考試資訊!");
                 return;
               }
 
@@ -177,6 +177,43 @@
           <h4>刪除注意事項</h4>
           
         </div>
+        <script>
+          const noteInsertBtn = document.getElementById("note-insert-btn");
+
+          if(noteInsertBtn){
+            noteInsertBtn.addEventListener("click", async() =>{
+
+              const startdate = document.getElementById("note-insert-startdate").value;
+              const enddate = document.getElementById("note-insert-enddate").value;
+              const detail = document.getElementById("note-insert-detail").value;
+
+              if(!startdate || !enddate || !detail){
+                alert("請完整填寫注意事項資訊!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Note Status")
+                .insert([
+                  { 
+                    details: detail,
+                    starttime: startdate,
+                    endtime: enddate
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("注意事項新增成功!");
+
+                document.getElementById("note-insert-startdate").value = "";
+                document.getElementById("note-insert-enddate").value = "";
+                document.getElementById("note-insert-detail").value = "";
+              }
+            });
+          }
+        </script>
       </div>
 
       <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
@@ -208,7 +245,7 @@
               const failureseat = document.getElementById("failure-insert-seat").value;
 
               if(!failurename || !failureseat){
-                alert("請完整填寫缺繳名單資訊!!");
+                alert("請完整填寫缺繳名單資訊!");
                 return;
               }
 
