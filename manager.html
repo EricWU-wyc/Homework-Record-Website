@@ -201,7 +201,7 @@
         </script>
       </div>
 
-<div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
         
         <div id="test-insert">
           <h3>新增考試</h3>
@@ -213,7 +213,7 @@
         
         <div id="test-edit">
           <h3>現有考試管理</h3>
-          <div style="margin-bottom: 10px;">
+          <div>
             <label>
               <select id="test-filter-field">
                 <option value="starttime">指派日期</option>
@@ -370,10 +370,9 @@
         
 
       <div id="note-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定注意事項</h3>
         
         <div id="note-insert">
-          <h4>新增注意事項</h4>
+          <h3>新增注意事項</h3>
           <label>開始公告日期：<input type="date" id="note-insert-startdate"></label><br><br>
           <label>結束公告日期：<input type="date" id="note-insert-enddate"></label><br><br>
           <label>公告內容：<br><br><textarea id="note-insert-detail" rows="6" style="width: 60%; resize: vertical;" placeholder="輸入注意事項，按下 Enter 即可換行"></textarea></label><br><br>
@@ -381,20 +380,28 @@
         </div>
 
         <div id="note-edit">
-          <h4>修改注意事項</h4>
-          
-        </div>        
-        
-        <div id="note-delete">
-          <h4>刪除注意事項</h4>
-          
+          <h3>現有注意事項管理</h3>
+          <div>
+            <label>
+              <select id="note-filter-field">
+                <option value="starttime">開始公告日期</option>
+                <option value="endtime">結束公告日期</option>
+              </select>
+            </label>
+            <label>從：<input type="date" id="note-filter-start"></label>
+            <label>到：<input type="date" id="note-filter-end"></label>
+            <button id="load-note-list-btn">查詢 / 重新載入</button>
+          </div>
+          <div id="test-note-container"></div>
         </div>
+        
         <script>
           const noteInsertBtn = document.getElementById("note-insert-btn");
+          const loadNoteBtn = document.getElementById("load-note-list-btn");
+          const noteListContainer = document.getElementById("test-note-container");
 
           if(noteInsertBtn){
             noteInsertBtn.addEventListener("click", async() =>{
-
               const startdate = document.getElementById("note-insert-startdate").value;
               const enddate = document.getElementById("note-insert-enddate").value;
               const detail = document.getElementById("note-insert-detail").value;
@@ -404,7 +411,7 @@
                 return;
               }
 
-              const {data, error} = await supabaseClient
+              const {error} = await supabaseClient
                 .from("Note Status")
                 .insert([
                   { 
@@ -416,18 +423,119 @@
 
               if(error){
                 alert("Error: " + error.message);
-              }else{
+              } else {
                 alert("注意事項新增成功!");
-
                 document.getElementById("note-insert-startdate").value = "";
                 document.getElementById("note-insert-enddate").value = "";
                 document.getElementById("note-insert-detail").value = "";
+                loadNoteList();
               }
             });
           }
+
+          async function loadNoteList(){
+            if(!noteListContainer) return;
+            noteListContainer.innerHTML = "載入中...";
+
+            const field = document.getElementById("note-filter-field").value;
+            const startDateVal = document.getElementById("note-filter-start").value;
+            const endDateVal = document.getElementById("note-filter-end").value;
+
+            let query = supabaseClient.from("Note Status").select("*");
+
+            if(startDateVal){
+              query = query.gte(field, startDateVal);
+            }
+            if(endDateVal){
+              query = query.lte(field, endDateVal);
+            }
+
+            const {data, error} = await query.order("starttime", {ascending: true});
+
+            if(error){
+              noteListContainer.innerHTML = "Error：" + error.message;
+              return;
+            }
+
+            if(!data || data.length === 0){
+              noteListContainer.innerHTML = "<div>目前沒有符合條件的注意事項資料</div>";
+              return;
+            }
+
+            let html = `
+              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 6px;">開始公告日期</th>
+                    <th style="padding: 6px;">結束公告日期</th>
+                    <th style="padding: 6px;">公告內容</th>
+                    <th style="padding: 6px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach((item) => {
+              html += `
+                <tr>
+                  <td style="padding: 6px;">${item.starttime}</td>
+                  <td style="padding: 6px;">${item.endtime}</td>
+                  <td style="padding: 6px; text-align: left; white-space: pre-wrap;">${item.details}</td>
+                  <td style="padding: 6px;">
+                    <button onclick="editNote('${item.id}', '${item.starttime}', '${item.endtime}', \`${item.details.replace(/`/g, '\\`')}\`)">修改</button>
+                    <button onclick="deleteNote('${item.id}')" style="color: red;">刪除</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += `</tbody></table>`;
+            noteListContainer.innerHTML = html;
+          }
+
+          window.deleteNote = async function(id){
+            if(!confirm("確定要刪除這筆注意事項嗎?")) return;
+
+            const {error} = await supabaseClient
+              .from("Note Status")
+              .delete()
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            } else {
+              alert("已成功刪除注意事項!");
+              loadNoteList();
+            }
+          };
+
+          window.editNote = async function(id, oldStart, oldEnd, oldDetail){
+            const newStart = prompt("修改開始公告日期 (YYYY-MM-DD)：", oldStart);
+            if(newStart === null) return;
+            const newEnd = prompt("修改結束公告日期 (YYYY-MM-DD)：", oldEnd);
+            if(newEnd === null) return;
+            const newDetail = prompt("修改公告內容：", oldDetail);
+            if(newDetail === null) return;
+
+            const {error} = await supabaseClient
+              .from("Note Status")
+              .update({starttime: newStart, endtime: newEnd, details: newDetail})
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            } else {
+              alert("修改成功!");
+              loadNoteList();
+            }
+          };
+
+          if(loadNoteBtn){
+            loadNoteBtn.addEventListener("click", loadNoteList);
+          }
         </script>
       </div>
-
+      
       <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
         <h3>設定缺繳名單</h3>
           <div id="failure-insert">
