@@ -39,7 +39,7 @@
         <div id="homework-insert">
           <h3>新增作業</h3>
           <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
-          <label>檢查/繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
+          <label>繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
           <label>作業內容：<input id="homework-insert-detail" style="width:30%" placeholder="輸入作業內容"></label><br><br>
           <button id="homework-insert-btn">確認新增</button>
         </div>
@@ -47,14 +47,14 @@
         <div id="homework-edit">
           <h3>現有作業管理</h3>
           <div>
-            <label>篩選欄位：
-              <select id="filter-field">
+            <label>
+              <select id="homework-filter-field">
                 <option value="starttime">指派日期</option>
                 <option value="endtime">繳交日期</option>
               </select>
             </label>
-            <label>從：<input type="date" id="filter-start"></label>
-            <label>到：<input type="date" id="filter-end"></label>
+            <label>從：<input type="date" id="homework-filter-start"></label>
+            <label>到：<input type="date" id="homework-filter-end"></label>
             <button id="load-homework-list-btn">查詢 / 重新載入</button>
           </div>
           <div id="homework-list-container"></div>
@@ -98,20 +98,20 @@
             });
           }
 
-          async function loadHomeworkList() {
+          async function loadHomeworkList(){
             if(!homeworkListContainer) return;
             homeworkListContainer.innerHTML = "載入中...";
 
-            const field = document.getElementById("filter-field").value;
-            const startDateVal = document.getElementById("filter-start").value;
-            const endDateVal = document.getElementById("filter-end").value;
+            const field = document.getElementById("homework-filter-field").value;
+            const startDateVal = document.getElementById("homework-filter-start").value;
+            const endDateVal = document.getElementById("homework-filter-end").value;
 
             let query = supabaseClient.from("Homework Status").select("*");
 
-            if (startDateVal) {
+            if(startDateVal){
               query = query.gte(field, startDateVal);
             }
-            if (endDateVal) {
+            if(endDateVal){
               query = query.lte(field, endDateVal);
             }
 
@@ -122,7 +122,7 @@
               return;
             }
 
-            if(!data || data.length === 0) {
+            if(!data || data.length === 0){
               homeworkListContainer.innerHTML = "<div>目前沒有符合條件的作業資料</div>";
               return;
             }
@@ -158,7 +158,7 @@
             homeworkListContainer.innerHTML = html;
           }
 
-          window.deleteHomework = async function(id) {
+          window.deleteHomework = async function(id){
             if(!confirm("確定要刪除這筆作業嗎?")) return;
 
             const {error} = await supabaseClient
@@ -174,7 +174,7 @@
             }
           };
 
-          window.editHomework = async function(id, oldStart, oldEnd, oldDetail) {
+          window.editHomework = async function(id, oldStart, oldEnd, oldDetail){
             const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
             if(newStart === null) return;
             const newEnd = prompt("修改繳交日期 (YYYY-MM-DD)：", oldEnd);
@@ -210,18 +210,30 @@
           <label>考試內容：<input id="test-insert-detail" style="width:30%" placeholder="輸入考試內容"></label><br><br>
           <button id="test-insert-btn">確認新增</button>
         </div>
-
+        
         <div id="test-edit">
-          <h3>修改現有考試</h3>
-          
-        </div>        
+          <h3>現有考試管理</h3>
+          <div>
+            <label>
+              <select id="test-filter-field">
+                <option value="starttime">指派日期</option>
+                <option value="endtime">考試日期</option>
+              </select>
+            </label>
+            <label>從：<input type="date" id="test-filter-start"></label>
+            <label>到：<input type="date" id="test-filter-end"></label>
+            <button id="load-test-list-btn">查詢 / 重新載入</button>
+          </div>
+          <div id="test-list-container"></div>
+        </div>
         
         <script>
-          const testInsertBtn = document.getElementById("test-insert-btn");
+          const homeworkInsertBtn = document.getElementById("test-insert-btn");
+          const loadHomeworkBtn = document.getElementById("load-test-list-btn");
+          const homeworkListContainer = document.getElementById("test-list-container");
 
           if(testInsertBtn){
             testInsertBtn.addEventListener("click", async() =>{
-
               const startdate = document.getElementById("test-insert-startdate").value;
               const enddate = document.getElementById("test-insert-enddate").value;
               const detail = document.getElementById("test-insert-detail").value;
@@ -231,7 +243,7 @@
                 return;
               }
 
-              const {data, error} = await supabaseClient
+              const {error} = await supabaseClient
                 .from("Test Status")
                 .insert([
                   { 
@@ -243,15 +255,115 @@
 
               if(error){
                 alert("Error: " + error.message);
-              }else{
+              } else {
                 alert("考試新增成功!");
-
                 document.getElementById("test-insert-startdate").value = "";
                 document.getElementById("test-insert-enddate").value = "";
                 document.getElementById("test-insert-detail").value = "";
-
+                loadTestList();
               }
             });
+          }
+
+          async function loadTestList(){
+            if(!testListContainer) return;
+            testListContainer.innerHTML = "載入中...";
+
+            const field = document.getElementById("test-filter-field").value;
+            const startDateVal = document.getElementById("test-filter-start").value;
+            const endDateVal = document.getElementById("test-filter-end").value;
+
+            let query = supabaseClient.from("Test Status").select("*");
+
+            if(startDateVal){
+              query = query.gte(field, startDateVal);
+            }
+            if(endDateVal){
+              query = query.lte(field, endDateVal);
+            }
+
+            const {data, error} = await query.order("starttime", {ascending: true});
+
+            if(error){
+              testListContainer.innerHTML = "Error：" + error.message;
+              return;
+            }
+
+            if(!data || data.length === 0){
+              testListContainer.innerHTML = "<div>目前沒有符合條件的考試資料</div>";
+              return;
+            }
+
+            let html = `
+              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 6px;">指派日期</th>
+                    <th style="padding: 6px;">考試日期</th>
+                    <th style="padding: 6px;">內容</th>
+                    <th style="padding: 6px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach((item) => {
+              html += `
+                <tr>
+                  <td style="padding: 6px;">${item.starttime}</td>
+                  <td style="padding: 6px;">${item.endtime}</td>
+                  <td style="padding: 6px; text-align: left;">${item.details}</td>
+                  <td style="padding: 6px;">
+                    <button onclick="edittest('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="deletetest('${item.id}')" style="color: red;">刪除</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += `</tbody></table>`;
+            testListContainer.innerHTML = html;
+          }
+
+          window.deletetest = async function(id){
+            if(!confirm("確定要刪除這筆考試嗎?")) return;
+
+            const {error} = await supabaseClient
+              .from("Test Status")
+              .delete()
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            } else {
+              alert("已成功刪除考試!");
+              loadHomeworkList();
+            }
+          };
+
+          window.editHomework = async function(id, oldStart, oldEnd, oldDetail){
+            const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
+            if(newStart === null) return;
+            const newEnd = prompt("修改考試日期 (YYYY-MM-DD)：", oldEnd);
+            if(newEnd === null) return;
+            const newDetail = prompt("修改考試內容：", oldDetail);
+            if(newDetail === null) return;
+
+            const {error} = await supabaseClient
+              .from("Test Status")
+              .update({starttime: newStart, endtime: newEnd, details: newDetail})
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            }else{
+              alert("修改成功!");
+              loadTestList();
+            }
+          };
+
+          if(loadTestBtn){
+            loadTestBtn.addEventListener("click", loadHomeworkList);
           }
         </script>
       </div>
@@ -465,13 +577,13 @@
                 const weekend = document.getElementById("clothes-weekend").value;
 
                 const startDateObj = new Date(weekstart);
-                if (startDateObj.getDay() !== 1) {
+                if(startDateObj.getDay() !== 1){
                   alert("開始日期必須是星期一！");
                   return;
                 }
 
                 const endDateObj = new Date(weekend);
-                if (endDateObj.getDay() !== 5) {
+                if(endDateObj.getDay() !== 5){
                   alert("結束日期必須是星期五！");
                   return;
                 }
@@ -479,12 +591,12 @@
                 const diffTime = endDateObj.getTime() - startDateObj.getTime();
                 const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-                if (diffDays < 0) {
+                if(diffDays < 0){
                   alert("結束日期不能早於開始日期!");
                   return;
                 }
 
-                if (diffDays > 4) {
+                if(diffDays > 4){
                   alert("開始與結束日期必須在同一週內!");
                   return;
                 }
@@ -534,7 +646,7 @@
                     ]);
 
                   resultError = insertError;
-                  if (!resultError) {
+                  if(!resultError){
                     alert("服裝設定成功！");
                   }
                 }
@@ -555,7 +667,7 @@
 
             const clothesOriginBtn = document.getElementById("clothes-origin-btn");
 
-            if (clothesOriginBtn) {
+            if(clothesOriginBtn){
               clothesOriginBtn.addEventListener("click", () => {
                 document.getElementById("mon-clothes-select").value = "sport";
                 document.getElementById("tue-clothes-select").value = "sport";
@@ -634,7 +746,7 @@
       const passwordBlank = document.getElementById("password-blank");
       const statusSelect = document.getElementById("status-select");
 
-      async function handleLogin() {
+      async function handleLogin(){
         const inputPwd = passwordBlank.value;
 
         const {data, error} = await supabaseClient
@@ -659,7 +771,7 @@
       loginBtn.addEventListener("click", handleLogin);
       
       passwordBlank.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
+        if(event.key === "Enter"){
           loginBtn.click();
         }
       });
@@ -672,9 +784,9 @@
           box.style.display = "none";
         });
 
-        if (selectedValue) {
+        if(selectedValue){
           const targetForm = document.getElementById(selectedValue + "-form");
-          if (targetForm) {
+          if(targetForm){
             targetForm.style.display = "block";
           }
         }
