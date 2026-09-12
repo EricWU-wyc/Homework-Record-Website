@@ -159,11 +159,12 @@
 
       async function fetchHomework(date) {
         const container = document.getElementById('homework-content');
+        // 條件：開始日期 <= 選擇日期 且 選擇日期 < 結束日期 (.lt 代表小於 <)
         const { data, error } = await supabaseClient
           .from("Homework Status")
           .select("*")
           .lte("starttime", date)
-          .gte("endtime", date);
+          .lt("endtime", date);
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
@@ -173,15 +174,17 @@
 
       async function fetchTest(date) {
         const container = document.getElementById('test-content');
+        // 條件：開始日期 <= 選擇日期 且 選擇日期 < 結束日期
         const { data, error } = await supabaseClient
           .from("Test Status")
           .select("*")
-          .eq("endtime", date);
+          .lte("starttime", date)
+          .lt("endtime", date);
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
 
-        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details}</li>`).join('') + `</ol>`;
+        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details} <span style="color:gray; font-size:0.9em;">(考試日期: ${item.endtime})</span></li>`).join('') + `</ol>`;
       }
 
       async function fetchClothes(date) {
