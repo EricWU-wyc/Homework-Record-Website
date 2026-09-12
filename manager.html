@@ -46,13 +46,9 @@
         </div>
         
         <div id="homework-edit">
-          <h4>修改作業</h4>
-
-        </div>
-        
-        <div id="homework-delete">
-          <h4>刪除作業</h4>
-          
+          <h4>現有作業管理</h4>
+          <button id="load-homework-list-btn" style="margin-bottom: 10px;">重新載入作業列表</button>
+          <div id="homework-list-container"></div>
         </div>
         
         <script>
@@ -91,6 +87,97 @@
 
               }
             });
+          }
+          // 2. 載入與渲染作業清單函式
+          async function loadHomeworkList() {
+            homeworkListContainer.innerHTML = "載入中...";
+
+            const { data, error } = await supabaseClient
+              .from("Homework Status")
+              .select("*")
+              .order("starttime", { ascending: true });
+
+            if (error) {
+              homeworkListContainer.innerHTML = "讀取失敗：" + error.message;
+              return;
+            }
+
+            if (!data || data.length === 0) {目前沒有任何作業資料</div>";
+              return;
+            }
+
+            let html = `
+              <table border="1" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 6px;">指派日期</th>
+                    <th style="padding: 6px;">繳交日期</th>
+                    <th style="padding: 6px;">內容</th>
+                    <th style="padding: 6px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach((item) => {
+              html += `
+                <tr>
+                  <td style="padding: 6px;">${item.starttime}</td>
+                  <td style="padding: 6px;">${item.endtime}</td>
+                  <td style="padding: 6px; text-align: left;">${item.details}</td>
+                  <td style="padding: 6px;">
+                    <button onclick="editHomework('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="deleteHomework('${item.id}')" style="color: red;">刪除</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += `</tbody></table>`;
+            homeworkListContainer.innerHTML = html;
+          }
+
+          // 3. 刪除作業
+          window.deleteHomework = async function(id) {
+            if (!confirm("確定要刪除這筆作業嗎？")) return;
+
+            const { error } = await supabaseClient
+              .from("Homework Status")
+              .delete()
+              .eq("id", id);
+
+            if (error) {
+              alert("刪除失敗：" + error.message);
+            } else {
+              alert("已成功刪除！");
+              loadHomeworkList();
+            }
+          };
+
+          // 4. 修改作業（使用簡單的 prompt 互動，或改為帶入上方表單）
+          window.editHomework = async function(id, oldStart, oldEnd, oldDetail) {
+            const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
+            if (newStart === null) return;
+            const newEnd = prompt("修改繳交日期 (YYYY-MM-DD)：", oldEnd);
+            if (newEnd === null) return;
+            const newDetail = prompt("修改作業內容：", oldDetail);
+            if (newDetail === null) return;
+
+            const { error } = await supabaseClient
+              .from("Homework Status")
+              .update({ starttime: newStart, enddate: newEnd, details: newDetail })
+              .eq("id", id);
+
+            if (error) {
+              alert("修改失敗：" + error.message);
+            } else {
+              alert("修改成功！");
+              loadHomeworkList();
+            }
+          };
+
+          if (loadHomeworkBtn) {
+            loadHomeworkBtn.addEventListener("click", loadHomeworkList);
           }
         </script>
       </div>
