@@ -239,12 +239,18 @@
         <h3>設定服裝</h3>
           <div id="clothes-setting" >
             <h4>修改服裝</h4>
+            
+            <label>該週開始日期：<input type="date" id="clothes-weekstart"></label><br><br>
+            <label>該週結束日期：<input type="date" id="clothes-weekend"></label><br><br>
+            
             <table border="1" style="width: 20%; margin: 10px 0; border-collapse: collapse; text-align: center;">
 
               <tr>
                 <td style="padding: 8px;">星期一</td>
                 <td style="padding: 8px;">
                   <select id="mon-clothes-select">
+                    <option value="">當天為例假日</option>
+                    <option value="exceptuni">運動服 or 班服</option>
                     <option value="sport">運動服</option>
                     <option value="uniform">制服</option>
                     <option value="class-clothes">班服</option>
@@ -256,6 +262,8 @@
               <td style="padding: 8px;">星期二</td>
                 <td style="padding: 8px;">
                   <select id="tue-clothes-select">
+                    <option value="">當天為例假日</option>
+                    <option value="exceptuni">運動服 or 班服</option>
                     <option value="sport">運動服</option>
                     <option value="uniform">制服</option>
                     <option value="class-clothes">班服</option>
@@ -267,6 +275,8 @@
               <td style="padding: 8px;">星期三</td>
                 <td style="padding: 8px;">
                   <select id="wed-clothes-select">
+                    <option value="">當天為例假日</option>
+                    <option value="exceptuni">運動服 or 班服</option>
                     <option value="sport">運動服</option>
                     <option value="uniform">制服</option>
                     <option value="class-clothes">班服</option>
@@ -278,6 +288,8 @@
               <td style="padding: 8px;">星期四</td>
                 <td style="padding: 8px;">
                   <select id="thur-clothes-select">
+                    <option value="">當天為例假日</option>
+                    <option value="exceptuni">運動服 or 班服</option>
                     <option value="sport">運動服</option>
                     <option value="uniform">制服</option>
                     <option value="class-clothes">班服</option>
@@ -289,6 +301,8 @@
               <td style="padding: 8px;">星期五</td>
                 <td style="padding: 8px;">
                   <select id="fri-clothes-select">
+                    <option value="">當天為例假日</option>
+                    <option value="exceptuni">運動服 or 班服</option>
                     <option value="sport">運動服</option>
                     <option value="uniform">制服</option>
                     <option value="class-clothes">班服</option>
@@ -298,9 +312,85 @@
             </table>
             <br>
             <button id="clothes-insert-btn">確認修改</button>
-            <button id="clothes-origin-insert-btn">回歸預設</button>
+            <button id="clothes-origin-btn">回歸預設</button>
           </div>
+        <script>
+          const clothesInsertBtn = document.getElementById("clothes-insert-btn");
 
+          if(clothesInsertBtn){
+            clothesInsertBtn.addEventListener("click", async() =>{
+
+              const clothesmon = document.getElementById("mon-clothes-select").value;
+              const clothestue = document.getElementById("tue-clothes-select").value;
+              const clotheswed = document.getElementById("wed-clothes-select").value;
+              const clothesthur = document.getElementById("thur-clothes-select").value;
+              const clothesfri = document.getElementById("fri-clothes-select").value;
+              
+              const startDateObj = new Date(weekstart);
+              if (startDateObj.getDay() !== 1) {
+                alert("開始日期必須是星期一！");
+                return;
+              }
+
+              const endDateObj = new Date(weekend);
+              if (endDateObj.getDay() !== 5) {
+                alert("結束日期必須是星期五！");
+                return;
+              }
+              
+              const weekstart = document.getElementById("clothes-weekstart").value;
+              const weekend = document.getElementById("clothes-weekend").value;
+
+              if(!clothesmon || !clothestue || !clotheswed || !clothesthur || !clothesfri || !weekstart || !weekend){
+                alert("請完整填寫服裝資訊!!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Clothes Status")
+                .insert([
+                  { 
+                    mon: clothesmon, 
+                    tue: clothestue, 
+                    wed: clotheswed, 
+                    thur: clothesthur, 
+                    fri: clothesfri, 
+                    weekstart: weekstart, 
+                    weekend: weekend
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("服裝設定成功!");
+                
+                document.getElementById("mon-clothes-select").value = "";
+                document.getElementById("tue-clothes-select").value = "";
+                document.getElementById("wed-clothes-select").value = "";
+                document.getElementById("thur-clothes-select").value = "";
+                document.getElementById("fri-clothes-select").value = "";
+                document.getElementById("clothes-weekstart").value = "";
+                document.getElementById("clothes-weekend").value = "";
+              }
+            });
+          }
+          
+          const clothesOriginBtn = document.getElementById("clothes-origin-btn");
+
+          if (clothesOriginBtn) {
+            clothesOriginBtn.addEventListener("click", () => {
+
+              document.getElementById("mon-clothes-select").value = "sport";
+              document.getElementById("tue-clothes-select").value = "sport";
+              document.getElementById("wed-clothes-select").value = "class-clothes";
+              document.getElementById("thur-clothes-select").value = "uniform";
+              document.getElementById("fri-clothes-select").value = "sport";
+
+              alert("已自動帶入預設服裝!");
+            });
+          }
+        </script>
       </div>
 
       <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
