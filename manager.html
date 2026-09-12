@@ -327,11 +327,6 @@
                 const weekstart = document.getElementById("clothes-weekstart").value;
                 const weekend = document.getElementById("clothes-weekend").value;
 
-                if(!clothesmon || !clothestue || !clotheswed || !clothesthur || !clothesfri || !weekstart || !weekend){
-                  alert("請完整填寫服裝資訊!!");
-                  return;
-                }
-
                 const startDateObj = new Date(weekstart);
                 if (startDateObj.getDay() !== 1) {
                   alert("開始日期必須是星期一！");
