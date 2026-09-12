@@ -34,14 +34,18 @@
         <option value="blog">Blog 班級紀錄</option>
       </select>
 
+      <!-- 作業區塊 -->
       <div id="homework-form" class="form-box" style="display: none; margin-top: 15px;">
-        
-        <div id="homework-insert">
-          <h3>新增作業</h3>
+        <div id="homework-insert" style="padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <h3 id="homework-form-title">新增作業</h3>
+          <input type="hidden" id="homework-edit-id">
+          
           <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
           <label>繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
           <label>作業內容：<input id="homework-insert-detail" style="width:30%" placeholder="輸入作業內容"></label><br><br>
+          
           <button id="homework-insert-btn">確認新增</button>
+          <button id="homework-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
         <div id="homework-edit">
@@ -62,40 +66,71 @@
         
         <script>
           const homeworkInsertBtn = document.getElementById("homework-insert-btn");
+          const homeworkCancelEditBtn = document.getElementById("homework-cancel-edit-btn");
           const loadHomeworkBtn = document.getElementById("load-homework-list-btn");
           const homeworkListContainer = document.getElementById("homework-list-container");
 
+          const homeworkFormTitle = document.getElementById("homework-form-title");
+          const homeworkEditIdInput = document.getElementById("homework-edit-id");
+          const homeworkStartInput = document.getElementById("homework-insert-startdate");
+          const homeworkEndInput = document.getElementById("homework-insert-enddate");
+          const homeworkDetailInput = document.getElementById("homework-insert-detail");
+
           if(homeworkInsertBtn){
             homeworkInsertBtn.addEventListener("click", async() =>{
-              const startdate = document.getElementById("homework-insert-startdate").value;
-              const enddate = document.getElementById("homework-insert-enddate").value;
-              const detail = document.getElementById("homework-insert-detail").value;
+              const startdate = homeworkStartInput.value;
+              const enddate = homeworkEndInput.value;
+              const detail = homeworkDetailInput.value;
+              const editId = homeworkEditIdInput.value;
 
               if(!startdate || !enddate || !detail){
                 alert("請完整填寫作業資訊!");
                 return;
               }
 
-              const {error} = await supabaseClient
-                .from("Homework Status")
-                .insert([
-                  { 
-                    starttime: startdate, 
-                    endtime: enddate, 
-                    details: detail 
-                  }
-                ]);
+              if(editId) {
+                const {error} = await supabaseClient
+                  .from("Homework Status")
+                  .update({ starttime: startdate, endtime: enddate, details: detail })
+                  .eq("id", editId);
 
-              if(error){
-                alert("Error: " + error.message);
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("作業修改成功!");
+                  resetHomeworkForm();
+                  loadHomeworkList();
+                }
               } else {
-                alert("作業新增成功!");
-                document.getElementById("homework-insert-startdate").value = "";
-                document.getElementById("homework-insert-enddate").value = "";
-                document.getElementById("homework-insert-detail").value = "";
-                loadHomeworkList();
+                const {error} = await supabaseClient
+                  .from("Homework Status")
+                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
+
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("作業新增成功!");
+                  resetHomeworkForm();
+                  loadHomeworkList();
+                }
               }
             });
+          }
+
+          if(homeworkCancelEditBtn){
+            homeworkCancelEditBtn.addEventListener("click", () => {
+              resetHomeworkForm();
+            });
+          }
+
+          function resetHomeworkForm() {
+            homeworkEditIdInput.value = "";
+            homeworkStartInput.value = "";
+            homeworkEndInput.value = "";
+            homeworkDetailInput.value = "";
+            homeworkFormTitle.innerText = "新增作業";
+            homeworkInsertBtn.innerText = "確認新增";
+            homeworkCancelEditBtn.style.display = "none";
           }
 
           async function loadHomeworkList(){
@@ -130,7 +165,7 @@
             let html = `
               <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
                 <thead>
-                  <tr style="background-color: #f2f2f2;">
+                  <tr>
                     <th style="padding: 6px;">指派日期</th>
                     <th style="padding: 6px;">繳交日期</th>
                     <th style="padding: 6px;">內容</th>
@@ -141,13 +176,14 @@
             `;
 
             data.forEach((item) => {
+              const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
                   <td style="padding: 6px;">${item.starttime}</td>
                   <td style="padding: 6px;">${item.endtime}</td>
                   <td style="padding: 6px; text-align: left;">${item.details}</td>
                   <td style="padding: 6px;">
-                    <button onclick="editHomework('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="prepareEditHomework('${item.id}', '${item.starttime}', '${item.endtime}', \`${safeDetails}\`)">修改</button>
                     <button onclick="deleteHomework('${item.id}')" style="color: red;">刪除</button>
                   </td>
                 </tr>
@@ -157,6 +193,19 @@
             html += `</tbody></table>`;
             homeworkListContainer.innerHTML = html;
           }
+
+          window.prepareEditHomework = function(id, start, end, detail){
+            homeworkEditIdInput.value = id;
+            homeworkStartInput.value = start;
+            homeworkEndInput.value = end;
+            homeworkDetailInput.value = detail;
+            
+            homeworkFormTitle.innerText = "修改作業";
+            homeworkInsertBtn.innerText = "確認修改";
+            homeworkCancelEditBtn.style.display = "inline-block";
+
+            window.scrollTo({ top: homeworkFormTitle.offsetTop, behavior: 'smooth' });
+          };
 
           window.deleteHomework = async function(id){
             if(!confirm("確定要刪除這筆作業嗎?")) return;
@@ -174,41 +223,24 @@
             }
           };
 
-          window.editHomework = async function(id, oldStart, oldEnd, oldDetail){
-            const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
-            if(newStart === null) return;
-            const newEnd = prompt("修改繳交日期 (YYYY-MM-DD)：", oldEnd);
-            if(newEnd === null) return;
-            const newDetail = prompt("修改作業內容：", oldDetail);
-            if(newDetail === null) return;
-
-            const {error} = await supabaseClient
-              .from("Homework Status")
-              .update({starttime: newStart, endtime: newEnd, details: newDetail})
-              .eq("id", id);
-
-            if(error){
-              alert("Error：" + error.message);
-            } else {
-              alert("修改成功!");
-              loadHomeworkList();
-            }
-          };
-
           if(loadHomeworkBtn){
             loadHomeworkBtn.addEventListener("click", loadHomeworkList);
           }
         </script>
       </div>
 
+      <!-- 考試區塊 -->
       <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
-        
-        <div id="test-insert">
-          <h3>新增考試</h3>
+        <div id="test-insert" style="padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <h3 id="test-form-title">新增考試</h3>
+          <input type="hidden" id="test-edit-id">
+          
           <label>指派日期：<input type="date" id="test-insert-startdate"></label><br><br>
           <label>考試日期：<input type="date" id="test-insert-enddate"></label><br><br>
           <label>考試內容：<input id="test-insert-detail" style="width:30%" placeholder="輸入考試內容"></label><br><br>
+          
           <button id="test-insert-btn">確認新增</button>
+          <button id="test-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
         <div id="test-edit">
@@ -229,40 +261,71 @@
         
         <script>
           const testInsertBtn = document.getElementById("test-insert-btn");
+          const testCancelEditBtn = document.getElementById("test-cancel-edit-btn");
           const loadTestBtn = document.getElementById("load-test-list-btn");
           const testListContainer = document.getElementById("test-list-container");
 
+          const testFormTitle = document.getElementById("test-form-title");
+          const testEditIdInput = document.getElementById("test-edit-id");
+          const testStartInput = document.getElementById("test-insert-startdate");
+          const testEndInput = document.getElementById("test-insert-enddate");
+          const testDetailInput = document.getElementById("test-insert-detail");
+
           if(testInsertBtn){
             testInsertBtn.addEventListener("click", async() =>{
-              const startdate = document.getElementById("test-insert-startdate").value;
-              const enddate = document.getElementById("test-insert-enddate").value;
-              const detail = document.getElementById("test-insert-detail").value;
+              const startdate = testStartInput.value;
+              const enddate = testEndInput.value;
+              const detail = testDetailInput.value;
+              const editId = testEditIdInput.value;
 
               if(!startdate || !enddate || !detail){
                 alert("請完整填寫考試資訊!");
                 return;
               }
 
-              const {error} = await supabaseClient
-                .from("Test Status")
-                .insert([
-                  { 
-                    starttime: startdate, 
-                    endtime: enddate, 
-                    details: detail 
-                  }
-                ]);
+              if(editId) {
+                const {error} = await supabaseClient
+                  .from("Test Status")
+                  .update({ starttime: startdate, endtime: enddate, details: detail })
+                  .eq("id", editId);
 
-              if(error){
-                alert("Error: " + error.message);
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("考試修改成功!");
+                  resetTestForm();
+                  loadTestList();
+                }
               } else {
-                alert("考試新增成功!");
-                document.getElementById("test-insert-startdate").value = "";
-                document.getElementById("test-insert-enddate").value = "";
-                document.getElementById("test-insert-detail").value = "";
-                loadTestList();
+                const {error} = await supabaseClient
+                  .from("Test Status")
+                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
+
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("考試新增成功!");
+                  resetTestForm();
+                  loadTestList();
+                }
               }
             });
+          }
+
+          if(testCancelEditBtn){
+            testCancelEditBtn.addEventListener("click", () => {
+              resetTestForm();
+            });
+          }
+
+          function resetTestForm() {
+            testEditIdInput.value = "";
+            testStartInput.value = "";
+            testEndInput.value = "";
+            testDetailInput.value = "";
+            testFormTitle.innerText = "新增考試";
+            testInsertBtn.innerText = "確認新增";
+            testCancelEditBtn.style.display = "none";
           }
 
           async function loadTestList(){
@@ -297,7 +360,7 @@
             let html = `
               <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
                 <thead>
-                  <tr style="background-color: #f2f2f2;">
+                  <tr>
                     <th style="padding: 6px;">指派日期</th>
                     <th style="padding: 6px;">考試日期</th>
                     <th style="padding: 6px;">內容</th>
@@ -308,13 +371,14 @@
             `;
 
             data.forEach((item) => {
+              const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
                   <td style="padding: 6px;">${item.starttime}</td>
                   <td style="padding: 6px;">${item.endtime}</td>
                   <td style="padding: 6px; text-align: left;">${item.details}</td>
                   <td style="padding: 6px;">
-                    <button onclick="editTest('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="prepareEditTest('${item.id}', '${item.starttime}', '${item.endtime}', \`${safeDetails}\`)">修改</button>
                     <button onclick="deleteTest('${item.id}')" style="color: red;">刪除</button>
                   </td>
                 </tr>
@@ -324,6 +388,19 @@
             html += `</tbody></table>`;
             testListContainer.innerHTML = html;
           }
+
+          window.prepareEditTest = function(id, start, end, detail){
+            testEditIdInput.value = id;
+            testStartInput.value = start;
+            testEndInput.value = end;
+            testDetailInput.value = detail;
+            
+            testFormTitle.innerText = "修改考試";
+            testInsertBtn.innerText = "確認修改";
+            testCancelEditBtn.style.display = "inline-block";
+
+            window.scrollTo({ top: testFormTitle.offsetTop, behavior: 'smooth' });
+          };
 
           window.deleteTest = async function(id){
             if(!confirm("確定要刪除這筆考試嗎?")) return;
@@ -341,40 +418,16 @@
             }
           };
 
-          window.editTest = async function(id, oldStart, oldEnd, oldDetail){
-            const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
-            if(newStart === null) return;
-            const newEnd = prompt("修改考試日期 (YYYY-MM-DD)：", oldEnd);
-            if(newEnd === null) return;
-            const newDetail = prompt("修改考試內容：", oldDetail);
-            if(newDetail === null) return;
-
-            const {error} = await supabaseClient
-              .from("Test Status")
-              .update({starttime: newStart, endtime: newEnd, details: newDetail})
-              .eq("id", id);
-
-            if(error){
-              alert("Error：" + error.message);
-            }else{
-              alert("修改成功!");
-              loadTestList();
-            }
-          };
-
           if(loadTestBtn){
             loadTestBtn.addEventListener("click", loadTestList);
           }
         </script>
       </div>
         
-
-<div id="note-form" class="form-box" style="display: none; margin-top: 15px;">
-        
-        <!-- 新增/編輯共用表單區塊 -->
-        <div id="note-insert" style="background: #fdfdfd; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+      <!-- 注意事項區塊 -->
+      <div id="note-form" class="form-box" style="display: none; margin-top: 15px;">
+        <div id="note-insert" style="padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
           <h3 id="note-form-title">新增注意事項</h3>
-          <!-- 隱藏欄位用來儲存正在編輯的 ID -->
           <input type="hidden" id="note-edit-id">
           
           <label>開始公告日期：<input type="date" id="note-insert-startdate"></label><br><br>
@@ -382,7 +435,7 @@
           <label>公告內容：<br><br><textarea id="note-insert-detail" rows="8" style="width: 80%; resize: vertical;" placeholder="輸入注意事項，按下 Enter 即可換行"></textarea></label><br><br>
           
           <button id="note-insert-btn">確認新增</button>
-          <button id="note-cancel-edit-btn" style="display: none; background-color: #ccc; margin-left: 10px;">取消修改</button>
+          <button id="note-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
 
         <div id="note-edit">
@@ -413,7 +466,6 @@
           const noteEndInput = document.getElementById("note-insert-enddate");
           const noteDetailInput = document.getElementById("note-insert-detail");
 
-          // 新增或更新按鈕事件
           if(noteInsertBtn){
             noteInsertBtn.addEventListener("click", async() =>{
               const startdate = noteStartInput.value;
@@ -427,14 +479,9 @@
               }
 
               if(editId) {
-                // 執行更新
                 const {error} = await supabaseClient
                   .from("Note Status")
-                  .update({
-                    starttime: startdate,
-                    endtime: enddate,
-                    details: detail
-                  })
+                  .update({ starttime: startdate, endtime: enddate, details: detail })
                   .eq("id", editId);
 
                 if(error){
@@ -445,16 +492,9 @@
                   loadNoteList();
                 }
               } else {
-                // 執行新增
                 const {error} = await supabaseClient
                   .from("Note Status")
-                  .insert([
-                    { 
-                      starttime: startdate,
-                      endtime: enddate,
-                      details: detail
-                    }
-                  ]);
+                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
 
                 if(error){
                   alert("Error: " + error.message);
@@ -467,7 +507,6 @@
             });
           }
 
-          // 取消修改按鈕
           if(noteCancelEditBtn){
             noteCancelEditBtn.addEventListener("click", () => {
               resetNoteForm();
@@ -516,7 +555,7 @@
             let html = `
               <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
                 <thead>
-                  <tr style="background-color: #f2f2f2;">
+                  <tr>
                     <th style="padding: 6px;">開始公告日期</th>
                     <th style="padding: 6px;">結束公告日期</th>
                     <th style="padding: 6px; width: 45%;">公告內容</th>
@@ -527,7 +566,6 @@
             `;
 
             data.forEach((item) => {
-              // 避免內容中的引號破壞 HTML 字串結構
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
@@ -546,7 +584,6 @@
             noteListContainer.innerHTML = html;
           }
 
-          // 點擊修改後將資料帶入上方的表單
           window.prepareEditNote = function(id, start, end, detail){
             noteEditIdInput.value = id;
             noteStartInput.value = start;
@@ -557,7 +594,6 @@
             noteInsertBtn.innerText = "確認修改";
             noteCancelEditBtn.style.display = "inline-block";
 
-            // 自動將畫面捲動到上方的編輯區塊，方便直接修改
             window.scrollTo({ top: noteFormTitle.offsetTop, behavior: 'smooth' });
           };
 
@@ -583,62 +619,175 @@
         </script>
       </div>
       
+      <!-- 缺繳名單區塊 -->
       <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定缺繳名單</h3>
-          <div id="failure-insert">
-            <h4>新增缺繳名單</h4>
-            <label>缺繳項目：<input id="failure-insert-name" style="width:30%" placeholder="輸入缺繳項目"></label><br><br>
-            <label>缺繳座號：<input id="failure-insert-seat" style="width:30%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
-            <button id="failure-insert-btn">確認新增</button>
+        <div id="failure-insert" style="padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <h3 id="failure-form-title">新增缺繳名單</h3>
+          <input type="hidden" id="failure-edit-id">
           
-          </div>
-        
-          <div id="failure-edit">
-            <h4>修改缺繳名單</h4>
+          <label>缺繳項目：<input id="failure-insert-name" style="width:30%" placeholder="輸入缺繳項目"></label><br><br>
+          <label>缺繳座號：<input id="failure-insert-seat" style="width:30%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
           
+          <button id="failure-insert-btn">確認新增</button>
+          <button id="failure-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
+        </div>
+      
+        <div id="failure-edit">
+          <h3>現有缺繳名單管理</h3>
+          <div style="margin-bottom: 10px;">
+            <button id="load-failure-list-btn">重新載入</button>
           </div>
-        
-          <div id="failure-delete">
-            <h4>刪除缺繳名單</h4>
-          
-          </div>
+          <div id="failure-list-container"></div>
+        </div>
+
         <script>
           const failureInsertBtn = document.getElementById("failure-insert-btn");
+          const failureCancelEditBtn = document.getElementById("failure-cancel-edit-btn");
+          const loadFailureBtn = document.getElementById("load-failure-list-btn");
+          const failureListContainer = document.getElementById("failure-list-container");
+
+          const failureFormTitle = document.getElementById("failure-form-title");
+          const failureEditIdInput = document.getElementById("failure-edit-id");
+          const failureNameInput = document.getElementById("failure-insert-name");
+          const failureSeatInput = document.getElementById("failure-insert-seat");
 
           if(failureInsertBtn){
             failureInsertBtn.addEventListener("click", async() =>{
-
-              const failurename = document.getElementById("failure-insert-name").value;
-              const failureseat = document.getElementById("failure-insert-seat").value;
+              const failurename = failureNameInput.value;
+              const failureseat = failureSeatInput.value;
+              const editId = failureEditIdInput.value;
 
               if(!failurename || !failureseat){
                 alert("請完整填寫缺繳名單資訊!");
                 return;
               }
 
-              const {data, error} = await supabaseClient
-                .from("Failure Status")
-                .insert([
-                  { 
-                    details: failurename, 
-                    failurelist: failureseat
-                  }
-                ]);
+              if(editId) {
+                const {error} = await supabaseClient
+                  .from("Failure Status")
+                  .update({ details: failurename, failurelist: failureseat })
+                  .eq("id", editId);
 
-              if(error){
-                alert("Error: " + error.message);
-              }else{
-                alert("缺繳名單新增成功!");
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("缺繳名單修改成功!");
+                  resetFailureForm();
+                  loadFailureList();
+                }
+              } else {
+                const {error} = await supabaseClient
+                  .from("Failure Status")
+                  .insert([{ details: failurename, failurelist: failureseat }]);
 
-                document.getElementById("failure-insert-name").value = "";
-                document.getElementById("failure-insert-seat").value = "";
-
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("缺繳名單新增成功!");
+                  resetFailureForm();
+                  loadFailureList();
+                }
               }
             });
+          }
+
+          if(failureCancelEditBtn){
+            failureCancelEditBtn.addEventListener("click", () => {
+              resetFailureForm();
+            });
+          }
+
+          function resetFailureForm() {
+            failureEditIdInput.value = "";
+            failureNameInput.value = "";
+            failureSeatInput.value = "";
+            failureFormTitle.innerText = "新增缺繳名單";
+            failureInsertBtn.innerText = "確認新增";
+            failureCancelEditBtn.style.display = "none";
+          }
+
+          async function loadFailureList(){
+            if(!failureListContainer) return;
+            failureListContainer.innerHTML = "載入中...";
+
+            const {data, error} = await supabaseClient.from("Failure Status").select("*");
+
+            if(error){
+              failureListContainer.innerHTML = "Error：" + error.message;
+              return;
+            }
+
+            if(!data || data.length === 0){
+              failureListContainer.innerHTML = "<div>目前沒有缺繳名單資料</div>";
+              return;
+            }
+
+            let html = `
+              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr>
+                    <th style="padding: 6px;">缺繳項目</th>
+                    <th style="padding: 6px;">缺繳座號</th>
+                    <th style="padding: 6px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach((item) => {
+              const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              const safeSeat = item.failurelist.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              html += `
+                <tr>
+                  <td style="padding: 6px; text-align: left;">${item.details}</td>
+                  <td style="padding: 6px;">${item.failurelist}</td>
+                  <td style="padding: 6px;">
+                    <button onclick="prepareEditFailure('${item.id}', \`${safeDetails}\`, \`${safeSeat}\`)">修改</button>
+                    <button onclick="deleteFailure('${item.id}')" style="color: red;">刪除</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += `</tbody></table>`;
+            failureListContainer.innerHTML = html;
+          }
+
+          window.prepareEditFailure = function(id, name, seat){
+            failureEditIdInput.value = id;
+            failureNameInput.value = name;
+            failureSeatInput.value = seat;
+            
+            failureFormTitle.innerText = "修改缺繳名單";
+            failureInsertBtn.innerText = "確認修改";
+            failureCancelEditBtn.style.display = "inline-block";
+
+            window.scrollTo({ top: failureFormTitle.offsetTop, behavior: 'smooth' });
+          };
+
+          window.deleteFailure = async function(id){
+            if(!confirm("確定要刪除這筆缺繳名單嗎?")) return;
+
+            const {error} = await supabaseClient
+              .from("Failure Status")
+              .delete()
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            } else {
+              alert("已成功刪除缺繳名單!");
+              loadFailureList();
+            }
+          };
+
+          if(loadFailureBtn){
+            loadFailureBtn.addEventListener("click", loadFailureList);
           }
         </script>
       </div>
 
+      <!-- 服裝區塊（保持原樣不變） -->
       <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
         <h3>設定服裝</h3>
           <div id="clothes-setting" >
@@ -648,7 +797,6 @@
             <label>該週結束日期：<input type="date" id="clothes-weekend"></label><br><br>
             
             <table border="1" style="width: 20%; margin: 10px 0; border-collapse: collapse; text-align: center;">
-
               <tr>
                 <td style="padding: 8px;">星期一</td>
                 <td style="padding: 8px;">
@@ -661,7 +809,6 @@
                   </select>
                 </td>
               </tr>
-              
               <tr>
               <td style="padding: 8px;">星期二</td>
                 <td style="padding: 8px;">
@@ -674,7 +821,6 @@
                   </select>
                 </td>
               </tr>                
-              
               <tr>
               <td style="padding: 8px;">星期三</td>
                 <td style="padding: 8px;">
@@ -687,7 +833,6 @@
                   </select>
                 </td>
               </tr>    
-              
               <tr>
               <td style="padding: 8px;">星期四</td>
                 <td style="padding: 8px;">
@@ -700,7 +845,6 @@
                   </select>
                 </td>
               </tr>    
-              
               <tr>
               <td style="padding: 8px;">星期五</td>
                 <td style="padding: 8px;">
@@ -836,66 +980,183 @@
           </script>
       </div>
 
+      <!-- Blog 班級紀錄區塊 -->
       <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
-        <h3>設定 Blog 班級紀錄</h3>
-          <div id="blog-insert">
-            <h4>新增 Blog</h4>
-            <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label><br><br>
-            <label>上傳日期：<input type="date" id="blog-insert-postdate"></label><br><br>
-            <label>公告內容：<br><br><textarea id="blog-insert-detail" rows="8" style="width: 60%; resize: vertical;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
-            <button id="blog-insert-btn">確認新增</button>
-            
-          </div>
-          <div id="blog-edit">
-            <h4>修改 Blog</h4>
+        <div id="blog-insert" style="padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <h3 id="blog-form-title">新增 Blog</h3>
+          <input type="hidden" id="blog-edit-id">
           
+          <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label><br><br>
+          <label>上傳日期：<input type="date" id="blog-insert-postdate"></label><br><br>
+          <label>公告內容：<br><br><textarea id="blog-insert-detail" rows="8" style="width: 60%; resize: vertical;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
+          
+          <button id="blog-insert-btn">確認新增</button>
+          <button id="blog-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
+        </div>
+
+        <div id="blog-edit">
+          <h3>現有 Blog 管理</h3>
+          <div style="margin-bottom: 10px;">
+            <button id="load-blog-list-btn">重新載入</button>
           </div>
+          <div id="blog-list-container"></div>
+        </div>
         
-          <div id="blog-delete">
-            <h4>刪除 Blog</h4>
-          
-          </div>
         <script>
           const blogInsertBtn = document.getElementById("blog-insert-btn");
+          const blogCancelEditBtn = document.getElementById("blog-cancel-edit-btn");
+          const loadBlogBtn = document.getElementById("load-blog-list-btn");
+          const blogListContainer = document.getElementById("blog-list-container");
+
+          const blogFormTitle = document.getElementById("blog-form-title");
+          const blogEditIdInput = document.getElementById("blog-edit-id");
+          const blogTitleInput = document.getElementById("blog-insert-title");
+          const blogDateInput = document.getElementById("blog-insert-postdate");
+          const blogDetailInput = document.getElementById("blog-insert-detail");
 
           if(blogInsertBtn){
             blogInsertBtn.addEventListener("click", async() =>{
-
-              const blogtitle = document.getElementById("blog-insert-title").value;
-              const blogdate = document.getElementById("blog-insert-postdate").value;
-              const blogdetail = document.getElementById("blog-insert-detail").value;
+              const blogtitle = blogTitleInput.value;
+              const blogdate = blogDateInput.value;
+              const blogdetail = blogDetailInput.value;
+              const editId = blogEditIdInput.value;
 
               if(!blogtitle || !blogdate || !blogdetail){
                 alert("請完整填寫Blog資訊!");
                 return;
               }
 
-              const {data, error} = await supabaseClient
-                .from("Blog Status")
-                .insert([
-                  { 
-                    title: blogtitle, 
-                    postdate: blogdate,
-                    blog: blogdetail
-                  }
-                ]);
+              if(editId) {
+                const {error} = await supabaseClient
+                  .from("Blog Status")
+                  .update({ title: blogtitle, postdate: blogdate, blog: blogdetail })
+                  .eq("id", editId);
 
-              if(error){
-                alert("Error: " + error.message);
-              }else{
-                alert("Blog新增成功!");
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("Blog修改成功!");
+                  resetBlogForm();
+                  loadBlogList();
+                }
+              } else {
+                const {error} = await supabaseClient
+                  .from("Blog Status")
+                  .insert([{ title: blogtitle, postdate: blogdate, blog: blogdetail }]);
 
-                document.getElementById("blog-insert-title").value = "";
-                document.getElementById("blog-insert-postdate").value = "";
-                document.getElementById("blog-insert-detail").value = "";
+                if(error){
+                  alert("Error: " + error.message);
+                } else {
+                  alert("Blog新增成功!");
+                  resetBlogForm();
+                  loadBlogList();
+                }
               }
             });
           }
+
+          if(blogCancelEditBtn){
+            blogCancelEditBtn.addEventListener("click", () => {
+              resetBlogForm();
+            });
+          }
+
+          function resetBlogForm() {
+            blogEditIdInput.value = "";
+            blogTitleInput.value = "";
+            blogDateInput.value = "";
+            blogDetailInput.value = "";
+            blogFormTitle.innerText = "新增 Blog";
+            blogInsertBtn.innerText = "確認新增";
+            blogCancelEditBtn.style.display = "none";
+          }
+
+          async function loadBlogList(){
+            if(!blogListContainer) return;
+            blogListContainer.innerHTML = "載入中...";
+
+            const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: true});
+
+            if(error){
+              blogListContainer.innerHTML = "Error：" + error.message;
+              return;
+            }
+
+            if(!data || data.length === 0){
+              blogListContainer.innerHTML = "<div>目前沒有 Blog 資料</div>";
+              return;
+            }
+
+            let html = `
+              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+                <thead>
+                  <tr>
+                    <th style="padding: 6px;">標題</th>
+                    <th style="padding: 6px;">上傳日期</th>
+                    <th style="padding: 6px; width: 45%;">內容</th>
+                    <th style="padding: 6px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+            `;
+
+            data.forEach((item) => {
+              const safeTitle = item.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              const safeBlog = item.blog.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+              html += `
+                <tr>
+                  <td style="padding: 6px; text-align: left;">${item.title}</td>
+                  <td style="padding: 6px;">${item.postdate}</td>
+                  <td style="padding: 6px; text-align: left; white-space: pre-wrap;">${item.blog}</td>
+                  <td style="padding: 6px;">
+                    <button onclick="prepareEditBlog('${item.id}', \`${safeTitle}\`, '${item.postdate}', \`${safeBlog}\`)">修改</button>
+                    <button onclick="deleteBlog('${item.id}')" style="color: red;">刪除</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += `</tbody></table>`;
+            blogListContainer.innerHTML = html;
+          }
+
+          window.prepareEditBlog = function(id, title, date, blog){
+            blogEditIdInput.value = id;
+            blogTitleInput.value = title;
+            blogDateInput.value = date;
+            blogDetailInput.value = blog;
+            
+            blogFormTitle.innerText = "修改 Blog";
+            blogInsertBtn.innerText = "確認修改";
+            blogCancelEditBtn.style.display = "inline-block";
+
+            window.scrollTo({ top: blogFormTitle.offsetTop, behavior: 'smooth' });
+          };
+
+          window.deleteBlog = async function(id){
+            if(!confirm("確定要刪除這筆 Blog 嗎?")) return;
+
+            const {error} = await supabaseClient
+              .from("Blog Status")
+              .delete()
+              .eq("id", id);
+
+            if(error){
+              alert("Error：" + error.message);
+            } else {
+              alert("已成功刪除 Blog!");
+              loadBlogList();
+            }
+          };
+
+          if(loadBlogBtn){
+            loadBlogBtn.addEventListener("click", loadBlogList);
+          }
         </script>
       </div>
+
     </div>
     
-  
     <script>
       const loginBtn = document.getElementById("login-btn");
       const passwordBlank = document.getElementById("password-blank");
@@ -943,11 +1204,16 @@
           const targetForm = document.getElementById(selectedValue + "-form");
           if(targetForm){
             targetForm.style.display = "block";
+            // 切換選項時自動載入對應清單
+            if(selectedValue === "homework" && typeof loadHomeworkList === "function") loadHomeworkList();
+            if(selectedValue === "test" && typeof loadTestList === "function") loadTestList();
+            if(selectedValue === "note" && typeof loadNoteList === "function") loadNoteList();
+            if(selectedValue === "failure" && typeof loadFailureList === "function") loadFailureList();
+            if(selectedValue === "blog" && typeof loadBlogList === "function") loadBlogList();
           }
         }
       });
     </script>
     
   </body>
-
 </html>
