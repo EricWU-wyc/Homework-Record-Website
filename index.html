@@ -17,55 +17,143 @@
     <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html">後臺管理頁面</a>
     
     <p id="current-time"></p>
-    <script>
-      
-      function CurrentTime(){
-        const now = new Date();
-        const timeString = now.toLocaleString("zh-TW", { 
-          hour12: false
-        });
-        document.getElementById("current-time").textContent = "現在時間： " + timeString;
-      }
-
-      CurrentTime();
-      setInterval(CurrentTime, 1000);
-      
-    </script>
     
     <label style="display: inline-flex; align-items: center; gap: 0px;">
         選擇日期：
         <input type="date" id="date-picker">
     </label>
-
-    <script>
-      const today = new Date().toISOString().split('T')[0]
-      document.getElementById('date-picker').value = today
-    </script>
     
     <div id="homework-section">
       <h3>作業</h3>
+      <div id="homework-content">載入中...</div>
     </div>
     
     <div id="test-section">
       <h3>考試</h3>
+      <div id="test-content">載入中...</div>
     </div>
     
     <div id="clothes-section">
       <h3>當周衣著</h3>
+      <div id="clothes-content">載入中...</div>
     </div>
     
     <div id="note-section">
       <h3>注意事項</h3>
+      <div id="note-content">載入中...</div>
     </div>
     
     <div id="failure-section">
       <h3>缺繳名單</h3>
+      <div id="failure-content">載入中...</div>
     </div>
     
     <div id="blog-section">
       <h3>Blog 班級紀錄</h3>
+      <div id="blog-content">載入中...</div>
     </div>
-    
+
+    <script>
+      // 即時時鐘
+      function CurrentTime(){
+        const now = new Date();
+        const timeString = now.toLocaleString("zh-TW", { hour12: false });
+        document.getElementById("current-time").textContent = "現在時間： " + timeString;
+      }
+      CurrentTime();
+      setInterval(CurrentTime, 1000);
+
+      // 設定日期選擇器預設值為今天
+      const today = new Date().toISOString().split('T')[0];
+      const datePicker = document.getElementById('date-picker');
+      datePicker.value = today;
+
+      // 當日期改變時重新載入資料
+      datePicker.addEventListener('change', (e) => {
+        fetchAllData(e.target.value);
+      });
+
+      // 核心撈取資料函式
+      async function fetchAllData(selectedDate) {
+        fetchHomework(selectedDate);
+        fetchTest(selectedDate);
+        fetchClothes(selectedDate);
+        fetchNote(selectedDate);
+        fetchFailure();
+        fetchBlog();
+      }
+
+      async function fetchHomework(date) {
+        const container = document.getElementById('homework-content');
+        // 假設資料庫有 starttime 跟 endtime，這裡示範抓取包含該日期的資料
+        const { data, error } = await supabaseClient
+          .from("Homework Status")
+          .select("*")
+          .lte("starttime", date)
+          .gte("endtime", date);
+
+        if (error) { container.innerHTML = "載入失敗"; return; }
+        if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
+
+        container.innerHTML = data.map(item => `<p>${item.details} (繳交期限: ${item.endtime})</p>`).join('');
+      }
+
+      async function fetchTest(date) {
+        const container = document.getElementById('test-content');
+        const { data, error } = await supabaseClient
+          .from("Test Status")
+          .select("*")
+          .eq("endtime", date); // 假設考試日期存在 endtime
+
+        if (error) { container.innerHTML = "載入失敗"; return; }
+        if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
+
+        container.innerHTML = data.map(item => `<p>${item.details}</p>`).join('');
+      }
+
+      async function fetchClothes(date) {
+        const container = document.getElementById('clothes-content');
+        const { data, error } = await supabaseClient
+          .from("Clothes Status")
+          .select("*")
+          .lte("weekstart", date)
+          .gte("weekend", date);
+
+        if (error || !data || data.length === 0) { container.innerHTML = "尚無服裝規定"; return; }
+        
+        const item = data[0];
+        // 簡單判斷今天星期幾來顯示對應規定（這裡先印出整週作為範例）
+        container.innerHTML = `<p>本週規定 - 一: ${item.mon || '無'} / 二: ${item.tue || '無'} / 三: ${item.wed || '無'} / 四: ${item.thur || '無'} / 五: ${item.fri || '無'}</p>`;
+      }
+
+      async function fetchNote(date) {
+        const container = document.getElementById('note-content');
+        const { data, error } = await supabaseClient
+          .from("Note Status")
+          .select("*")
+          .lte("starttime", date)
+          .gte("endtime", date);
+
+        if (error || !data || data.length === 0) { container.innerHTML = "本日無注意事項"; return; }
+        container.innerHTML = data.map(item => `<p>${item.details}</p>`).join('');
+      }
+
+      async function fetchFailure() {
+        const container = document.getElementById('failure-content');
+        const { data, error } = await supabaseClient.from("Failure Status").select("*");
+        if (error || !data || data.length === 0) { container.innerHTML = "目前無缺繳名單"; return; }
+        container.innerHTML = data.map(item => `<p>項目：${item.details} ｜ 缺繳：${item.failurelist}</p>`).join('');
+      }
+
+      async function fetchBlog() {
+        const container = document.getElementById('blog-content');
+        const { data, error } = await supabaseClient.from("Blog Status").select("*").order("postdate", { ascending: false }).limit(3);
+        if (error || !data || data.length === 0) { container.innerHTML = "目前無 Blog 紀錄"; return; }
+        container.innerHTML = data.map(item => `<p><b>${item.title}</b> (${item.postdate})<br>${item.blog}</p>`).join('');
+      }
+
+      // 初始化載入當天資料
+      fetchAllData(today);
+    </script>
   </body>
-  
 </html>
