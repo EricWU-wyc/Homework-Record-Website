@@ -34,7 +34,6 @@
         <option value="blog">Blog 班級紀錄</option>
       </select>
 
-      <!-- 作業區塊 -->
       <div id="homework-form" class="form-box" style="display: none; margin-top: 15px;">
         <div id="homework-insert">
           <h3 id="homework-form-title">新增作業</h3>
@@ -88,27 +87,27 @@
                 return;
               }
 
-              if(editId) {
+              if(editId){
                 const {error} = await supabaseClient
                   .from("Homework Status")
-                  .update({ starttime: startdate, endtime: enddate, details: detail })
+                  .update({starttime: startdate, endtime: enddate, details: detail })
                   .eq("id", editId);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("作業修改成功!");
                   resetHomeworkForm();
                   loadHomeworkList();
                 }
-              } else {
+              }else{
                 const {error} = await supabaseClient
                   .from("Homework Status")
-                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
+                  .insert([{starttime: startdate, endtime: enddate, details: detail }]);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("作業新增成功!");
                   resetHomeworkForm();
                   loadHomeworkList();
@@ -118,12 +117,12 @@
           }
 
           if(homeworkCancelEditBtn){
-            homeworkCancelEditBtn.addEventListener("click", () => {
+            homeworkCancelEditBtn.addEventListener("click", () =>{
               resetHomeworkForm();
             });
           }
 
-          function resetHomeworkForm() {
+          function resetHomeworkForm(){
             homeworkEditIdInput.value = "";
             homeworkStartInput.value = "";
             homeworkEndInput.value = "";
@@ -175,7 +174,7 @@
                 <tbody>
             `;
 
-            data.forEach((item) => {
+            data.forEach((item) =>{
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
@@ -204,7 +203,7 @@
             homeworkInsertBtn.innerText = "確認修改";
             homeworkCancelEditBtn.style.display = "inline-block";
 
-            window.scrollTo({ top: homeworkFormTitle.offsetTop, behavior: 'smooth' });
+            window.scrollTo({top: homeworkFormTitle.offsetTop, behavior: 'smooth' });
           };
 
           window.deleteHomework = async function(id){
@@ -217,7 +216,7 @@
 
             if(error){
               alert("Error：" + error.message);
-            } else {
+            }else{
               alert("已成功刪除作業!");
               loadHomeworkList();
             }
@@ -229,7 +228,6 @@
         </script>
       </div>
 
-      <!-- 考試區塊 -->
       <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
         <div id="test-insert">
           <h3 id="test-form-title">新增考試</h3>
@@ -283,27 +281,27 @@
                 return;
               }
 
-              if(editId) {
+              if(editId){
                 const {error} = await supabaseClient
                   .from("Test Status")
-                  .update({ starttime: startdate, endtime: enddate, details: detail })
+                  .update({starttime: startdate, endtime: enddate, details: detail})
                   .eq("id", editId);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("考試修改成功!");
                   resetTestForm();
                   loadTestList();
                 }
-              } else {
+              }else{
                 const {error} = await supabaseClient
                   .from("Test Status")
-                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
+                  .insert([{: startdate, endtime: enddate, details: detail }]);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("考試新增成功!");
                   resetTestForm();
                   loadTestList();
@@ -313,12 +311,12 @@
           }
 
           if(testCancelEditBtn){
-            testCancelEditBtn.addEventListener("click", () => {
+            testCancelEditBtn.addEventListener("click", () =>{
               resetTestForm();
             });
           }
 
-          function resetTestForm() {
+          function resetTestForm(){
             testEditIdInput.value = "";
             testStartInput.value = "";
             testEndInput.value = "";
@@ -370,7 +368,7 @@
                 <tbody>
             `;
 
-            data.forEach((item) => {
+            data.forEach((item) =>{
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
@@ -399,7 +397,7 @@
             testInsertBtn.innerText = "確認修改";
             testCancelEditBtn.style.display = "inline-block";
 
-            window.scrollTo({ top: testFormTitle.offsetTop, behavior: 'smooth' });
+            window.scrollTo({top: testFormTitle.offsetTop, behavior: 'smooth' });
           };
 
           window.deleteTest = async function(id){
@@ -478,27 +476,27 @@
                 return;
               }
 
-              if(editId) {
+              if(editId){
                 const {error} = await supabaseClient
                   .from("Note Status")
-                  .update({ starttime: startdate, endtime: enddate, details: detail })
+                  .update({starttime: startdate, endtime: enddate, details: detail })
                   .eq("id", editId);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("注意事項修改成功!");
                   resetNoteForm();
                   loadNoteList();
                 }
-              } else {
+              }else{
                 const {error} = await supabaseClient
                   .from("Note Status")
-                  .insert([{ starttime: startdate, endtime: enddate, details: detail }]);
+                  .insert([{starttime: startdate, endtime: enddate, details: detail }]);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("注意事項新增成功!");
                   resetNoteForm();
                   loadNoteList();
@@ -508,12 +506,12 @@
           }
 
           if(noteCancelEditBtn){
-            noteCancelEditBtn.addEventListener("click", () => {
+            noteCancelEditBtn.addEventListener("click", () =>{
               resetNoteForm();
             });
           }
 
-          function resetNoteForm() {
+          function resetNoteForm(){
             noteEditIdInput.value = "";
             noteStartInput.value = "";
             noteEndInput.value = "";
@@ -565,7 +563,7 @@
                 <tbody>
             `;
 
-            data.forEach((item) => {
+            data.forEach((item) =>{
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
@@ -594,7 +592,7 @@
             noteInsertBtn.innerText = "確認修改";
             noteCancelEditBtn.style.display = "inline-block";
 
-            window.scrollTo({ top: noteFormTitle.offsetTop, behavior: 'smooth' });
+            window.scrollTo({top: noteFormTitle.offsetTop, behavior: 'smooth' });
           };
 
           window.deleteNote = async function(id){
@@ -607,7 +605,7 @@
 
             if(error){
               alert("Error：" + error.message);
-            } else {
+            }else{
               alert("已成功刪除注意事項!");
               loadNoteList();
             }
@@ -662,27 +660,27 @@
                 return;
               }
 
-              if(editId) {
+              if(editId){
                 const {error} = await supabaseClient
                   .from("Failure Status")
-                  .update({ details: failurename, failurelist: failureseat })
+                  .update({details: failurename, failurelist: failureseat })
                   .eq("id", editId);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("缺繳名單修改成功!");
                   resetFailureForm();
                   loadFailureList();
                 }
-              } else {
+              }else{
                 const {error} = await supabaseClient
                   .from("Failure Status")
-                  .insert([{ details: failurename, failurelist: failureseat }]);
+                  .insert([{details: failurename, failurelist: failureseat }]);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("缺繳名單新增成功!");
                   resetFailureForm();
                   loadFailureList();
@@ -692,12 +690,12 @@
           }
 
           if(failureCancelEditBtn){
-            failureCancelEditBtn.addEventListener("click", () => {
+            failureCancelEditBtn.addEventListener("click", () =>{
               resetFailureForm();
             });
           }
 
-          function resetFailureForm() {
+          function resetFailureForm(){
             failureEditIdInput.value = "";
             failureNameInput.value = "";
             failureSeatInput.value = "";
@@ -734,7 +732,7 @@
                 <tbody>
             `;
 
-            data.forEach((item) => {
+            data.forEach((item) =>{
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               const safeSeat = item.failurelist.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
@@ -762,7 +760,7 @@
             failureInsertBtn.innerText = "確認修改";
             failureCancelEditBtn.style.display = "inline-block";
 
-            window.scrollTo({ top: failureFormTitle.offsetTop, behavior: 'smooth' });
+            window.scrollTo({top: failureFormTitle.offsetTop, behavior: 'smooth' });
           };
 
           window.deleteFailure = async function(id){
@@ -775,7 +773,7 @@
 
             if(error){
               alert("Error：" + error.message);
-            } else {
+            }else{
               alert("已成功刪除缺繳名單!");
               loadFailureList();
             }
@@ -915,7 +913,7 @@
                 if(existingData && existingData.length > 0){
                   const {error: updateError} = await supabaseClient
                     .from("Clothes Status")
-                    .update({ 
+                    .update({
                       mon: clothesmon, 
                       tue: clothestue, 
                       wed: clotheswed, 
@@ -933,7 +931,7 @@
                   const {error: insertError} = await supabaseClient
                     .from("Clothes Status")
                     .insert([
-                      { 
+                      {
                         mon: clothesmon, 
                         tue: clothestue, 
                         wed: clotheswed, 
@@ -952,7 +950,7 @@
 
                 if(resultError){
                   alert("Error: " + resultError.message);
-                } else {
+                }else{
                   document.getElementById("mon-clothes-select").value = "sport";
                   document.getElementById("tue-clothes-select").value = "sport";
                   document.getElementById("wed-clothes-select").value = "class-clothes";
@@ -967,7 +965,7 @@
             const clothesOriginBtn = document.getElementById("clothes-origin-btn");
 
             if(clothesOriginBtn){
-              clothesOriginBtn.addEventListener("click", () => {
+              clothesOriginBtn.addEventListener("click", () =>{
                 document.getElementById("mon-clothes-select").value = "sport";
                 document.getElementById("tue-clothes-select").value = "sport";
                 document.getElementById("wed-clothes-select").value = "class-clothes";
@@ -1026,27 +1024,27 @@
                 return;
               }
 
-              if(editId) {
+              if(editId){
                 const {error} = await supabaseClient
                   .from("Blog Status")
-                  .update({ title: blogtitle, postdate: blogdate, blog: blogdetail })
+                  .update({title: blogtitle, postdate: blogdate, blog: blogdetail })
                   .eq("id", editId);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("Blog修改成功!");
                   resetBlogForm();
                   loadBlogList();
                 }
-              } else {
+              }else{
                 const {error} = await supabaseClient
                   .from("Blog Status")
-                  .insert([{ title: blogtitle, postdate: blogdate, blog: blogdetail }]);
+                  .insert([{title: blogtitle, postdate: blogdate, blog: blogdetail }]);
 
                 if(error){
                   alert("Error: " + error.message);
-                } else {
+                }else{
                   alert("Blog新增成功!");
                   resetBlogForm();
                   loadBlogList();
@@ -1056,12 +1054,12 @@
           }
 
           if(blogCancelEditBtn){
-            blogCancelEditBtn.addEventListener("click", () => {
+            blogCancelEditBtn.addEventListener("click", () =>{
               resetBlogForm();
             });
           }
 
-          function resetBlogForm() {
+          function resetBlogForm(){
             blogEditIdInput.value = "";
             blogTitleInput.value = "";
             blogDateInput.value = "";
@@ -1100,7 +1098,7 @@
                 <tbody>
             `;
 
-            data.forEach((item) => {
+            data.forEach((item) =>{
               const safeTitle = item.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               const safeBlog = item.blog.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
@@ -1130,7 +1128,7 @@
             blogInsertBtn.innerText = "確認修改";
             blogCancelEditBtn.style.display = "inline-block";
 
-            window.scrollTo({ top: blogFormTitle.offsetTop, behavior: 'smooth' });
+            window.scrollTo({top: blogFormTitle.offsetTop, behavior: 'smooth'});
           };
 
           window.deleteBlog = async function(id){
@@ -1143,7 +1141,7 @@
 
             if(error){
               alert("Error：" + error.message);
-            } else {
+            }else{
               alert("已成功刪除 Blog!");
               loadBlogList();
             }
@@ -1186,17 +1184,17 @@
 
       loginBtn.addEventListener("click", handleLogin);
       
-      passwordBlank.addEventListener("keydown", (event) => {
+      passwordBlank.addEventListener("keydown", (event) =>{
         if(event.key === "Enter"){
           loginBtn.click();
         }
       });
 
-      statusSelect.addEventListener("change", (event) => {
+      statusSelect.addEventListener("change", (event) =>{
         const selectedValue = event.target.value;
 
         const allForms = document.querySelectorAll(".form-box");
-        allForms.forEach((box) => {
+        allForms.forEach((box) =>{
           box.style.display = "none";
         });
 
