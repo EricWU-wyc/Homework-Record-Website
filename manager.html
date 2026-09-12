@@ -201,7 +201,7 @@
         </script>
       </div>
 
-      <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
+<div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
         
         <div id="test-insert">
           <h3>新增考試</h3>
@@ -213,7 +213,7 @@
         
         <div id="test-edit">
           <h3>現有考試管理</h3>
-          <div>
+          <div style="margin-bottom: 10px;">
             <label>
               <select id="test-filter-field">
                 <option value="starttime">指派日期</option>
@@ -228,9 +228,9 @@
         </div>
         
         <script>
-          const homeworkInsertBtn = document.getElementById("test-insert-btn");
-          const loadHomeworkBtn = document.getElementById("load-test-list-btn");
-          const homeworkListContainer = document.getElementById("test-list-container");
+          const testInsertBtn = document.getElementById("test-insert-btn");
+          const loadTestBtn = document.getElementById("load-test-list-btn");
+          const testListContainer = document.getElementById("test-list-container");
 
           if(testInsertBtn){
             testInsertBtn.addEventListener("click", async() =>{
@@ -314,8 +314,8 @@
                   <td style="padding: 6px;">${item.endtime}</td>
                   <td style="padding: 6px; text-align: left;">${item.details}</td>
                   <td style="padding: 6px;">
-                    <button onclick="edittest('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
-                    <button onclick="deletetest('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="editTest('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="deleteTest('${item.id}')" style="color: red;">刪除</button>
                   </td>
                 </tr>
               `;
@@ -325,7 +325,7 @@
             testListContainer.innerHTML = html;
           }
 
-          window.deletetest = async function(id){
+          window.deleteTest = async function(id){
             if(!confirm("確定要刪除這筆考試嗎?")) return;
 
             const {error} = await supabaseClient
@@ -335,13 +335,13 @@
 
             if(error){
               alert("Error：" + error.message);
-            } else {
+            }else{
               alert("已成功刪除考試!");
-              loadHomeworkList();
+              loadTestList();
             }
           };
 
-          window.editHomework = async function(id, oldStart, oldEnd, oldDetail){
+          window.editTest = async function(id, oldStart, oldEnd, oldDetail){
             const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
             if(newStart === null) return;
             const newEnd = prompt("修改考試日期 (YYYY-MM-DD)：", oldEnd);
@@ -363,7 +363,7 @@
           };
 
           if(loadTestBtn){
-            loadTestBtn.addEventListener("click", loadHomeworkList);
+            loadTestBtn.addEventListener("click", loadTestList);
           }
         </script>
       </div>
