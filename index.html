@@ -10,6 +10,41 @@
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     <title>FDHS 407 線上聯絡簿 首頁</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 0 20px;
+        line-height: 1.6;
+        color: #333;
+      }
+      .section-box {
+        background: #fdfdfd;
+        border: 1px solid #e1e8ed;
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      }
+      .section-box h3 {
+        margin-top: 0;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 8px;
+        color: #2c3e50;
+      }
+      ol {
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .note-text {
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
   </head>
   
   <body>
@@ -18,43 +53,42 @@
     
     <p id="current-time"></p>
     
-    <label style="display: inline-flex; align-items: center; gap: 0px;">
+    <label style="display: inline-flex; align-items: center; gap: 5px; margin-bottom: 20px;">
         選擇日期：
         <input type="date" id="date-picker">
     </label>
     
-    <div id="homework-section">
+    <div class="section-box" id="homework-section">
       <h3>作業</h3>
       <div id="homework-content">載入中...</div>
     </div>
     
-    <div id="test-section">
+    <div class="section-box" id="test-section">
       <h3>考試</h3>
       <div id="test-content">載入中...</div>
     </div>
     
-    <div id="clothes-section">
+    <div class="section-box" id="clothes-section">
       <h3>當周衣著</h3>
       <div id="clothes-content">載入中...</div>
     </div>
     
-    <div id="note-section">
+    <div class="section-box" id="note-section">
       <h3>注意事項</h3>
       <div id="note-content">載入中...</div>
     </div>
     
-    <div id="failure-section">
+    <div class="section-box" id="failure-section">
       <h3>缺繳名單</h3>
       <div id="failure-content">載入中...</div>
     </div>
     
-    <div id="blog-section">
+    <div class="section-box" id="blog-section">
       <h3>Blog 班級紀錄</h3>
       <div id="blog-content">載入中...</div>
     </div>
 
     <script>
-      // 即時時鐘
       function CurrentTime(){
         const now = new Date();
         const timeString = now.toLocaleString("zh-TW", { hour12: false });
@@ -63,17 +97,14 @@
       CurrentTime();
       setInterval(CurrentTime, 1000);
 
-      // 設定日期選擇器預設值為今天
       const today = new Date().toISOString().split('T')[0];
       const datePicker = document.getElementById('date-picker');
       datePicker.value = today;
 
-      // 當日期改變時重新載入資料
       datePicker.addEventListener('change', (e) => {
         fetchAllData(e.target.value);
       });
 
-      // 核心撈取資料函式
       async function fetchAllData(selectedDate) {
         fetchHomework(selectedDate);
         fetchTest(selectedDate);
@@ -85,7 +116,6 @@
 
       async function fetchHomework(date) {
         const container = document.getElementById('homework-content');
-        // 假設資料庫有 starttime 跟 endtime，這裡示範抓取包含該日期的資料
         const { data, error } = await supabaseClient
           .from("Homework Status")
           .select("*")
@@ -95,7 +125,7 @@
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
 
-        container.innerHTML = data.map(item => `<p>${item.details} (繳交期限: ${item.endtime})</p>`).join('');
+        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details} <span style="color:gray; font-size:0.9em;">(繳交期限: ${item.endtime})</span></li>`).join('') + `</ol>`;
       }
 
       async function fetchTest(date) {
@@ -103,12 +133,12 @@
         const { data, error } = await supabaseClient
           .from("Test Status")
           .select("*")
-          .eq("endtime", date); // 假設考試日期存在 endtime
+          .eq("endtime", date);
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
 
-        container.innerHTML = data.map(item => `<p>${item.details}</p>`).join('');
+        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details}</li>`).join('') + `</ol>`;
       }
 
       async function fetchClothes(date) {
@@ -122,8 +152,15 @@
         if (error || !data || data.length === 0) { container.innerHTML = "尚無服裝規定"; return; }
         
         const item = data[0];
-        // 簡單判斷今天星期幾來顯示對應規定（這裡先印出整週作為範例）
-        container.innerHTML = `<p>本週規定 - 一: ${item.mon || '無'} / 二: ${item.tue || '無'} / 三: ${item.wed || '無'} / 四: ${item.thur || '無'} / 五: ${item.fri || '無'}</p>`;
+        container.innerHTML = `
+          <p><b>統計週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
+          <ul>
+            <li>星期一：${item.mon || '無'}</li>
+            <li>星期二：${item.tue || '無'}</li>
+            <li>星期三：${item.wed || '無'}</li>
+            <li>星期四：${item.thur || '無'}</li>
+            <li>星期五：${item.fri || '無'}</li>
+          </ul>`;
       }
 
       async function fetchNote(date) {
@@ -135,24 +172,30 @@
           .gte("endtime", date);
 
         if (error || !data || data.length === 0) { container.innerHTML = "本日無注意事項"; return; }
-        container.innerHTML = data.map(item => `<p>${item.details}</p>`).join('');
+        
+        // 將長篇文字自動透過正規表達式在數字編號前加上換行，解決整坨擠在一起的問題
+        container.innerHTML = data.map(item => {
+          let formattedText = item.details
+            .replace(/([0-9]+\.)/g, '<br><strong>$1</strong>')
+            .replace(/(\([0-9]+\))/g, '<br>&nbsp;&nbsp;<strong>$1</strong>');
+          return `<div class="note-text">${formattedText}</div>`;
+        }).join('<hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">');
       }
 
       async function fetchFailure() {
         const container = document.getElementById('failure-content');
         const { data, error } = await supabaseClient.from("Failure Status").select("*");
         if (error || !data || data.length === 0) { container.innerHTML = "目前無缺繳名單"; return; }
-        container.innerHTML = data.map(item => `<p>項目：${item.details} ｜ 缺繳：${item.failurelist}</p>`).join('');
+        container.innerHTML = `<ol>` + data.map(item => `<li><b>${item.details}</b>：${item.failurelist}</li>`).join('') + `</ol>`;
       }
 
       async function fetchBlog() {
         const container = document.getElementById('blog-content');
         const { data, error } = await supabaseClient.from("Blog Status").select("*").order("postdate", { ascending: false }).limit(3);
         if (error || !data || data.length === 0) { container.innerHTML = "目前無 Blog 紀錄"; return; }
-        container.innerHTML = data.map(item => `<p><b>${item.title}</b> (${item.postdate})<br>${item.blog}</p>`).join('');
+        container.innerHTML = `<ol>` + data.map(item => `<li><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><br><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ol>`;
       }
 
-      // 初始化載入當天資料
       fetchAllData(today);
     </script>
   </body>
