@@ -10,62 +10,230 @@
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     <title>FDHS 407 線上聯絡簿 首頁</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 1100px;
+        margin: 20px auto;
+        padding: 0 20px;
+        line-height: 1.6;
+        color: #333;
+        background-color: #fcfcfc;
+      }
+      
+      /* 置中上方標頭區塊 */
+      .header-container {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .header-container h1 {
+        margin-bottom: 10px;
+      }
+      .header-container a {
+        display: inline-block;
+        margin-bottom: 10px;
+        color: #0066cc;
+        text-decoration: none;
+      }
+      .header-container a:hover {
+        text-decoration: underline;
+      }
+
+      /* 網格儀表板佈局 */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+
+      .section-box {
+        background: #ffffff;
+        border: 1px solid #e1e8ed;
+        border-radius: 8px;
+        padding: 15px 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      }
+
+      .section-box h3 {
+        margin-top: 0;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 8px;
+        color: #2c3e50;
+      }
+
+      /* 指定區塊跨欄設定 */
+      #homework-section { grid-column: 1; }
+      #test-section { grid-column: 2; }
+      #clothes-section { grid-column: 3; }
+
+      #note-section { grid-column: span 2; }      /* 左下佔兩格寬 */
+      #failure-section { grid-column: span 1; }   /* 右下佔一格寬 */
+
+      #blog-section { grid-column: span 3; }      /* 最下方 Blog 跨滿三格 */
+
+      ol, ul {
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .note-text {
+        white-space: pre-wrap;
+      }
+    </style>
   </head>
   
   <body>
-    <h1>407 線上聯絡簿</h1>
-    <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html">後臺管理頁面</a>
+    <!-- 置中上方標頭與控制項 -->
+    <div class="header-container">
+      <h1>407 線上聯絡簿</h1>
+      <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html">後臺管理頁面</a>
+      <p id="current-time" style="margin: 5px 0;"></p>
+      <div style="margin-top: 10px;">
+        <label>
+            選擇日期：
+            <input type="date" id="date-picker" style="padding: 4px; border-radius: 4px; border: 1px solid #ccc;">
+        </label>
+      </div>
+    </div>
     
-    <p id="current-time"></p>
-    <script>
+    <!-- 網格內容區塊 -->
+    <div class="dashboard-grid">
+      <div class="section-box" id="homework-section">
+        <h3>作業</h3>
+        <div id="homework-content">載入中...</div>
+      </div>
       
+      <div class="section-box" id="test-section">
+        <h3>考試</h3>
+        <div id="test-content">載入中...</div>
+      </div>
+      
+      <div class="section-box" id="clothes-section">
+        <h3>當周衣著</h3>
+        <div id="clothes-content">載入中...</div>
+      </div>
+      
+      <div class="section-box" id="note-section">
+        <h3>注意事項</h3>
+        <div id="note-content">載入中...</div>
+      </div>
+      
+      <div class="section-box" id="failure-section">
+        <h3>缺繳名單</h3>
+        <div id="failure-content">載入中...</div>
+      </div>
+      
+      <div class="section-box" id="blog-section">
+        <h3>Blog 班級紀錄</h3>
+        <div id="blog-content">載入中...</div>
+      </div>
+    </div>
+
+    <script>
       function CurrentTime(){
         const now = new Date();
-        const timeString = now.toLocaleString("zh-TW", { 
-          hour12: false
-        });
+        const timeString = now.toLocaleString("zh-TW", { hour12: false });
         document.getElementById("current-time").textContent = "現在時間： " + timeString;
       }
-
       CurrentTime();
       setInterval(CurrentTime, 1000);
-      
-    </script>
-    
-    <label style="display: inline-flex; align-items: center; gap: 0px;">
-        選擇日期：
-        <input type="date" id="date-picker">
-    </label>
 
-    <script>
-      const today = new Date().toISOString().split('T')[0]
-      document.getElementById('date-picker').value = today
+      const today = new Date().toISOString().split('T')[0];
+      const datePicker = document.getElementById('date-picker');
+      datePicker.value = today;
+
+      datePicker.addEventListener('change', (e) => {
+        fetchAllData(e.target.value);
+      });
+
+      async function fetchAllData(selectedDate) {
+        fetchHomework(selectedDate);
+        fetchTest(selectedDate);
+        fetchClothes(selectedDate);
+        fetchNote(selectedDate);
+        fetchFailure();
+        fetchBlog();
+      }
+
+      async function fetchHomework(date) {
+        const container = document.getElementById('homework-content');
+        const { data, error } = await supabaseClient
+          .from("Homework Status")
+          .select("*")
+          .lte("starttime", date)
+          .gte("endtime", date);
+
+        if (error) { container.innerHTML = "載入失敗"; return; }
+        if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
+
+        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details} <span style="color:gray; font-size:0.9em;">(繳交期限: ${item.endtime})</span></li>`).join('') + `</ol>`;
+      }
+
+      async function fetchTest(date) {
+        const container = document.getElementById('test-content');
+        const { data, error } = await supabaseClient
+          .from("Test Status")
+          .select("*")
+          .eq("endtime", date);
+
+        if (error) { container.innerHTML = "載入失敗"; return; }
+        if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
+
+        container.innerHTML = `<ol>` + data.map(item => `<li>${item.details}</li>`).join('') + `</ol>`;
+      }
+
+      async function fetchClothes(date) {
+        const container = document.getElementById('clothes-content');
+        const { data, error } = await supabaseClient
+          .from("Clothes Status")
+          .select("*")
+          .lte("weekstart", date)
+          .gte("weekend", date);
+
+        if (error || !data || data.length === 0) { container.innerHTML = "尚無服裝規定"; return; }
+        
+        const item = data[0];
+        container.innerHTML = `
+          <p style="margin:0 0 8px 0; font-size:0.9em; color:#666;"><b>統計週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
+          <ul style="padding-left:15px;">
+            <li>星期一：${item.mon || '無'}</li>
+            <li>星期二：${item.tue || '無'}</li>
+            <li>星期三：${item.wed || '無'}</li>
+            <li>星期四：${item.thur || '無'}</li>
+            <li>星期五：${item.fri || '無'}</li>
+          </ul>`;
+      }
+
+      async function fetchNote(date) {
+        const container = document.getElementById('note-content');
+        const { data, error } = await supabaseClient
+          .from("Note Status")
+          .select("*")
+          .lte("starttime", date)
+          .gte("endtime", date);
+
+        if (error || !data || data.length === 0) { container.innerHTML = "本日無注意事項"; return; }
+        
+        container.innerHTML = `<ol>` + data.map(item => `<li><div class="note-text">${item.details}</div></li>`).join('') + `</ol>`;
+      }
+
+      async function fetchFailure() {
+        const container = document.getElementById('failure-content');
+        const { data, error } = await supabaseClient.from("Failure Status").select("*");
+        if (error || !data || data.length === 0) { container.innerHTML = "目前無缺繳名單"; return; }
+        container.innerHTML = `<ol>` + data.map(item => `<li><b>${item.details}</b>：${item.failurelist}</li>`).join('') + `</ol>`;
+      }
+
+      async function fetchBlog() {
+        const container = document.getElementById('blog-content');
+        const { data, error } = await supabaseClient.from("Blog Status").select("*").order("postdate", { ascending: false }).limit(3);
+        if (error || !data || data.length === 0) { container.innerHTML = "目前無 Blog 紀錄"; return; }
+        container.innerHTML = `<ol>` + data.map(item => `<li><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><br><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ol>`;
+      }
+
+      fetchAllData(today);
     </script>
-    
-    <div id="homework-section">
-      <h3>作業</h3>
-    </div>
-    
-    <div id="test-section">
-      <h3>考試</h3>
-    </div>
-    
-    <div id="clothes-section">
-      <h3>當周衣著</h3>
-    </div>
-    
-    <div id="note-section">
-      <h3>注意事項</h3>
-    </div>
-    
-    <div id="failure-section">
-      <h3>缺繳名單</h3>
-    </div>
-    
-    <div id="blog-section">
-      <h3>Blog 班級紀錄</h3>
-    </div>
-    
   </body>
-  
 </html>
