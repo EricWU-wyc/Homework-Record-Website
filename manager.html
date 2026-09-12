@@ -473,14 +473,12 @@
         <h3>設定 Blog 班級紀錄</h3>
           <div id="blog-insert">
             <h4>新增 Blog</h4>
-            <label>標題：<input type="text" id="blog-insert-title"></label><br><br>
+            <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label><br><br>
             <label>上傳日期：<input type="date" id="blog-insert-postdate"></label><br><br>
-            <label>相關連結：<input type="text" id="blog-insert-url"></label><br><br>
             <label>公告內容：<br><br><textarea id="blog-insert-detail" rows="8" style="width: 60%; resize: vertical;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
             <button id="blog-insert-btn">確認新增</button>
             
           </div>
-        
           <div id="blog-edit">
             <h4>修改 Blog</h4>
           
@@ -490,6 +488,43 @@
             <h4>刪除 Blog</h4>
           
           </div>
+        <script>
+          const blogInsertBtn = document.getElementById("blog-insert-btn");
+
+          if(blogInsertBtn){
+            blogInsertBtn.addEventListener("click", async() =>{
+
+              const blogtitle = document.getElementById("blog-insert-title").value;
+              const blogdate = document.getElementById("blog-insert-postdate").value;
+              const blogdetail = document.getElementById("blog-insert-detail").value;
+
+              if(!blogtitle || !blogdate || !blogdetail){
+                alert("請完整填寫Blog資訊!");
+                return;
+              }
+
+              const {data, error} = await supabaseClient
+                .from("Blog Status")
+                .insert([
+                  { 
+                    title: blogtitle, 
+                    postdate: blogdate,
+                    blog: blogdetail
+                  }
+                ]);
+
+              if(error){
+                alert("Error: " + error.message);
+              }else{
+                alert("Blog新增成功!");
+
+                document.getElementById("blog-insert-title").value = "";
+                document.getElementById("blog-insert-postdate").value = "";
+                document.getElementById("blog-insert-detail").value = "";
+              }
+            });
+          }
+        </script>
       </div>
     </div>
     
