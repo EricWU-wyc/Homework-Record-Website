@@ -314,95 +314,127 @@
             <button id="clothes-insert-btn">確認修改</button>
             <button id="clothes-origin-btn">回歸預設</button>
           </div>
-        <script>
-          const clothesInsertBtn = document.getElementById("clothes-insert-btn");
+          <script>
+            const clothesInsertBtn = document.getElementById("clothes-insert-btn");
 
-          if(clothesInsertBtn){
-            clothesInsertBtn.addEventListener("click", async() =>{
+            if(clothesInsertBtn){
+              clothesInsertBtn.addEventListener("click", async() =>{
+                const clothesmon = document.getElementById("mon-clothes-select").value;
+                const clothestue = document.getElementById("tue-clothes-select").value;
+                const clotheswed = document.getElementById("wed-clothes-select").value;
+                const clothesthur = document.getElementById("thur-clothes-select").value;
+                const clothesfri = document.getElementById("fri-clothes-select").value;
+                const weekstart = document.getElementById("clothes-weekstart").value;
+                const weekend = document.getElementById("clothes-weekend").value;
 
-              const clothesmon = document.getElementById("mon-clothes-select").value;
-              const clothestue = document.getElementById("tue-clothes-select").value;
-              const clotheswed = document.getElementById("wed-clothes-select").value;
-              const clothesthur = document.getElementById("thur-clothes-select").value;
-              const clothesfri = document.getElementById("fri-clothes-select").value;
-              const weekstart = document.getElementById("clothes-weekstart").value;
-              const weekend = document.getElementById("clothes-weekend").value;
-              
-              const startDateObj = new Date(weekstart);
-              if (startDateObj.getDay() !== 1) {
-                alert("開始日期必須是星期一！");
-                return;
-              }
+                if(!clothesmon || !clothestue || !clotheswed || !clothesthur || !clothesfri || !weekstart || !weekend){
+                  alert("請完整填寫服裝資訊!!");
+                  return;
+                }
 
-              const endDateObj = new Date(weekend);
-              if (endDateObj.getDay() !== 5) {
-                alert("結束日期必須是星期五！");
-                return;
-              }
-              
-              const diffTime = endDateObj.getTime() - startDateObj.getTime();
-              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                const startDateObj = new Date(weekstart);
+                if (startDateObj.getDay() !== 1) {
+                  alert("開始日期必須是星期一！");
+                  return;
+                }
 
-              if (diffDays < 0) {
-                alert("結束日期不能早於開始日期!");
-                return;
-              }
-              
-              if (diffDays > 4) {
-                alert("開始與結束日期必須在同一週內!");
-                return;
-              }
+                const endDateObj = new Date(weekend);
+                if (endDateObj.getDay() !== 5) {
+                  alert("結束日期必須是星期五！");
+                  return;
+                }
 
-              if(!clothesmon || !clothestue || !clotheswed || !clothesthur || !clothesfri || !weekstart || !weekend){
-                alert("請完整填寫服裝資訊!!");
-                return;
-              }
+                const diffTime = endDateObj.getTime() - startDateObj.getTime();
+                const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-              const {data, error} = await supabaseClient
-                .from("Clothes Status")
-                .insert([
-                  { 
-                    mon: clothesmon, 
-                    tue: clothestue, 
-                    wed: clotheswed, 
-                    thur: clothesthur, 
-                    fri: clothesfri, 
-                    weekstart: weekstart, 
-                    weekend: weekend
+                if (diffDays < 0) {
+                  alert("結束日期不能早於開始日期!");
+                  return;
+                }
+
+                if (diffDays > 4) {
+                  alert("開始與結束日期必須在同一週內!");
+                  return;
+                }
+
+                const {data: existingData, error: checkError} = await supabaseClient
+                    .from("Clothes Status")
+                    .select("*")
+                    .eq("weekstart", weekstart);
+
+                if(checkError){
+                  alert("Error：" + checkError.message);
+                  return;
+                }
+
+                let resultError;
+
+                if(existingData && existingData.length > 0){
+                  const {error: updateError} = await supabaseClient
+                    .from("Clothes Status")
+                    .update({ 
+                      mon: clothesmon, 
+                      tue: clothestue, 
+                      wed: clotheswed, 
+                      thur: clothesthur, 
+                      fri: clothesfri, 
+                      weekend: weekend
+                    })
+                    .eq("weekstart", weekstart);
+
+                  resultError = updateError;
+                  if(!resultError){
+                    alert("偵測到該週已有紀錄，已自動更新該週服裝！");
                   }
-                ]);
+                }else{
+                  const {error: insertError} = await supabaseClient
+                    .from("Clothes Status")
+                    .insert([
+                      { 
+                        mon: clothesmon, 
+                        tue: clothestue, 
+                        wed: clotheswed, 
+                        thur: clothesthur, 
+                        fri: clothesfri, 
+                        weekstart: weekstart, 
+                        weekend: weekend
+                      }
+                    ]);
 
-              if(error){
-                alert("Error: " + error.message);
-              }else{
-                alert("服裝設定成功!");
-                
-                document.getElementById("mon-clothes-select").value = "";
-                document.getElementById("tue-clothes-select").value = "";
-                document.getElementById("wed-clothes-select").value = "";
-                document.getElementById("thur-clothes-select").value = "";
-                document.getElementById("fri-clothes-select").value = "";
-                document.getElementById("clothes-weekstart").value = "";
-                document.getElementById("clothes-weekend").value = "";
-              }
-            });
-          }
-          
-          const clothesOriginBtn = document.getElementById("clothes-origin-btn");
+                  resultError = insertError;
+                  if (!resultError) {
+                    alert("服裝設定成功！");
+                  }
+                }
 
-          if (clothesOriginBtn) {
-            clothesOriginBtn.addEventListener("click", () => {
+                if(resultError){
+                  alert("Error: " + resultError.message);
+                } else {
+                  document.getElementById("mon-clothes-select").value = "sport";
+                  document.getElementById("tue-clothes-select").value = "sport";
+                  document.getElementById("wed-clothes-select").value = "class-clothes";
+                  document.getElementById("thur-clothes-select").value = "uniform";
+                  document.getElementById("fri-clothes-select").value = "sport";
+                  document.getElementById("clothes-weekstart").value = "";
+                  document.getElementById("clothes-weekend").value = "";
+                }
+              });
+            }
 
-              document.getElementById("mon-clothes-select").value = "sport";
-              document.getElementById("tue-clothes-select").value = "sport";
-              document.getElementById("wed-clothes-select").value = "class-clothes";
-              document.getElementById("thur-clothes-select").value = "uniform";
-              document.getElementById("fri-clothes-select").value = "sport";
+            const clothesOriginBtn = document.getElementById("clothes-origin-btn");
 
-              alert("已自動帶入預設服裝!");
-            });
-          }
-        </script>
+            if (clothesOriginBtn) {
+              clothesOriginBtn.addEventListener("click", () => {
+                document.getElementById("mon-clothes-select").value = "sport";
+                document.getElementById("tue-clothes-select").value = "sport";
+                document.getElementById("wed-clothes-select").value = "class-clothes";
+                document.getElementById("thur-clothes-select").value = "uniform";
+                document.getElementById("fri-clothes-select").value = "sport";
+
+                alert("已自動帶入預設服裝!");
+              });
+            }
+          </script>
       </div>
 
       <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
