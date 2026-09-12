@@ -38,11 +38,10 @@
         margin: 5px 0;
       }
       li {
-        margin-bottom: 8px;
+        margin-bottom: 12px;
       }
       .note-text {
         white-space: pre-wrap;
-        word-break: break-all;
       }
     </style>
   </head>
@@ -173,13 +172,8 @@
 
         if (error || !data || data.length === 0) { container.innerHTML = "本日無注意事項"; return; }
         
-        // 將長篇文字自動透過正規表達式在數字編號前加上換行，解決整坨擠在一起的問題
-        container.innerHTML = data.map(item => {
-          let formattedText = item.details
-            .replace(/([0-9]+\.)/g, '<br><strong>$1</strong>')
-            .replace(/(\([0-9]+\))/g, '<br>&nbsp;&nbsp;<strong>$1</strong>');
-          return `<div class="note-text">${formattedText}</div>`;
-        }).join('<hr style="border:0; border-top:1px dashed #ccc; margin:10px 0;">');
+        // 每一筆資料獨立成一個清單編號 (1, 2, 3...)，內部保留原本的換行與格式
+        container.innerHTML = `<ol>` + data.map(item => `<li><div class="note-text">${item.details}</div></li>`).join('') + `</ol>`;
       }
 
       async function fetchFailure() {
