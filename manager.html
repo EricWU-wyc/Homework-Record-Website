@@ -57,12 +57,12 @@
           const homeworkListContainer = document.getElementById("homework-list-container");
 
           if(homeworkInsertBtn){
-            homeworkInsertBtn.addEventListener("click", async () => {
+            homeworkInsertBtn.addEventListener("click", async() =>{
               const startdate = document.getElementById("homework-insert-startdate").value;
               const enddate = document.getElementById("homework-insert-enddate").value;
               const detail = document.getElementById("homework-insert-detail").value;
 
-              if (!startdate || !enddate || !detail) {
+              if(!startdate || !enddate || !detail){
                 alert("請完整填寫作業資訊!");
                 return;
               }
@@ -79,7 +79,7 @@
 
               if(error){
                 alert("Error: " + error.message);
-              } else {
+              }else{
                 alert("作業新增成功!");
                 document.getElementById("homework-insert-startdate").value = "";
                 document.getElementById("homework-insert-enddate").value = "";
@@ -90,21 +90,33 @@
           }
 
           async function loadHomeworkList() {
-            if(!homeworkListContainer)return;
+            if(!homeworkListContainer) return;
             homeworkListContainer.innerHTML = "載入中...";
 
-            const {data, error} = await supabaseClient
+            const today = new Date();
+            
+            const pastWeek = new Date(today);
+            pastWeek.setDate(today.getDate() - 7);
+            const pastWeekStr = pastWeek.toISOString().split('T')[0];
+
+            const futureWeeks = new Date(today);
+            futureWeeks.setDate(today.getDate() + 14);
+            const futureWeeksStr = futureWeeks.toISOString().split('T')[0];
+
+            const{data, error}= await supabaseClient
               .from("Homework Status")
               .select("*")
+              .gte("starttime", pastWeekStr)
+              .lte("starttime", futureWeeksStr)
               .order("starttime", {ascending: true});
 
             if(error){
-              homeworkListContainer.innerHTML = "讀取失敗：" + error.message;
+              homeworkListContainer.innerHTML = "Error：" + error.message;
               return;
             }
 
             if(!data || data.length === 0) {
-              homeworkListContainer.innerHTML = "<div>目前沒有任何作業資料</div>";
+              homeworkListContainer.innerHTML = "<div>目前沒有這區間內的作業資料</div>";
               return;
             }
 
@@ -150,18 +162,18 @@
             if(error){
               alert("Error：" + error.message);
             } else {
-              alert("已成功刪除!");
+              alert("已成功刪除作業!");
               loadHomeworkList();
             }
           };
 
           window.editHomework = async function(id, oldStart, oldEnd, oldDetail) {
             const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
-            if(newStart === null)return;
+            if(newStart === null) return;
             const newEnd = prompt("修改繳交日期 (YYYY-MM-DD)：", oldEnd);
-            if(newEnd === null)return;
+            if(newEnd === null) return;
             const newDetail = prompt("修改作業內容：", oldDetail);
-            if(newDetail === null)return;
+            if(newDetail === null) return;
 
             const {error} = await supabaseClient
               .from("Homework Status")
@@ -176,7 +188,7 @@
             }
           };
 
-          if (loadHomeworkBtn) {
+          if(loadHomeworkBtn){
             loadHomeworkBtn.addEventListener("click", loadHomeworkList);
           }
         </script>
