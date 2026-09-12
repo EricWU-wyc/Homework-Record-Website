@@ -56,8 +56,7 @@
           const loadHomeworkBtn = document.getElementById("load-homework-list-btn");
           const homeworkListContainer = document.getElementById("homework-list-container");
 
-          // 1. 新增作業邏輯
-          if (homeworkInsertBtn) {
+          if(homeworkInsertBtn){
             homeworkInsertBtn.addEventListener("click", async () => {
               const startdate = document.getElementById("homework-insert-startdate").value;
               const enddate = document.getElementById("homework-insert-enddate").value;
@@ -68,7 +67,7 @@
                 return;
               }
 
-              const { error } = await supabaseClient
+              const {error} = await supabaseClient
                 .from("Homework Status")
                 .insert([
                   { 
@@ -78,40 +77,39 @@
                   }
                 ]);
 
-              if (error) {
+              if(error){
                 alert("Error: " + error.message);
               } else {
                 alert("作業新增成功!");
                 document.getElementById("homework-insert-startdate").value = "";
                 document.getElementById("homework-insert-enddate").value = "";
                 document.getElementById("homework-insert-detail").value = "";
-                loadHomeworkList(); // 新增後自動重新整理列表
+                loadHomeworkList();
               }
             });
           }
 
-          // 2. 載入與渲染作業清單函式
           async function loadHomeworkList() {
-            if (!homeworkListContainer) return;
+            if(!homeworkListContainer)return;
             homeworkListContainer.innerHTML = "載入中...";
 
-            const { data, error } = await supabaseClient
+            const {data, error} = await supabaseClient
               .from("Homework Status")
               .select("*")
-              .order("starttime", { ascending: true });
+              .order("starttime", {ascending: true});
 
-            if (error) {
+            if(error){
               homeworkListContainer.innerHTML = "讀取失敗：" + error.message;
               return;
             }
 
-            if (!data || data.length === 0) {
+            if(!data || data.length === 0) {
               homeworkListContainer.innerHTML = "<div>目前沒有任何作業資料</div>";
               return;
             }
 
             let html = `
-              <table border="1" style="width: 100%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
                 <thead>
                   <tr style="background-color: #f2f2f2;">
                     <th style="padding: 6px;">指派日期</th>
@@ -130,7 +128,7 @@
                   <td style="padding: 6px;">${item.endtime}</td>
                   <td style="padding: 6px; text-align: left;">${item.details}</td>
                   <td style="padding: 6px;">
-                    <button onclick="editHomework('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}')">修改</button>
+                    <button onclick="editHomework('${item.id}', '${item.starttime}', '${item.endtime}', '${item.details}' style="color: green")">修改</button>
                     <button onclick="deleteHomework('${item.id}')" style="color: red;">刪除</button>
                   </td>
                 </tr>
@@ -141,41 +139,39 @@
             homeworkListContainer.innerHTML = html;
           }
 
-          // 3. 刪除作業
           window.deleteHomework = async function(id) {
-            if (!confirm("確定要刪除這筆作業嗎？")) return;
+            if(!confirm("確定要刪除這筆作業嗎?")) return;
 
-            const { error } = await supabaseClient
+            const {error} = await supabaseClient
               .from("Homework Status")
               .delete()
               .eq("id", id);
 
-            if (error) {
-              alert("刪除失敗：" + error.message);
+            if(error){
+              alert("Error：" + error.message);
             } else {
-              alert("已成功刪除！");
+              alert("已成功刪除!");
               loadHomeworkList();
             }
           };
 
-          // 4. 修改作業
           window.editHomework = async function(id, oldStart, oldEnd, oldDetail) {
             const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
-            if (newStart === null) return;
+            if(newStart === null)return;
             const newEnd = prompt("修改繳交日期 (YYYY-MM-DD)：", oldEnd);
-            if (newEnd === null) return;
+            if(newEnd === null)return;
             const newDetail = prompt("修改作業內容：", oldDetail);
-            if (newDetail === null) return;
+            if(newDetail === null)return;
 
-            const { error } = await supabaseClient
+            const {error} = await supabaseClient
               .from("Homework Status")
-              .update({ starttime: newStart, endtime: newEnd, details: newDetail })
+              .update({starttime: newStart, endtime: newEnd, details: newDetail})
               .eq("id", id);
 
-            if (error) {
-              alert("修改失敗：" + error.message);
+            if(error){
+              alert("Error：" + error.message);
             } else {
-              alert("修改成功！");
+              alert("修改成功!");
               loadHomeworkList();
             }
           };
