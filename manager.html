@@ -9,6 +9,71 @@
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
     <title>FDHS 407 線上聯絡簿 後臺</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 0 20px;
+        line-height: 1.6;
+        color: #333;
+        background-color: #fcfcfc;
+      }
+      h1, h2, h3 {
+        color: #2c3e50;
+      }
+      #login-container {
+        text-align: center;
+        margin-top: 100px;
+        background: #ffffff;
+        padding: 40px;
+        border: 1px solid #e1e8ed;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .form-box {
+        background: #ffffff;
+        border: 1px solid #e1e8ed;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+      }
+      input[type="date"], input[type="text"], input[type="password"], select, textarea {
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      button {
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background-color: #0055b3;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        background: #fff;
+      }
+      th, td {
+        border: 1px solid #e1e8ed;
+        padding: 8px 12px;
+      }
+      th {
+        background-color: #f7f9fa;
+        color: #2c3e50;
+      }
+    </style>
   </head>
   
   <body>
@@ -16,44 +81,48 @@
     <div id="login-container">
       <h1>407 線上聯絡簿 後臺登入</h1>
       <p>請輸入後臺管理密碼</p>
-      <input type="password" placeholder="password" id="password-blank">
+      <input type="password" placeholder="password" id="password-blank"><br><br>
       <button id="login-btn">登入</button>
     </div>
     
     <div id="admin-container" style="display: none;">
-      <h1>407 線上聯絡簿 後臺管理系統</h1>
+      <h1 style="text-align: center;">407 線上聯絡簿 後臺管理系統</h1>
       
-      <label for="status-select">選擇要更新的內容：</label>
-      <select id="status-select">
-        <option value="">-- 請選擇項目 --</option>
-        <option value="homework">作業</option>
-        <option value="test">考試</option>
-        <option value="note">注意事項</option>
-        <option value="failure">缺繳名單</option>
-        <option value="clothes">服裝</option>
-        <option value="blog">Blog 班級紀錄</option>
-      </select>
+      <div style="margin-bottom: 20px; text-align: center;">
+        <label for="status-select"><b>選擇要更新的內容：</b></label>
+        <select id="status-select">
+          <option value="">-- 請選擇項目 --</option>
+          <option value="homework">作業</option>
+          <option value="test">考試</option>
+          <option value="note">注意事項</option>
+          <option value="failure">缺繳名單</option>
+          <option value="clothes">服裝</option>
+          <option value="blog">Blog 班級紀錄</option>
+        </select>
+      </div>
 
-      <div id="homework-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="homework-form" class="form-box" style="display: none;">
         <div id="homework-insert">
           <h3 id="homework-form-title">新增作業</h3>
           <input type="hidden" id="homework-edit-id">
           
-          <label>指派日期：<input type="date" id="homework-insert-startdate"></label><br><br>
+          <label>指派日期：<input type="date" id="homework-insert-startdate"></label>&nbsp;&nbsp;&nbsp;
           <label>繳交日期：<input type="date" id="homework-insert-enddate"></label><br><br>
-          <label>作業內容：<input id="homework-insert-detail" style="width:30%" placeholder="輸入作業內容"></label><br><br>
+          <label>作業內容：<input id="homework-insert-detail" style="width:40%" placeholder="輸入作業內容"></label><br><br>
           
           <button id="homework-insert-btn">確認新增</button>
           <button id="homework-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
         <div id="homework-edit">
           <h3>現有作業管理</h3>
-          <div>
+          <div style="margin-bottom: 10px;">
             <label>
               <select id="homework-filter-field">
-                <option value="starttime">指派日期</option>
                 <option value="endtime">繳交日期</option>
+                <option value="starttime">指派日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="homework-filter-start"></label>
@@ -149,7 +218,7 @@
               query = query.lte(field, endDateVal);
             }
 
-            const {data, error} = await query.order("starttime", {ascending: true});
+            const {data, error} = await query.order("endtime", {ascending: true});
 
             if(error){
               homeworkListContainer.innerHTML = "Error：" + error.message;
@@ -162,13 +231,13 @@
             }
 
             let html = `
-              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table>
                 <thead>
                   <tr>
-                    <th style="padding: 6px;">指派日期</th>
-                    <th style="padding: 6px;">繳交日期</th>
-                    <th style="padding: 6px;">內容</th>
-                    <th style="padding: 6px;">操作</th>
+                    <th>指派日期</th>
+                    <th>繳交日期</th>
+                    <th>內容</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,12 +247,12 @@
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
-                  <td style="padding: 6px;">${item.starttime}</td>
-                  <td style="padding: 6px;">${item.endtime}</td>
-                  <td style="padding: 6px; text-align: left;">${item.details}</td>
-                  <td style="padding: 6px;">
+                  <td style="text-align: center;">${item.starttime}</td>
+                  <td style="text-align: center;">${item.endtime}</td>
+                  <td>${item.details}</td>
+                  <td style="text-align: center;">
                     <button onclick="prepareEditHomework('${item.id}', '${item.starttime}', '${item.endtime}', \`${safeDetails}\`)">修改</button>
-                    <button onclick="deleteHomework('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="deleteHomework('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button>
                   </td>
                 </tr>
               `;
@@ -228,26 +297,28 @@
         </script>
       </div>
 
-      <div id="test-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="test-form" class="form-box" style="display: none;">
         <div id="test-insert">
           <h3 id="test-form-title">新增考試</h3>
           <input type="hidden" id="test-edit-id">
           
-          <label>指派日期：<input type="date" id="test-insert-startdate"></label><br><br>
+          <label>指派日期：<input type="date" id="test-insert-startdate"></label>&nbsp;&nbsp;&nbsp;
           <label>考試日期：<input type="date" id="test-insert-enddate"></label><br><br>
-          <label>考試內容：<input id="test-insert-detail" style="width:30%" placeholder="輸入考試內容"></label><br><br>
+          <label>考試內容：<input id="test-insert-detail" style="width:40%" placeholder="輸入考試內容"></label><br><br>
           
           <button id="test-insert-btn">確認新增</button>
           <button id="test-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
         <div id="test-edit">
           <h3>現有考試管理</h3>
-          <div>
+          <div style="margin-bottom: 10px;">
             <label>
               <select id="test-filter-field">
-                <option value="starttime">指派日期</option>
                 <option value="endtime">考試日期</option>
+                <option value="starttime">指派日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="test-filter-start"></label>
@@ -297,7 +368,7 @@
               }else{
                 const {error} = await supabaseClient
                   .from("Test Status")
-                  .insert([{: startdate, endtime: enddate, details: detail }]);
+                  .insert([{starttime: startdate, endtime: enddate, details: detail }]);
 
                 if(error){
                   alert("Error: " + error.message);
@@ -343,7 +414,7 @@
               query = query.lte(field, endDateVal);
             }
 
-            const {data, error} = await query.order("starttime", {ascending: true});
+            const {data, error} = await query.order("endtime", {ascending: true});
 
             if(error){
               testListContainer.innerHTML = "Error：" + error.message;
@@ -356,13 +427,13 @@
             }
 
             let html = `
-              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table>
                 <thead>
                   <tr>
-                    <th style="padding: 6px;">指派日期</th>
-                    <th style="padding: 6px;">考試日期</th>
-                    <th style="padding: 6px;">內容</th>
-                    <th style="padding: 6px;">操作</th>
+                    <th>指派日期</th>
+                    <th>考試日期</th>
+                    <th>內容</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -372,12 +443,12 @@
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
-                  <td style="padding: 6px;">${item.starttime}</td>
-                  <td style="padding: 6px;">${item.endtime}</td>
-                  <td style="padding: 6px; text-align: left;">${item.details}</td>
-                  <td style="padding: 6px;">
+                  <td style="text-align: center;">${item.starttime}</td>
+                  <td style="text-align: center;">${item.endtime}</td>
+                  <td>${item.details}</td>
+                  <td style="text-align: center;">
                     <button onclick="prepareEditTest('${item.id}', '${item.starttime}', '${item.endtime}', \`${safeDetails}\`)">修改</button>
-                    <button onclick="deleteTest('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="deleteTest('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button>
                   </td>
                 </tr>
               `;
@@ -422,26 +493,28 @@
         </script>
       </div>
         
-      <div id="note-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="note-form" class="form-box" style="display: none;">
         <div id="note-insert">
           <h3 id="note-form-title">新增注意事項</h3>
           <input type="hidden" id="note-edit-id">
           
-          <label>開始公告日期：<input type="date" id="note-insert-startdate"></label><br><br>
+          <label>開始公告日期：<input type="date" id="note-insert-startdate"></label>&nbsp;&nbsp;&nbsp;
           <label>結束公告日期：<input type="date" id="note-insert-enddate"></label><br><br>
-          <label>公告內容：<br><br><textarea id="note-insert-detail" rows="8" style="width: 80%; resize: vertical;" placeholder="輸入注意事項，按下 Enter 即可換行"></textarea></label><br><br>
+          <label>公告內容：<br><textarea id="note-insert-detail" rows="6" style="width: 80%; resize: vertical; margin-top: 5px;" placeholder="輸入注意事項，按下 Enter 即可換行"></textarea></label><br><br>
           
           <button id="note-insert-btn">確認新增</button>
           <button id="note-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
 
         <div id="note-edit">
           <h3>現有注意事項管理</h3>
           <div style="margin-bottom: 10px;">
             <label>
               <select id="note-filter-field">
-                <option value="starttime">開始公告日期</option>
                 <option value="endtime">結束公告日期</option>
+                <option value="starttime">開始公告日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="note-filter-start"></label>
@@ -537,7 +610,7 @@
               query = query.lte(field, endDateVal);
             }
 
-            const {data, error} = await query.order("starttime", {ascending: true});
+            const {data, error} = await query.order("endtime", {ascending: true});
 
             if(error){
               noteListContainer.innerHTML = "Error：" + error.message;
@@ -550,13 +623,13 @@
             }
 
             let html = `
-              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table>
                 <thead>
                   <tr>
-                    <th style="padding: 6px;">開始公告日期</th>
-                    <th style="padding: 6px;">結束公告日期</th>
-                    <th style="padding: 6px; width: 45%;">公告內容</th>
-                    <th style="padding: 6px;">操作</th>
+                    <th>開始公告日期</th>
+                    <th>結束公告日期</th>
+                    <th style="width: 45%;">公告內容</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -566,12 +639,12 @@
               const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
-                  <td style="padding: 6px;">${item.starttime}</td>
-                  <td style="padding: 6px;">${item.endtime}</td>
-                  <td style="padding: 6px; text-align: left; white-space: pre-wrap;">${item.details}</td>
-                  <td style="padding: 6px;">
+                  <td style="text-align: center;">${item.starttime}</td>
+                  <td style="text-align: center;">${item.endtime}</td>
+                  <td style="white-space: pre-wrap;">${item.details}</td>
+                  <td style="text-align: center;">
                     <button onclick="prepareEditNote('${item.id}', '${item.starttime}', '${item.endtime}', \`${safeDetails}\`)">修改</button>
-                    <button onclick="deleteNote('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="deleteNote('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button>
                   </td>
                 </tr>
               `;
@@ -616,18 +689,20 @@
         </script>
       </div>
       
-      <div id="failure-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="failure-form" class="form-box" style="display: none;">
         <div id="failure-insert">
           <h3 id="failure-form-title">新增缺繳名單</h3>
           <input type="hidden" id="failure-edit-id">
           
           <label>缺繳項目：<input id="failure-insert-name" style="width:30%" placeholder="輸入缺繳項目"></label><br><br>
-          <label>缺繳座號：<input id="failure-insert-seat" style="width:30%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
+          <label>缺繳座號：<input id="failure-insert-seat" style="width:40%" placeholder="輸入缺繳座號, EX: 1, 2, 3"></label><br><br>
           
           <button id="failure-insert-btn">確認新增</button>
           <button id="failure-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
       
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
         <div id="failure-edit">
           <h3>現有缺繳名單管理</h3>
           <div style="margin-bottom: 10px;">
@@ -719,12 +794,12 @@
             }
 
             let html = `
-              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table>
                 <thead>
                   <tr>
-                    <th style="padding: 6px;">缺繳項目</th>
-                    <th style="padding: 6px;">缺繳座號</th>
-                    <th style="padding: 6px;">操作</th>
+                    <th>缺繳項目</th>
+                    <th>缺繳座號</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -735,11 +810,11 @@
               const safeSeat = item.failurelist.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
-                  <td style="padding: 6px; text-align: left;">${item.details}</td>
-                  <td style="padding: 6px;">${item.failurelist}</td>
-                  <td style="padding: 6px;">
+                  <td>${item.details}</td>
+                  <td style="text-align: center;">${item.failurelist}</td>
+                  <td style="text-align: center;">
                     <button onclick="prepareEditFailure('${item.id}', \`${safeDetails}\`, \`${safeSeat}\`)">修改</button>
-                    <button onclick="deleteFailure('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="deleteFailure('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button>
                   </td>
                 </tr>
               `;
@@ -783,210 +858,212 @@
         </script>
       </div>
 
-      <div id="clothes-form" class="form-box" style="display: none; margin-top: 15px;">
-        
-          <div id="clothes-setting" >
-            <h3>設定服裝</h3>
-            
-            <label>該週開始日期：<input type="date" id="clothes-weekstart"></label><br><br>
-            <label>該週結束日期：<input type="date" id="clothes-weekend"></label><br><br>
-            
-            <table border="1" style="width: 20%; margin: 10px 0; border-collapse: collapse; text-align: center;">
-              <tr>
-                <td style="padding: 8px;">星期一</td>
-                <td style="padding: 8px;">
-                  <select id="mon-clothes-select">
-                    <option value="">當天為例假日</option>
-                    <option value="運動服 or 班服">運動服 or 班服</option>
-                    <option value="運動服">運動服</option>
-                    <option value="制服">制服</option>
-                    <option value="班服">班服</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
+      <div id="clothes-form" class="form-box" style="display: none;">
+        <div id="clothes-setting">
+          <h3>設定服裝</h3>
+          
+          <label>該週開始日期：<input type="date" id="clothes-weekstart"></label>&nbsp;&nbsp;&nbsp;
+          <label>該週結束日期：<input type="date" id="clothes-weekend"></label><br><br>
+          
+          <table style="width: 40%; margin: 10px 0;">
+            <tr>
+              <td style="padding: 8px; width: 30%;">星期一</td>
+              <td style="padding: 8px;">
+                <select id="mon-clothes-select">
+                  <option value="">當天為例假日</option>
+                  <option value="運動服 or 班服">運動服 or 班服</option>
+                  <option value="運動服">運動服</option>
+                  <option value="制服">制服</option>
+                  <option value="班服">班服</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
               <td style="padding: 8px;">星期二</td>
-                <td style="padding: 8px;">
-                  <select id="tue-clothes-select">
-                    <option value="">當天為例假日</option>
-                    <option value="運動服 or 班服">運動服 or 班服</option>
-                    <option value="運動服">運動服</option>
-                    <option value="制服">制服</option>
-                    <option value="班服">班服</option>
-                  </select>
-                </td>
-              </tr>                
-              <tr>
+              <td style="padding: 8px;">
+                <select id="tue-clothes-select">
+                  <option value="">當天為例假日</option>
+                  <option value="運動服 or 班服">運動服 or 班服</option>
+                  <option value="運動服">運動服</option>
+                  <option value="制服">制服</option>
+                  <option value="班服">班服</option>
+                </select>
+              </td>
+            </tr>                
+            <tr>
               <td style="padding: 8px;">星期三</td>
-                <td style="padding: 8px;">
-                  <select id="wed-clothes-select">
-                    <option value="">當天為例假日</option>
-                    <option value="運動服 or 班服">運動服 or 班服</option>
-                    <option value="運動服">運動服</option>
-                    <option value="制服">制服</option>
-                    <option value="班服">班服</option>
-                  </select>
-                </td>
-              </tr>    
-              <tr>
+              <td style="padding: 8px;">
+                <select id="wed-clothes-select">
+                  <option value="">當天為例假日</option>
+                  <option value="運動服 or 班服">運動服 or 班服</option>
+                  <option value="運動服">運動服</option>
+                  <option value="制服">制服</option>
+                  <option value="班服">班服</option>
+                </select>
+              </td>
+            </tr>    
+            <tr>
               <td style="padding: 8px;">星期四</td>
-                <td style="padding: 8px;">
-                  <select id="thur-clothes-select">
-                    <option value="">當天為例假日</option>
-                    <option value="運動服 or 班服">運動服 or 班服</option>
-                    <option value="運動服">運動服</option>
-                    <option value="制服">制服</option>
-                    <option value="班服">班服</option>
-                  </select>
-                </td>
-              </tr>    
-              <tr>
+              <td style="padding: 8px;">
+                <select id="thur-clothes-select">
+                  <option value="">當天為例假日</option>
+                  <option value="運動服 or 班服">運動服 or 班服</option>
+                  <option value="運動服">運動服</option>
+                  <option value="制服">制服</option>
+                  <option value="班服">班服</option>
+                </select>
+              </td>
+            </tr>    
+            <tr>
               <td style="padding: 8px;">星期五</td>
-                <td style="padding: 8px;">
-                  <select id="fri-clothes-select">
-                    <option value="">當天為例假日</option>
-                    <option value="運動服 or 班服">運動服 or 班服</option>
-                    <option value="運動服">運動服</option>
-                    <option value="制服">制服</option>
-                    <option value="班服">班服</option>
-                  </select>
-                </td>
-              </tr>    
-            </table>
-            <br>
-            <button id="clothes-insert-btn">確認設定</button>
-            <button id="clothes-origin-btn">預設服裝</button>
-          </div>
-          <script>
-            const clothesInsertBtn = document.getElementById("clothes-insert-btn");
+              <td style="padding: 8px;">
+                <select id="fri-clothes-select">
+                  <option value="">當天為例假日</option>
+                  <option value="運動服 or 班服">運動服 or 班服</option>
+                  <option value="運動服">運動服</option>
+                  <option value="制服">制服</option>
+                  <option value="班服">班服</option>
+                </select>
+              </td>
+            </tr>    
+          </table>
+          <br>
+          <button id="clothes-insert-btn">確認設定</button>
+          <button id="clothes-origin-btn" style="margin-left: 10px; background-color: #7f8c8d;">預設服裝</button>
+        </div>
+        
+        <script>
+          const clothesInsertBtn = document.getElementById("clothes-insert-btn");
 
-            if(clothesInsertBtn){
-              clothesInsertBtn.addEventListener("click", async() =>{
-                const clothesmon = document.getElementById("mon-clothes-select").value;
-                const clothestue = document.getElementById("tue-clothes-select").value;
-                const clotheswed = document.getElementById("wed-clothes-select").value;
-                const clothesthur = document.getElementById("thur-clothes-select").value;
-                const clothesfri = document.getElementById("fri-clothes-select").value;
-                const weekstart = document.getElementById("clothes-weekstart").value;
-                const weekend = document.getElementById("clothes-weekend").value;
+          if(clothesInsertBtn){
+            clothesInsertBtn.addEventListener("click", async() =>{
+              const clothesmon = document.getElementById("mon-clothes-select").value;
+              const clothestue = document.getElementById("tue-clothes-select").value;
+              const clotheswed = document.getElementById("wed-clothes-select").value;
+              const clothesthur = document.getElementById("thur-clothes-select").value;
+              const clothesfri = document.getElementById("fri-clothes-select").value;
+              const weekstart = document.getElementById("clothes-weekstart").value;
+              const weekend = document.getElementById("clothes-weekend").value;
 
-                const startDateObj = new Date(weekstart);
-                if(startDateObj.getDay() !== 1){
-                  alert("開始日期必須是星期一！");
-                  return;
+              const startDateObj = new Date(weekstart);
+              if(startDateObj.getDay() !== 1){
+                alert("開始日期必須是星期一！");
+                return;
+              }
+
+              const endDateObj = new Date(weekend);
+              if(endDateObj.getDay() !== 5){
+                alert("結束日期必須是星期五！");
+                return;
+              }
+
+              const diffTime = endDateObj.getTime() - startDateObj.getTime();
+              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+              if(diffDays < 0){
+                alert("結束日期不能早於開始日期!");
+                return;
+              }
+
+              if(diffDays > 4){
+                alert("開始與結束日期必須在同一週內!");
+                return;
+              }
+
+              const {data: existingData, error: checkError} = await supabaseClient
+                  .from("Clothes Status")
+                  .select("*")
+                  .eq("weekstart", weekstart);
+
+              if(checkError){
+                alert("Error：" + checkError.message);
+                return;
+              }
+
+              let resultError;
+
+              if(existingData && existingData.length > 0){
+                const {error: updateError} = await supabaseClient
+                  .from("Clothes Status")
+                  .update({
+                    mon: clothesmon, 
+                    tue: clothestue, 
+                    wed: clotheswed, 
+                    thur: clothesthur, 
+                    fri: clothesfri, 
+                    weekend: weekend
+                  })
+                  .eq("weekstart", weekstart);
+
+                resultError = updateError;
+                if(!resultError){
+                  alert("偵測到該週已有紀錄，已自動更新該週服裝！");
                 }
-
-                const endDateObj = new Date(weekend);
-                if(endDateObj.getDay() !== 5){
-                  alert("結束日期必須是星期五！");
-                  return;
-                }
-
-                const diffTime = endDateObj.getTime() - startDateObj.getTime();
-                const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-                if(diffDays < 0){
-                  alert("結束日期不能早於開始日期!");
-                  return;
-                }
-
-                if(diffDays > 4){
-                  alert("開始與結束日期必須在同一週內!");
-                  return;
-                }
-
-                const {data: existingData, error: checkError} = await supabaseClient
-                    .from("Clothes Status")
-                    .select("*")
-                    .eq("weekstart", weekstart);
-
-                if(checkError){
-                  alert("Error：" + checkError.message);
-                  return;
-                }
-
-                let resultError;
-
-                if(existingData && existingData.length > 0){
-                  const {error: updateError} = await supabaseClient
-                    .from("Clothes Status")
-                    .update({
+              }else{
+                const {error: insertError} = await supabaseClient
+                  .from("Clothes Status")
+                  .insert([
+                    {
                       mon: clothesmon, 
                       tue: clothestue, 
                       wed: clotheswed, 
                       thur: clothesthur, 
                       fri: clothesfri, 
+                      weekstart: weekstart, 
                       weekend: weekend
-                    })
-                    .eq("weekstart", weekstart);
+                    }
+                  ]);
 
-                  resultError = updateError;
-                  if(!resultError){
-                    alert("偵測到該週已有紀錄，已自動更新該週服裝！");
-                  }
-                }else{
-                  const {error: insertError} = await supabaseClient
-                    .from("Clothes Status")
-                    .insert([
-                      {
-                        mon: clothesmon, 
-                        tue: clothestue, 
-                        wed: clotheswed, 
-                        thur: clothesthur, 
-                        fri: clothesfri, 
-                        weekstart: weekstart, 
-                        weekend: weekend
-                      }
-                    ]);
-
-                  resultError = insertError;
-                  if(!resultError){
-                    alert("服裝設定成功！");
-                  }
+                resultError = insertError;
+                if(!resultError){
+                  alert("服裝設定成功！");
                 }
+              }
 
-                if(resultError){
-                  alert("Error: " + resultError.message);
-                }else{
-                  document.getElementById("mon-clothes-select").value = "";
-                  document.getElementById("tue-clothes-select").value = "";
-                  document.getElementById("wed-clothes-select").value = "";
-                  document.getElementById("thur-clothes-select").value = "";
-                  document.getElementById("fri-clothes-select").value = "";
-                  document.getElementById("clothes-weekstart").value = "";
-                  document.getElementById("clothes-weekend").value = "";
-                }
-              });
-            }
+              if(resultError){
+                alert("Error: " + resultError.message);
+              }else{
+                document.getElementById("mon-clothes-select").value = "";
+                document.getElementById("tue-clothes-select").value = "";
+                document.getElementById("wed-clothes-select").value = "";
+                document.getElementById("thur-clothes-select").value = "";
+                document.getElementById("fri-clothes-select").value = "";
+                document.getElementById("clothes-weekstart").value = "";
+                document.getElementById("clothes-weekend").value = "";
+              }
+            });
+          }
 
-            const clothesOriginBtn = document.getElementById("clothes-origin-btn");
+          const clothesOriginBtn = document.getElementById("clothes-origin-btn");
 
-            if(clothesOriginBtn){
-              clothesOriginBtn.addEventListener("click", () =>{
-                document.getElementById("mon-clothes-select").value = "運動服";
-                document.getElementById("tue-clothes-select").value = "運動服";
-                document.getElementById("wed-clothes-select").value = "班服";
-                document.getElementById("thur-clothes-select").value = "制服";
-                document.getElementById("fri-clothes-select").value = "運動服";
+          if(clothesOriginBtn){
+            clothesOriginBtn.addEventListener("click", () =>{
+              document.getElementById("mon-clothes-select").value = "運動服";
+              document.getElementById("tue-clothes-select").value = "運動服";
+              document.getElementById("wed-clothes-select").value = "班服";
+              document.getElementById("thur-clothes-select").value = "制服";
+              document.getElementById("fri-clothes-select").value = "運動服";
 
-                alert("已自動帶入預設服裝!");
-              });
-            }
-          </script>
+              alert("已自動帶入預設服裝!");
+            });
+          }
+        </script>
       </div>
 
-      <div id="blog-form" class="form-box" style="display: none; margin-top: 15px;">
+      <div id="blog-form" class="form-box" style="display: none;">
         <div id="blog-insert">
           <h3 id="blog-form-title">新增 Blog</h3>
           <input type="hidden" id="blog-edit-id">
           
-          <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label><br><br>
+          <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label>&nbsp;&nbsp;&nbsp;
           <label>上傳日期：<input type="date" id="blog-insert-postdate"></label><br><br>
-          <label>公告內容：<br><br><textarea id="blog-insert-detail" rows="8" style="width: 60%; resize: vertical;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
+          <label>公告內容：<br><textarea id="blog-insert-detail" rows="6" style="width: 80%; resize: vertical; margin-top: 5px;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
           
           <button id="blog-insert-btn">確認新增</button>
           <button id="blog-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
 
         <div id="blog-edit">
           <h3>現有 Blog 管理</h3>
@@ -1069,7 +1146,7 @@
             if(!blogListContainer) return;
             blogListContainer.innerHTML = "載入中...";
 
-            const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: true});
+            const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false});
 
             if(error){
               blogListContainer.innerHTML = "Error：" + error.message;
@@ -1082,13 +1159,13 @@
             }
 
             let html = `
-              <table border="1" style="width: 80%; border-collapse: collapse; text-align: center; margin-top: 10px;">
+              <table>
                 <thead>
                   <tr>
-                    <th style="padding: 6px;">標題</th>
-                    <th style="padding: 6px;">上傳日期</th>
-                    <th style="padding: 6px; width: 45%;">內容</th>
-                    <th style="padding: 6px;">操作</th>
+                    <th>標題</th>
+                    <th>上傳日期</th>
+                    <th style="width: 45%;">內容</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1099,12 +1176,12 @@
               const safeBlog = item.blog.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
               html += `
                 <tr>
-                  <td style="padding: 6px; text-align: left;">${item.title}</td>
-                  <td style="padding: 6px;">${item.postdate}</td>
-                  <td style="padding: 6px; text-align: left; white-space: pre-wrap;">${item.blog}</td>
-                  <td style="padding: 6px;">
+                  <td>${item.title}</td>
+                  <td style="text-align: center;">${item.postdate}</td>
+                  <td style="white-space: pre-wrap;">${item.blog}</td>
+                  <td style="text-align: center;">
                     <button onclick="prepareEditBlog('${item.id}', \`${safeTitle}\`, '${item.postdate}', \`${safeBlog}\`)">修改</button>
-                    <button onclick="deleteBlog('${item.id}')" style="color: red;">刪除</button>
+                    <button onclick="deleteBlog('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button>
                   </td>
                 </tr>
               `;

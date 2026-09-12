@@ -154,12 +154,12 @@
 
       async function fetchHomework(date) {
         const container = document.getElementById('homework-content');
-        // 條件：starttime <= date 且 endtime > date (包含開始、不包含結束)
         const { data, error } = await supabaseClient
           .from("Homework Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date);
+          .gt("endtime", date)
+          .order("endtime", { ascending: true });
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無作業"; return; }
@@ -169,12 +169,12 @@
 
       async function fetchTest(date) {
         const container = document.getElementById('test-content');
-        // 條件：starttime <= date 且 endtime > date (包含開始、不包含結束)
         const { data, error } = await supabaseClient
           .from("Test Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date);
+          .gt("endtime", date)
+          .order("endtime", { ascending: true });
 
         if (error) { container.innerHTML = "載入失敗"; return; }
         if (!data || data.length === 0) { container.innerHTML = "本日無考試"; return; }
@@ -194,7 +194,7 @@
         
         const item = data[0];
         container.innerHTML = `
-          <p style="margin:0 0 8px 0; font-size:0.9em; color:#666;"><b>統計週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
+          <p style="margin:0 0 8px 0; font-size:0.9em; color:#666;"><b>週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
           <ul style="padding-left:15px;">
             <li>星期一：${item.mon || '無'}</li>
             <li>星期二：${item.tue || '無'}</li>
@@ -210,7 +210,8 @@
           .from("Note Status")
           .select("*")
           .lte("starttime", date)
-          .gte("endtime", date);
+          .gte("endtime", date)
+          .order("endtime", { ascending: true });
 
         if (error || !data || data.length === 0) { container.innerHTML = "本日無注意事項"; return; }
         
@@ -228,7 +229,7 @@
         const container = document.getElementById('blog-content');
         const { data, error } = await supabaseClient.from("Blog Status").select("*").order("postdate", { ascending: false }).limit(3);
         if (error || !data || data.length === 0) { container.innerHTML = "目前無 Blog 紀錄"; return; }
-        container.innerHTML = `<ol>` + data.map(item => `<li><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><br><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ol>`;
+        container.innerHTML = `<ul style="list-style-type: none; padding-left: 0;">` + data.map(item => `<li style="margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 10px;"><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ul>`;
       }
 
       fetchAllData(today);
