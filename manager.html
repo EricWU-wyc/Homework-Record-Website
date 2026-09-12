@@ -88,8 +88,9 @@
               }
             });
           }
-          // 2. 載入與渲染作業清單函式
+        // 2. 載入與渲染作業清單函式
           async function loadHomeworkList() {
+            if (!homeworkListContainer) return;
             homeworkListContainer.innerHTML = "載入中...";
 
             const { data, error } = await supabaseClient
@@ -155,7 +156,7 @@
             }
           };
 
-          // 4. 修改作業（使用簡單的 prompt 互動，或改為帶入上方表單）
+          // 4. 修改作業
           window.editHomework = async function(id, oldStart, oldEnd, oldDetail) {
             const newStart = prompt("修改指派日期 (YYYY-MM-DD)：", oldStart);
             if (newStart === null) return;
@@ -166,7 +167,7 @@
 
             const { error } = await supabaseClient
               .from("Homework Status")
-              .update({ starttime: newStart, enddate: newEnd, details: newDetail })
+              .update({ starttime: newStart, endtime: newEnd, details: newDetail })
               .eq("id", id);
 
             if (error) {
