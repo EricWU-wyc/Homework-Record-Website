@@ -340,8 +340,18 @@
                 return;
               }
               
-              const weekstart = document.getElementById("clothes-weekstart").value;
-              const weekend = document.getElementById("clothes-weekend").value;
+              const diffTime = endDateObj.getTime() - startDateObj.getTime();
+              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+              if (diffDays < 0) {
+                alert("結束日期不能早於開始日期!");
+                return;
+              }
+              
+              if (diffDays > 4) {
+                alert("開始與結束日期必須在同一週內!");
+                return;
+              }
 
               if(!clothesmon || !clothestue || !clotheswed || !clothesthur || !clothesfri || !weekstart || !weekend){
                 alert("請完整填寫服裝資訊!!");
