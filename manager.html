@@ -10,42 +10,139 @@
     </script>
     <title>FDHS 407 線上聯絡簿 後臺</title>
     <style>
+      :root {
+        --bg-color: #fcfcfc;
+        --text-color: #333;
+        --box-bg: #ffffff;
+        --border-color: #e1e8ed;
+        --h-color: #2c3e50;
+        --input-bg: #ffffff;
+        --input-text: #333333;
+        --input-border: #ccc;
+        --th-bg: #f7f9fa;
+        --table-bg: #ffffff;
+        --hr-color: #eee;
+      }
+
+      body.dark-mode {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --box-bg: #1e1e1e;
+        --border-color: #333333;
+        --h-color: #ffffff;
+        --input-bg: #2d2d2d;
+        --input-text: #e0e0e0;
+        --input-border: #444444;
+        --th-bg: #252525;
+        --table-bg: #1e1e1e;
+        --hr-color: #333333;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         max-width: 1000px;
         margin: 20px auto;
         padding: 0 20px;
         line-height: 1.6;
-        color: #333;
-        background-color: #fcfcfc;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        position: relative;
+        transition: background-color 0.3s, color 0.3s;
       }
+
+      .theme-switch-container {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9em;
+        font-weight: bold;
+      }
+
+      .switch {
+        font-size: 17px;
+        position: relative;
+        display: inline-block;
+        width: 3.5em;
+        height: 1.7em;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgb(182, 182, 182);
+        transition: .4s;
+        border-radius: 10px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 1.2em;
+        width: 1.2em;
+        border-radius: 8px;
+        left: 0.25em;
+        bottom: 0.25em;
+        transform: rotate(270deg);
+        background-color: rgb(255, 255, 255);
+        transition: .4s;
+      }
+
+      .switch input:checked + .slider {
+        background-color: #21cc4c;
+      }
+
+      .switch input:focus + .slider {
+        box-shadow: 0 0 1px #2196F3;
+      }
+
+      .switch input:checked + .slider:before {
+        transform: translateX(1.8em);
+      }
+
       h1, h2, h3 {
-        color: #2c3e50;
+        color: var(--h-color);
       }
       #login-container {
         text-align: center;
         margin-top: 100px;
-        background: #ffffff;
+        background: var(--box-bg);
         padding: 40px;
-        border: 1px solid #e1e8ed;
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         max-width: 400px;
         margin-left: auto;
         margin-right: auto;
+        transition: background-color 0.3s, border-color 0.3s;
       }
       .form-box {
-        background: #ffffff;
-        border: 1px solid #e1e8ed;
+        background: var(--box-bg);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        transition: background-color 0.3s, border-color 0.3s;
       }
-      input[type="date"], input[type="text"], input[type="password"], select, textarea {
+      input[type="date"], input[type="text"], input[type="password"], input:not([type]), select, textarea {
         padding: 6px 10px;
         border-radius: 4px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--input-border);
         font-size: 14px;
+        background-color: var(--input-bg);
+        color: var(--input-text);
       }
       button {
         background-color: #0066cc;
@@ -63,20 +160,30 @@
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
-        background: #fff;
+        background: var(--table-bg);
+        color: var(--text-color);
       }
       th, td {
-        border: 1px solid #e1e8ed;
+        border: 1px solid var(--border-color);
         padding: 8px 12px;
       }
       th {
-        background-color: #f7f9fa;
-        color: #2c3e50;
+        background-color: var(--th-bg);
+        color: var(--h-color);
       }
     </style>
   </head>
   
   <body>
+
+    <div class="theme-switch-container">
+      <span>淺色模式</span>
+      <label class="switch">
+        <input type="checkbox" id="darkModeToggle">
+        <span class="slider"></span>
+      </label>
+      <span>深色模式</span>
+    </div>
     
     <div id="login-container">
       <h1>407 線上聯絡簿 後臺登入</h1>
@@ -114,7 +221,7 @@
           <button id="homework-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
 
         <div id="homework-edit">
           <h3>現有作業管理</h3>
@@ -310,7 +417,7 @@
           <button id="test-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
         
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
 
         <div id="test-edit">
           <h3>現有考試管理</h3>
@@ -506,7 +613,7 @@
           <button id="note-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
 
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
 
         <div id="note-edit">
           <h3>現有注意事項管理</h3>
@@ -701,7 +808,7 @@
           <button id="failure-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
       
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
 
         <div id="failure-edit">
           <h3>現有缺繳名單管理</h3>
@@ -1063,7 +1170,7 @@
           <button id="blog-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
         </div>
 
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
 
         <div id="blog-edit">
           <h3>現有 Blog 管理</h3>
@@ -1229,6 +1336,37 @@
     </div>
     
     <script>
+      const darkModeToggle = document.getElementById('darkModeToggle');
+
+      // 檢查裝置預設是否為深色模式
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+      
+      // 初始化：根據裝置預設決定是否開啟深色模式
+      if (prefersDark.matches) {
+        document.body.classList.add('dark-mode');
+        darkModeToggle.checked = true;
+      }
+
+      // 監聽裝置預設顏色的動態改變
+      prefersDark.addEventListener('change', (e) => {
+        if (e.matches) {
+          document.body.classList.add('dark-mode');
+          darkModeToggle.checked = true;
+        } else {
+          document.body.classList.remove('dark-mode');
+          darkModeToggle.checked = false;
+        }
+      });
+
+      // 監聽開關手動切換事件
+      darkModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+          document.body.classList.add('dark-mode');
+        } else {
+          document.body.classList.remove('dark-mode');
+        }
+      });
+
       const loginBtn = document.getElementById("login-btn");
       const passwordBlank = document.getElementById("password-blank");
       const statusSelect = document.getElementById("status-select");
