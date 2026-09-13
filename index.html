@@ -310,11 +310,11 @@
         container.innerHTML = `
           <p style="margin:0 0 8px 0; font-size:0.9em; color:gray;"><b>週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
           <ul style="padding-left:15px;">
-            <li>星期一：${item.mon || '無'}</li>
-            <li>星期二：${item.tue || '無'}</li>
-            <li>星期三：${item.wed || '無'}</li>
-            <li>星期四：${item.thur || '無'}</li>
-            <li>星期五：${item.fri || '無'}</li>
+            <li>星期一：${item.mon || '當天放假'}</li>
+            <li>星期二：${item.tue || '當天放假'}</li>
+            <li>星期三：${item.wed || '當天放假'}</li>
+            <li>星期四：${item.thur || '當天放假'}</li>
+            <li>星期五：${item.fri || '當天放假'}</li>
           </ul>`;
       }
 
@@ -349,7 +349,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.1.0 增加深色模式還有切換按鈕(首頁)和新增版本號
+      FDHS 407 線上聯絡簿 | Ver. 1.1.1 將放假日的預設文字由「無」調整為「當天放假」
     </footer>
   </body>
 
