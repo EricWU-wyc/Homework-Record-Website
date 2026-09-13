@@ -41,7 +41,6 @@
         transition: background-color 0.3s, color 0.3s;
       }
 
-      /* 右上角切換控制區塊（flex 讓文字和按鈕並排） */
       .theme-switch-container {
         position: absolute;
         top: 10px;
@@ -53,7 +52,6 @@
         font-weight: bold;
       }
 
-      /* 你提供的原始按鈕 CSS */
       .switch {
         --input-focus: #2d8cf0;
         --font-color: #323232;
@@ -177,7 +175,7 @@
   </head>
   
   <body>
-    <!-- 右上角開關與文字容器 -->
+
     <div class="theme-switch-container">
       <span>淺色模式</span>
       <label class="switch">
@@ -233,7 +231,7 @@
     </div>
 
     <script>
-      // 深淺色模式切換邏輯
+
       const darkModeToggle = document.getElementById('darkModeToggle');
       darkModeToggle.addEventListener('change', function() {
         if (this.checked) {
