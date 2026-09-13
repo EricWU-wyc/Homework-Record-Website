@@ -255,8 +255,11 @@
       }
       CurrentTime();
       setInterval(CurrentTime, 1000);
+      
+      const now = new Date();
+      const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+      const today = taiwanTime.toISOString().split('T')[0];
 
-      const today = new Date().toISOString().split('T')[0];
       const datePicker = document.getElementById('date-picker');
       datePicker.value = today;
 
@@ -356,7 +359,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.0 深色模式調整 & UI更新 和 自動切換深淺
+      FDHS 407 線上聯絡簿 | Ver. 1.2.1 時區調整
     </footer>
   </body>
 
