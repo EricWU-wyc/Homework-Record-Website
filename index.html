@@ -122,7 +122,7 @@
 
       .dashboard-grid{
         display: grid;
-        grid-template-columns: repeat(3, 1fr); /* 恢復為三欄等寬均分 */
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
       }
 
@@ -136,6 +136,9 @@
         min-height: 180px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: background-color 0.3s, border-color 0.3s;
+        /* 讓過長文字自動換行，防止超框 */
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
 
       .section-box h3{
@@ -362,7 +365,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.2 公告日期邊界調整
+      FDHS 407 線上聯絡簿 | Ver. 1.2.5 文字自動換行修正
     </footer>
   </body>
 
