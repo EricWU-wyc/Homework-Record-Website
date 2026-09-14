@@ -106,18 +106,130 @@
       .header-container{
         text-align: center;
         margin-bottom: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
       .header-container h1{
         margin-bottom: 10px;
       }
-      .header-container a{
-        display: inline-block;
-        margin-bottom: 10px;
-        color: var(--link-color);
+
+      /* Animated Button 樣式 */
+      .animated-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 12px 28px;
+        border: 4px solid;
+        border-color: transparent;
+        font-size: 15px;
+        background-color: inherit;
+        border-radius: 100px;
+        font-weight: 600;
+        color: #2e7d32;
+        box-shadow: 0 0 0 2px #2e7d32;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         text-decoration: none;
+        margin-bottom: 10px;
       }
-      .header-container a:hover{
-        text-decoration: underline;
+
+      body.dark-mode .animated-button {
+        color: greenyellow;
+        box-shadow: 0 0 0 2px greenyellow;
+      }
+
+      .animated-button svg {
+        position: absolute;
+        width: 20px;
+        fill: #2e7d32;
+        z-index: 9;
+        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      body.dark-mode .animated-button svg {
+        fill: greenyellow;
+      }
+
+      .animated-button .arr-1 {
+        right: 16px;
+      }
+
+      .animated-button .arr-2 {
+        left: -25%;
+      }
+
+      .animated-button .circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 20px;
+        height: 20px;
+        background-color: #2e7d32;
+        border-radius: 50%;
+        opacity: 0;
+        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        z-index: 0;
+      }
+
+      body.dark-mode .animated-button .circle {
+        background-color: greenyellow;
+      }
+
+      .animated-button .text {
+        position: relative;
+        z-index: 1;
+        transform: translateX(-8px);
+        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .animated-button:hover {
+        box-shadow: 0 0 0 12px transparent;
+        color: #ffffff;
+        border-radius: 12px;
+      }
+
+      body.dark-mode .animated-button:hover {
+        color: #212121;
+      }
+
+      .animated-button:hover .arr-1 {
+        right: -25%;
+      }
+
+      .animated-button:hover .arr-2 {
+        left: 16px;
+      }
+
+      .animated-button:hover .text {
+        transform: translateX(8px);
+      }
+
+      .animated-button:hover svg {
+        fill: #ffffff;
+      }
+
+      body.dark-mode .animated-button:hover svg {
+        fill: #212121;
+      }
+
+      .animated-button:active {
+        scale: 0.95;
+        box-shadow: 0 0 0 4px #2e7d32;
+      }
+
+      body.dark-mode .animated-button:active {
+        box-shadow: 0 0 0 4px greenyellow;
+      }
+
+      .animated-button:hover .circle {
+        width: 220px;
+        height: 220px;
+        opacity: 1;
       }
 
       .dashboard-grid{
@@ -136,7 +248,6 @@
         min-height: 180px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: background-color 0.3s, border-color 0.3s;
-        /* 讓過長文字自動換行，防止超框 */
         word-break: break-word;
         overflow-wrap: break-word;
       }
@@ -183,7 +294,18 @@
 
     <div class="header-container">
       <h1>407 線上聯絡簿</h1>
-      <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html">後臺管理頁面</a>
+      
+      <a href="https://ericwu-wyc.github.io/Homework-Record-Website/manager.html" class="animated-button">
+        <svg viewBox="0 0 24 24" class="arr-2" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+        </svg>
+        <span class="text">後臺管理頁面</span>
+        <span class="circle"></span>
+        <svg viewBox="0 0 24 24" class="arr-1" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.1716 10.9999L10.8076 5.63589L12.2218 4.22168L20 11.9999L12.2218 19.778L10.8076 18.3638L16.1716 12.9999H4V10.9999H16.1716Z"></path>
+        </svg>
+      </a>
+
       <p id="current-time" style="margin: 5px 0;"></p>
       <div style="margin-top: 10px;">
         <label>
@@ -365,7 +487,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.3 固定每一字卡寬度並自動換行
+      FDHS 407 線上聯絡簿 | Ver. 1.2.4 後臺導向 UI 更動
     </footer>
   </body>
 
