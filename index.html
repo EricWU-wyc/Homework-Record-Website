@@ -131,6 +131,8 @@
         border: 1px solid var(--border-color);
         border-radius: 8px;
         padding: 15px 20px;
+        box-sizing: border-box;
+        min-height: 180px; /* 固定最小高度，防止內容過少時被壓縮變形 */
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: background-color 0.3s, border-color 0.3s;
       }
@@ -255,7 +257,7 @@
       }
       CurrentTime();
       setInterval(CurrentTime, 1000);
-      
+
       const now = new Date();
       const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
       const today = taiwanTime.toISOString().split('T')[0];
@@ -282,7 +284,7 @@
           .from("Homework Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date)
+          .gt("endtime", date) // 顯示到結束日期的前一天
           .order("endtime", {ascending: true});
 
         if(error){container.innerHTML = "載入失敗"; return;}
@@ -297,7 +299,7 @@
           .from("Test Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date)
+          .gt("endtime", date) // 顯示到結束日期的前一天
           .order("endtime", {ascending: true});
 
         if(error){container.innerHTML = "載入失敗"; return;}
@@ -334,7 +336,7 @@
           .from("Note Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date)
+          .gt("endtime", date) // 顯示到結束日期的前一天
           .order("endtime", {ascending: true});
 
         if(error || !data || data.length === 0){container.innerHTML = "本日無注意事項"; return;}
@@ -359,8 +361,9 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.2 公布日期邊界調整
+      FDHS 407 線上聯絡簿 | Ver. 1.2.2 區塊排版優化 & 邏輯調整
     </footer>
   </body>
 
 </html>
+
