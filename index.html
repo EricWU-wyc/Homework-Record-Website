@@ -122,7 +122,7 @@
 
       .dashboard-grid{
         display: grid;
-        grid-template-columns: 40% 40% 20%; /* 作業 40%、考試 40%、服裝 20% */
+        grid-template-columns: repeat(3, 1fr); /* 恢復為三欄等寬均分 */
         gap: 20px;
       }
 
@@ -132,7 +132,7 @@
         border-radius: 8px;
         padding: 15px 20px;
         box-sizing: border-box;
-        min-width: 0; /* 防止文字過長撐開網格 */
+        min-width: 0;
         min-height: 180px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: background-color 0.3s, border-color 0.3s;
@@ -149,8 +149,8 @@
       #test-section{grid-column: 2;}
       #clothes-section{grid-column: 3;}
 
-      #note-section{grid-column: span 2;} /* 佔用前兩欄（40% + 40% = 80%） */
-      #failure-section{grid-column: span 1;} /* 佔用第三欄（20%） */
+      #note-section{grid-column: span 2;}
+      #failure-section{grid-column: span 1;}
 
       #blog-section{grid-column: span 3;}
 
@@ -362,7 +362,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.3 欄位比例調整 (40/40/20)
+      FDHS 407 線上聯絡簿 | Ver. 1.2.2 公告日期邊界調整
     </footer>
   </body>
 
