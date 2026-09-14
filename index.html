@@ -122,7 +122,7 @@
 
       .dashboard-grid{
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 40% 40% 20%; /* 作業 40%、考試 40%、服裝 20% */
         gap: 20px;
       }
 
@@ -132,7 +132,8 @@
         border-radius: 8px;
         padding: 15px 20px;
         box-sizing: border-box;
-        min-height: 180px; /* 固定最小高度，防止內容過少時被壓縮變形 */
+        min-width: 0; /* 防止文字過長撐開網格 */
+        min-height: 180px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         transition: background-color 0.3s, border-color 0.3s;
       }
@@ -148,8 +149,8 @@
       #test-section{grid-column: 2;}
       #clothes-section{grid-column: 3;}
 
-      #note-section{grid-column: span 2;}
-      #failure-section{grid-column: span 1;}
+      #note-section{grid-column: span 2;} /* 佔用前兩欄（40% + 40% = 80%） */
+      #failure-section{grid-column: span 1;} /* 佔用第三欄（20%） */
 
       #blog-section{grid-column: span 3;}
 
@@ -284,7 +285,7 @@
           .from("Homework Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date) // 顯示到結束日期的前一天
+          .gt("endtime", date)
           .order("endtime", {ascending: true});
 
         if(error){container.innerHTML = "載入失敗"; return;}
@@ -299,7 +300,7 @@
           .from("Test Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date) // 顯示到結束日期的前一天
+          .gt("endtime", date)
           .order("endtime", {ascending: true});
 
         if(error){container.innerHTML = "載入失敗"; return;}
@@ -336,7 +337,7 @@
           .from("Note Status")
           .select("*")
           .lte("starttime", date)
-          .gt("endtime", date) // 顯示到結束日期的前一天
+          .gt("endtime", date)
           .order("endtime", {ascending: true});
 
         if(error || !data || data.length === 0){container.innerHTML = "本日無注意事項"; return;}
@@ -361,9 +362,8 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.2 區塊排版優化 & 邏輯調整
+      FDHS 407 線上聯絡簿 | Ver. 1.2.3 欄位比例調整 (40/40/20)
     </footer>
   </body>
 
 </html>
-
