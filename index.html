@@ -334,7 +334,7 @@
           .from("Note Status")
           .select("*")
           .lte("starttime", date)
-          .gte("endtime", date)
+          .gt("endtime", date)
           .order("endtime", {ascending: true});
 
         if(error || !data || data.length === 0){container.innerHTML = "本日無注意事項"; return;}
@@ -359,7 +359,7 @@
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.2.1 時區調整
+      FDHS 407 線上聯絡簿 | Ver. 1.2.2 公布日期邊界調整
     </footer>
   </body>
 
