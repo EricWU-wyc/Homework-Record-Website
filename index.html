@@ -113,7 +113,7 @@
         margin-bottom: 10px;
       }
 
-      .animated-button {
+      .animated-button{
         position: relative;
         display: inline-flex;
         align-items: center;
@@ -135,12 +135,12 @@
         margin-bottom: 10px;
       }
 
-      body.dark-mode .animated-button {
+      body.dark-mode.animated-button{
         color: greenyellow;
         box-shadow: 0 0 0 2px greenyellow;
       }
 
-      .animated-button svg {
+      .animated-button svg{
         position: absolute;
         width: 20px;
         fill: #2e7d32;
@@ -148,19 +148,19 @@
         transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
       }
 
-      body.dark-mode .animated-button svg {
+      body.dark-mode.animated-button svg{
         fill: greenyellow;
       }
 
-      .animated-button .arr-1 {
+      .animated-button.arr-1{
         right: 16px;
       }
 
-      .animated-button .arr-2 {
+      .animated-button.arr-2{
         left: -25%;
       }
 
-      .animated-button .circle {
+      .animated-button.circle{
         position: absolute;
         top: 50%;
         left: 50%;
@@ -174,63 +174,63 @@
         z-index: 0;
       }
 
-      body.dark-mode .animated-button .circle {
+      body.dark-mode.animated-button.circle{
         background-color: greenyellow;
       }
 
-      .animated-button .text {
+      .animated-button.text{
         position: relative;
         z-index: 1;
         transform: translateX(-8px);
         transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
       }
 
-      .animated-button:hover {
+      .animated-button:hover{
         box-shadow: 0 0 0 12px transparent;
         color: #ffffff;
         border-radius: 12px;
       }
 
-      body.dark-mode .animated-button:hover {
+      body.dark-mode.animated-button:hover{
         color: #212121;
       }
 
-      .animated-button:hover .arr-1 {
+      .animated-button:hover.arr-1{
         right: -25%;
       }
 
-      .animated-button:hover .arr-2 {
+      .animated-button:hover.arr-2{
         left: 16px;
       }
 
-      .animated-button:hover .text {
+      .animated-button:hover.text{
         transform: translateX(8px);
       }
 
-      .animated-button:hover svg {
+      .animated-button:hover svg{
         fill: #ffffff;
       }
 
-      body.dark-mode .animated-button:hover svg {
+      body.dark-mode .animated-button:hover svg{
         fill: #212121;
       }
 
-      .animated-button:active {
+      .animated-button:active{
         scale: 0.95;
         box-shadow: 0 0 0 4px #2e7d32;
       }
 
-      body.dark-mode .animated-button:active {
+      body.dark-mode .animated-button:active{
         box-shadow: 0 0 0 4px greenyellow;
       }
 
-      .animated-button:hover .circle {
+      .animated-button:hover.circle{
         width: 220px;
         height: 220px;
         opacity: 1;
       }
 
-      .mode-switch-container {
+      .mode-switch-container{
         display: flex;
         gap: 8px;
         background: var(--border-color);
@@ -239,7 +239,7 @@
         margin-top: 10px;
       }
 
-      .mode-btn {
+      .mode-btn{
         background: transparent;
         border: none;
         padding: 6px 16px;
@@ -250,7 +250,7 @@
         transition: background 0.3s, color 0.3s;
       }
 
-      .mode-btn.active {
+      .mode-btn.active{
         background: var(--box-bg);
         color: var(--link-color);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -292,7 +292,7 @@
 
       #blog-section{grid-column: span 3;}
 
-      .weekly-grid {
+      .weekly-grid{
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
         gap: 15px;
@@ -300,7 +300,7 @@
         margin-top: 10px;
       }
 
-      .day-card {
+      .day-card{
         background: var(--box-bg);
         border: 1px solid var(--border-color);
         border-radius: 8px;
@@ -308,7 +308,7 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
       }
 
-      .day-card h4 {
+      .day-card h4{
         margin-top: 0;
         margin-bottom: 5px;
         color: var(--h3-color);
@@ -319,18 +319,18 @@
         align-items: center;
       }
 
-      .day-date {
+      .day-date{
         font-size: 0.8em;
         color: gray;
         font-weight: normal;
       }
 
-      .day-content-section {
+      .day-content-section{
         margin-top: 10px;
         font-size: 0.9em;
       }
 
-      .day-content-section strong {
+      .day-content-section strong{
         color: var(--link-color);
       }
 
@@ -481,41 +481,41 @@
 
       const now = new Date();
       const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-      const today = taiwanTime.toISOString().split('T')[0];
+      const today = taiwanTime.toISOString().split("T")[0];
 
-      const datePicker = document.getElementById('date-picker');
+      const datePicker = document.getElementById("date-picker");
       datePicker.value = today;
 
-      let currentViewMode = 'daily';
+      let currentViewMode = "daily";
 
-      const btnDaily = document.getElementById('btn-daily-view');
-      const btnWeekly = document.getElementById('btn-weekly-view');
-      const dailyContainer = document.getElementById('daily-view-container');
-      const weeklyContainer = document.getElementById('weekly-view-container');
+      const btnDaily = document.getElementById("btn-daily-view");
+      const btnWeekly = document.getElementById("btn-weekly-view");
+      const dailyContainer = document.getElementById("daily-view-container");
+      const weeklyContainer = document.getElementById("weekly-view-container");
 
-      btnDaily.addEventListener('click', () => {
-        currentViewMode = 'daily';
-        btnDaily.classList.add('active');
-        btnWeekly.classList.remove('active');
-        dailyContainer.style.display = 'grid';
-        weeklyContainer.style.display = 'none';
+      btnDaily.addEventListener("click", () =>{
+        currentViewMode = "daily";
+        btnDaily.classList.add("active");
+        btnWeekly.classList.remove("active");
+        dailyContainer.style.display = "grid";
+        weeklyContainer.style.display = "none";
         fetchAllData(datePicker.value);
       });
 
-      btnWeekly.addEventListener('click', () => {
-        currentViewMode = 'weekly';
-        btnWeekly.classList.add('active');
-        btnDaily.classList.remove('active');
-        dailyContainer.style.display = 'none';
-        weeklyContainer.style.display = 'block';
+      btnWeekly.addEventListener("click", () =>{
+        currentViewMode = "weekly";
+        btnWeekly.classList.add("active");
+        btnDaily.classList.remove("active");
+        dailyContainer.style.display = "none";
+        weeklyContainer.style.display = "block";
         fetchWeeklyData(datePicker.value);
       });
 
-      datePicker.addEventListener('change', (e) =>{
+      datePicker.addEventListener("change", (e) =>{
         const selectedDate = e.target.value;
-        if(currentViewMode === 'daily'){
+        if(currentViewMode === "daily"){
           fetchAllData(selectedDate);
-        } else {
+        }else{
           fetchWeeklyData(selectedDate);
         }
       });
@@ -556,7 +556,7 @@
         if(error){container.innerHTML = "載入失敗"; return;}
         if(!data || data.length === 0){container.innerHTML = "本日無考試"; return;}
 
-        container.innerHTML = `<ol>` + data.map(item =>`<li>${item.details} <span style="color:gray; font-size:0.9em;">(考試日期: ${item.endtime})</span></li>`).join('') + `</ol>`;
+        container.innerHTML = `<ol>` + data.map(item =>`<li>${item.details} <span style="color:gray; font-size:0.9em;">(考試日期: ${item.endtime})</span></li>`).join("") + `</ol>`;
       }
 
       async function fetchClothes(date){
@@ -592,38 +592,38 @@
 
         if(error || !data || data.length === 0){container.innerHTML = "本日無注意事項"; return;}
         
-        container.innerHTML = `<ol>` + data.map(item =>`<li><div class="note-text">${item.details}</div></li>`).join('') + `</ol>`;
+        container.innerHTML = `<ol>` + data.map(item =>`<li><div class="note-text">${item.details}</div></li>`).join("") + `</ol>`;
       }
 
       async function fetchFailure(){
         const container = document.getElementById("failure-content");
         const {data, error} = await supabaseClient.from("Failure Status").select("*");
-        if(error || !data || data.length === 0){ container.innerHTML = "目前無缺繳名單"; return; }
-        container.innerHTML = `<ol>` + data.map(item =>`<li><b>${item.details}</b>：${item.failurelist}</li>`).join('') + `</ol>`;
+        if(error || !data || data.length === 0){container.innerHTML = "目前無缺繳名單"; return;}
+        container.innerHTML = `<ol>` + data.map(item =>`<li><b>${item.details}</b>：${item.failurelist}</li>`).join("") + `</ol>`;
       }
 
       async function fetchBlog(){
-        const container = document.getElementById('blog-content');
+        const container = document.getElementById("blog-content");
         const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false}).limit(5);
         if(error || !data || data.length === 0){ container.innerHTML = "目前無 Blog 紀錄"; return;}
         container.innerHTML = `<ul style="list-style-type: none; padding-left: 0;">` + data.map(item =>`<li style="margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;"><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ul>`;
       }
 
       async function fetchWeeklyData(selectedDate){
-        const cardsContainer = document.getElementById('weekly-cards-container');
-        const headerTitle = document.getElementById('weekly-header-title');
-        cardsContainer.innerHTML = '<div style="text-align: center; color: gray; padding: 20px; grid-column: span 5;">載入中...</div>';
+        const cardsContainer = document.getElementById("weekly-cards-container");
+        const headerTitle = document.getElementById("weekly-header-title");
+        cardsContainer.innerHTML = "<div style="text-align: center; color: gray; padding: 20px; grid-column: span 5;">載入中...</div>";
 
         const d = new Date(selectedDate);
         const day = d.getDay();
         const diffToMon = d.getDate() - day + (day === 0 ? -6 : 1);
         
         const mondayObj = new Date(d.setDate(diffToMon));
-        const mondayStr = mondayObj.toISOString().split('T')[0];
+        const mondayStr = mondayObj.toISOString().split("T")[0];
 
         const fridayObj = new Date(mondayObj);
         fridayObj.setDate(mondayObj.getDate() + 4);
-        const fridayStr = fridayObj.toISOString().split('T')[0];
+        const fridayStr = fridayObj.toISOString().split("T")[0];
 
         headerTitle.textContent = `一週總覽 (${mondayStr} ~ ${fridayStr})`;
 
@@ -634,7 +634,7 @@
         for(let i = 0; i < 5; i++){
           const tempDate = new Date(mondayObj);
           tempDate.setDate(mondayObj.getDate() + i);
-          const dateStr = tempDate.toISOString().split('T')[0];
+          const dateStr = tempDate.toISOString().split("T")[0];
           weekDays.push({
             name: dayNames[i],
             key: dayKeys[i],
@@ -664,9 +664,9 @@
           .lte("endtime", fridayStr)
           .order("endtime", {ascending: true});
 
-        let cardsHtml = '';
+        let cardsHtml = "";
 
-        weekDays.forEach(wd => {
+        weekDays.forEach(wd =>{
           const dayHw = (hwData || []).filter(item => item.endtime === wd.date);
           const dayTest = (testData || []).filter(item => item.endtime === wd.date);
           const dayClothes = clothesItem ? (clothesItem[wd.key] || "當天放假") : "尚無服裝規定";
@@ -681,12 +681,12 @@
 
               <div class="day-content-section">
                 <strong>作業：</strong>
-                ${dayHw.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayHw.map(h => `<li>${h.details}</li>`).join('') + `</ul>` : '<span style="color:gray;">無</span>'}
+                ${dayHw.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayHw.map(h => `<li>${h.details}</li>`).join("") + `</ul>` : '<span style="color:gray;">無</span>'}
               </div>
 
               <div class="day-content-section">
                 <strong>考試：</strong>
-                ${dayTest.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayTest.map(t => `<li>${t.details}</li>`).join('') + `</ul>` : '<span style="color:gray;">無</span>'}
+                ${dayTest.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayTest.map(t => `<li>${t.details}</li>`).join("") + `</ul>` : '<span style="color:gray;">無</span>'}
               </div>
             </div>
           `;
@@ -709,27 +709,27 @@
           .order("endtime", {ascending: true});
 
         if(error || !data || data.length === 0){ container.innerHTML = "本週無注意事項"; return; }
-        container.innerHTML = `<ol>` + data.map(item => `<li><div class="note-text">${item.details}</div></li>`).join('') + `</ol>`;
+        container.innerHTML = `<ol>` + data.map(item => `<li><div class="note-text">${item.details}</div></li>`).join("") + `</ol>`;
       }
 
       async function fetchWeeklyFailure(){
         const container = document.getElementById("weekly-failure-content");
         const {data, error} = await supabaseClient.from("Failure Status").select("*");
         if(error || !data || data.length === 0){ container.innerHTML = "目前無缺繳名單"; return; }
-        container.innerHTML = `<ol>` + data.map(item =>`<li><b>${item.details}</b>：${item.failurelist}</li>`).join('') + `</ol>`;
+        container.innerHTML = `<ol>` + data.map(item =>`<li><b>${item.details}</b>：${item.failurelist}</li>`).join("") + `</ol>`;
       }
 
       async function fetchWeeklyBlog(){
-        const container = document.getElementById('weekly-blog-content');
+        const container = document.getElementById("weekly-blog-content");
         const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false}).limit(5);
         if(error || !data || data.length === 0){ container.innerHTML = "目前無 Blog 紀錄"; return;}
-        container.innerHTML = `<ul style="list-style-type: none; padding-left: 0;">` + data.map(item =>`<li style="margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;"><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ul>`;
+        container.innerHTML = `<ul style="list-style-type: none; padding-left: 0;">` + data.map(item =>`<li style="margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;"><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join("") + `</ul>`;
       }
 
       fetchAllData(today);
     </script>
     <footer style="text-align: center; margin-top: 40px; color: gray; font-size: 0.85em;">
-      FDHS 407 線上聯絡簿 | Ver. 1.3.0 新增一周檢視功能
+      FDHS 407 線上聯絡簿 | Ver. 1.3.1 程式碼精簡
     </footer>
   </body>
 </html>
