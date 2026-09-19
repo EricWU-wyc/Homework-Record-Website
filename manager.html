@@ -236,7 +236,7 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="homework-filter-field">
-                <option value="endtime">繳交日期</option>
+                <option value="endtime" selected>繳交日期</option>
                 <option value="starttime">指派日期</option>
               </select>
             </label>
@@ -432,7 +432,7 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="test-filter-field">
-                <option value="endtime">考試日期</option>
+                <option value="endtime" selected>考試日期</option>
                 <option value="starttime">指派日期</option>
               </select>
             </label>
@@ -628,7 +628,7 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="note-filter-field">
-                <option value="endtime">結束公告日期</option>
+                <option value="endtime" selected>結束公告日期</option>
                 <option value="starttime">開始公告日期</option>
               </select>
             </label>
@@ -1392,6 +1392,19 @@
           alert("登入成功");
           document.getElementById("login-container").style.display = "none";
           document.getElementById("admin-container").style.display = "block";
+
+          // 登入成功後，自動填入當天日期並帶入預設篩選資料
+          const now = new Date();
+          const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+          const today = taiwanTime.toISOString().split('T')[0];
+
+          ['homework', 'test', 'note'].forEach(type => {
+            const startInput = document.getElementById(`${type}-filter-start`);
+            const endInput = document.getElementById(`${type}-filter-end`);
+            if(startInput) startInput.value = today;
+            if(endInput) endInput.value = today;
+          });
+
         }else{
           alert("密碼錯誤");
         }
