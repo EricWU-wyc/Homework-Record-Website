@@ -1250,7 +1250,12 @@
           function resetBlogForm(){
             blogEditIdInput.value = "";
             blogTitleInput.value = "";
-            blogDateInput.value = "";
+            
+            // 自動帶入當天日期 (台灣時區)
+            const now = new Date();
+            const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+            blogDateInput.value = taiwanTime.toISOString().split('T')[0];
+
             blogDetailInput.value = "";
             blogFormTitle.innerText = "新增 Blog";
             blogInsertBtn.innerText = "確認新增";
@@ -1434,7 +1439,10 @@
             if(selectedValue === "test" && typeof loadTestList === "function") loadTestList();
             if(selectedValue === "note" && typeof loadNoteList === "function") loadNoteList();
             if(selectedValue === "failure" && typeof loadFailureList === "function") loadFailureList();
-            if(selectedValue === "blog" && typeof loadBlogList === "function") loadBlogList();
+            if(selectedValue === "blog") {
+              if(typeof loadBlogList === "function") loadBlogList();
+              if(typeof resetBlogForm === "function") resetBlogForm();
+            }
           }
         }
       });
