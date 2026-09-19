@@ -1,4 +1,3 @@
 # 407 聯絡簿網站
-
-## 版本紀錄
-Ver 1.0.0 基本上所有基礎功能完成 [09/12]
+直接去看這個
+https://hackmd.io/@H7YDKMtrSxODOMJl4hE3QA/BycPpoMFfe
