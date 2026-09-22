@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
       const SUPABASE_URL = "https://ocwpamhemxddhujichkz.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3BhbWhlbXhkZGh1amljaGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTYzNzUsImV4cCI6MjEwNDQ3MjM3NX0.N4N75_Y7dFNoOiSEBvKEcpHHMdxFfGC0P4PDmlNbTns";
@@ -1251,7 +1252,6 @@
             blogEditIdInput.value = "";
             blogTitleInput.value = "";
             
-            // 自動帶入當天日期 (台灣時區)
             const now = new Date();
             const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
             blogDateInput.value = taiwanTime.toISOString().split('T')[0];
@@ -1394,13 +1394,30 @@
         }
 
         if(data && data.length > 0){
-          alert("登入成功");
+          const userRecord = data[0];
+          const userName = userRecord.user; 
+
+          const now = new Date();
+          const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+          const month = taiwanTime.getUTCMonth() + 1;
+          const day = taiwanTime.getUTCDate();
+          const todayStr = `${month}/${day}`;
+
+          if (todayStr === "9/23" && userName === "班導 陳喬瑋") {
+            alert("生日快樂!!");
+            
+            confetti({
+              particleCount: 150,
+              spread: 80,
+              origin: { y: 0.6 }
+            });
+          } else {
+            alert("登入成功");
+          }
+
           document.getElementById("login-container").style.display = "none";
           document.getElementById("admin-container").style.display = "block";
 
-          // 登入成功後，自動填入當天日期並帶入預設篩選資料
-          const now = new Date();
-          const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
           const today = taiwanTime.toISOString().split('T')[0];
 
           ['homework', 'test', 'note'].forEach(type => {
