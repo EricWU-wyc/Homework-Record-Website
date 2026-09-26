@@ -236,8 +236,8 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="homework-filter-field">
-                <option value="endtime" selected>繳交日期</option>
-                <option value="starttime">指派日期</option>
+                <option value="starttime" selected>指派日期</option>
+                <option value="endtime">繳交日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="homework-filter-start"></label>
@@ -432,8 +432,8 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="test-filter-field">
-                <option value="endtime" selected>考試日期</option>
-                <option value="starttime">指派日期</option>
+                <option value="starttime" selected>指派日期</option>
+                <option value="endtime">考試日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="test-filter-start"></label>
@@ -628,8 +628,8 @@
           <div style="margin-bottom: 10px;">
             <label>
               <select id="note-filter-field">
-                <option value="endtime" selected>結束公告日期</option>
-                <option value="starttime">開始公告日期</option>
+                <option value="starttime" selected>開始公告日期</option>
+                <option value="endtime">結束公告日期</option>
               </select>
             </label>
             <label>從：<input type="date" id="note-filter-start"></label>
@@ -1434,9 +1434,38 @@
           const targetForm = document.getElementById(selectedValue + "-form");
           if(targetForm){
             targetForm.style.display = "block";
-            if(selectedValue === "homework" && typeof loadHomeworkList === "function") loadHomeworkList();
-            if(selectedValue === "test" && typeof loadTestList === "function") loadTestList();
-            if(selectedValue === "note" && typeof loadNoteList === "function") loadNoteList();
+            
+            const now = new Date();
+            const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+            const today = taiwanTime.toISOString().split('T')[0];
+
+            if(selectedValue === "homework") {
+              const startInput = document.getElementById("homework-filter-start");
+              const endInput = document.getElementById("homework-filter-end");
+              const fieldSelect = document.getElementById("homework-filter-field");
+              if(startInput && !startInput.value) startInput.value = today;
+              if(endInput && !endInput.value) endInput.value = today;
+              if(fieldSelect) fieldSelect.value = "starttime";
+              if(typeof loadHomeworkList === "function") loadHomeworkList();
+            }
+            if(selectedValue === "test") {
+              const startInput = document.getElementById("test-filter-start");
+              const endInput = document.getElementById("test-filter-end");
+              const fieldSelect = document.getElementById("test-filter-field");
+              if(startInput && !startInput.value) startInput.value = today;
+              if(endInput && !endInput.value) endInput.value = today;
+              if(fieldSelect) fieldSelect.value = "starttime";
+              if(typeof loadTestList === "function") loadTestList();
+            }
+            if(selectedValue === "note") {
+              const startInput = document.getElementById("note-filter-start");
+              const endInput = document.getElementById("note-filter-end");
+              const fieldSelect = document.getElementById("note-filter-field");
+              if(startInput && !startInput.value) startInput.value = today;
+              if(endInput && !endInput.value) endInput.value = today;
+              if(fieldSelect) fieldSelect.value = "starttime";
+              if(typeof loadNoteList === "function") loadNoteList();
+            }
             if(selectedValue === "failure" && typeof loadFailureList === "function") loadFailureList();
             if(selectedValue === "blog") {
               if(typeof loadBlogList === "function") loadBlogList();
