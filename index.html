@@ -71,7 +71,11 @@
         bottom: 0;
         left: 0;
         z-index: 100;
-        transition: background-color 0.3s, border-color 0.3s;
+        transition: left 0.3s ease, background-color 0.3s, border-color 0.3s;
+      }
+
+      aside.collapsed {
+        left: -260px;
       }
 
       .sidebar-top h2{
@@ -130,6 +134,40 @@
         flex-direction: column;
         justify-content: space-between;
         min-height: 100vh;
+        transition: margin-left 0.3s ease, max-width 0.3s ease;
+      }
+
+      main.expanded {
+        margin-left: 0;
+        max-width: 100%;
+      }
+
+      #sidebar-toggle-btn {
+        position: fixed;
+        top: 20px;
+        left: 275px;
+        z-index: 101;
+        background-color: var(--box-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        font-size: 16px;
+        transition: left 0.3s ease, background-color 0.3s, color 0.3s;
+      }
+
+      #sidebar-toggle-btn:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      #sidebar-toggle-btn.collapsed {
+        left: 15px;
       }
 
       .main-content-body {
@@ -345,7 +383,9 @@
   
   <body>
 
-    <aside>
+    <button id="sidebar-toggle-btn" title="切換側欄顯示">◀</button>
+
+    <aside id="sidebar">
       <div class="sidebar-top">
         <h2>407 班級專區</h2>
         <div class="nav-menu">
@@ -365,7 +405,7 @@
       </div>
     </aside>
 
-    <main>
+    <main id="main-content">
       <div class="main-content-body">
         <div id="view-contact-container">
           <div class="header-container">
@@ -440,7 +480,7 @@
 
         <div id="view-manager-container" style="display: none;">
           <div id="login-container" style="text-align: center; margin-top: 100px; background: var(--box-bg); padding: 40px; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); max-width: 400px; margin-left: auto; margin-right: auto;">
-            <h1>407 線上聯絡簿 後臺登入</h1>
+            <h1>後臺登入</h1>
             <p>請輸入後臺管理密碼</p>
             <input type="password" placeholder="password" id="password-blank"><br><br>
             <button id="login-btn">登入</button>
@@ -684,11 +724,29 @@
       </div>
 
       <footer class="site-footer">
-        FDHS 407 線上聯絡簿 | Ver. 2.0.0 主頁與管理頁整合
+        FDHS 407 線上聯絡簿 | Ver. 2.0.1 側欄增加收縮按鈕
       </footer>
     </main>
 
     <script>
+      const sidebarToggleBtn = document.getElementById("sidebar-toggle-btn");
+      const sidebar = document.getElementById("sidebar");
+      const mainContent = document.getElementById("main-content");
+
+      sidebarToggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("collapsed");
+        mainContent.classList.toggle("expanded");
+        sidebarToggleBtn.classList.toggle("collapsed");
+
+        if (sidebar.classList.contains("collapsed")) {
+          sidebarToggleBtn.textContent = "▶";
+          sidebarToggleBtn.title = "展開側欄";
+        } else {
+          sidebarToggleBtn.textContent = "◀";
+          sidebarToggleBtn.title = "收合側欄";
+        }
+      });
+
       const darkModeToggle = document.getElementById("darkModeToggle");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
       
@@ -841,7 +899,6 @@
       }
 
       function renderDailyData(data) {
-        
         const hwContainer = document.getElementById("homework-content");
         if(data.homeworkError){ hwContainer.innerHTML = "載入失敗"; }
         else if(data.homework.length === 0){ hwContainer.innerHTML = "本日無作業"; }
@@ -859,11 +916,11 @@
           clothesContainer.innerHTML = `
             <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
             <ul style="padding-left:15px;">
-              <li>星期一：${item.mon || "放假"}</li>
-              <li>星期二：${item.tue || "放假"}</li>
-              <li>星期三：${item.wed || "放假"}</li>
-              <li>星期四：${item.thur || "放假"}</li>
-              <li>星期五：${item.fri || "放假"}</li>
+              <li>一：${item.mon || "放假"}</li>
+              <li>二：${item.tue || "放假"}</li>
+              <li>三：${item.wed || "放假"}</li>
+              <li>四：${item.thur || "放假"}</li>
+              <li>五：${item.fri || "放假"}</li>
             </ul>`;
         }
 
