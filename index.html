@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
+    
+    <!-- 引入 Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script>
       const SUPABASE_URL = "https://ocwpamhemxddhujichkz.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3BhbWhlbXhkZGh1amljaGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTYzNzUsImV4cCI6MjEwNDQ3MjM3NX0.N4N75_Y7dFNoOiSEBvKEcpHHMdxFfGC0P4PDmlNbTns";
@@ -181,7 +184,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           <button class="nav-btn active" id="nav-contact">聯絡簿</button>
           <button class="nav-btn hidden" id="nav-manager">後台管理</button>
           <button class="nav-btn" id="nav-blog">班級部落格</button>
-          <button class="nav-btn hidden" id="nav-todo">我的待辦</button>          
+          <button class="nav-btn hidden" id="nav-todo">我的待辦</button>         
         </div>
       </div>
 
@@ -278,12 +281,28 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-blog-container" style="display: none;">
-          <div class="header-container"><div><h1>班級部落格</h1><p class="hint" style="margin:2px 0 0">分享你的日常，大家一起交流</p></div></div>
+          <div class="header-container">
+            <div>
+              <h1>班級部落格</h1>
+              <p class="hint" style="margin:2px 0 0">分享你的日常，支援上傳圖片，按下 Enter 即可換行</p>
+            </div>
+          </div>
+          
           <div class="section-box composer view-gap" style="min-height:0">
-            <h3>寫一篇</h3>
+            <h3 id="blog-composer-title">寫一篇</h3>
+            <input type="hidden" id="blog-composer-id">
             <input id="blog-new-title" placeholder="標題">
-            <textarea id="blog-new-body" rows="4" placeholder="今天發生了什麼事？"></textarea>
-            <button id="blog-new-post">發佈</button>
+            <textarea id="blog-new-body" rows="6" placeholder="今天發生了什麼事？"></textarea>
+            
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom: 12px; flex-wrap:wrap;">
+              <label class="ghost" style="padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem; margin:0;">
+                插入圖片 <input type="file" id="blog-new-image" accept="image/*" hidden>
+              </label>
+              <span id="blog-image-uploading" style="display:none; color:var(--muted); font-size:0.9rem;">圖片上傳中...</span>
+              <span style="flex:1"></span>
+              <button id="blog-new-post">發佈</button>
+              <button id="blog-cancel-edit" class="ghost" style="display:none; margin-left:8px;">取消編輯</button>
+            </div>
           </div>
           <div id="blog-feed"></div>
         </div>
@@ -311,7 +330,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
+            <label>暱稱<input id="profile-nick" placeholder="即顯示名稱"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
@@ -566,7 +585,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="blog-form" class="form-box" style="display: none;">
               <div id="blog-insert">
-                <h3 id="blog-form-title">新增 Blog</h3>
+                <h3 id="blog-manager-form-title">新增 Blog</h3>
                 <input type="hidden" id="blog-edit-id">
                 
                 <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label>&nbsp;&nbsp;&nbsp;
@@ -592,7 +611,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       </div>
 
       <footer class="site-footer">
-        FDHS 407 線上聯絡簿 | Ver. 3.0.0 帳號、待辦、緊急通告與班級部落格
+        FDHS 407 線上聯絡簿 | Ver. 3.2.0 純文字部落格與圖片編輯功能
       </footer>
     </main>
 
@@ -689,8 +708,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       const dataCache = {
         daily: {},
         weekly: {},
-        failure: null,
-        blog: null
+        failure: null
       };
 
       async function initGlobalData() {
@@ -698,12 +716,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           fetchFailure();
         } else {
           renderFailure(dataCache.failure);
-        }
-
-        if (!dataCache.blog) {
-          fetchBlog();
-        } else {
-          renderBlog(dataCache.blog);
         }
       }
 
@@ -733,8 +745,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       let dailyRequestId = 0;
 
-      // 一日檢視：四個區塊獨立載入。
-      // 不使用 Promise.all，避免其中一個 Supabase 查詢卡住時拖住整個畫面。
       function fetchDailyQuery(label, query, onDone, requestId){
         let finished = false;
         const finish = (result) => {
@@ -779,7 +789,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           note: [], noteError: null
         };
 
-        // 今天可以準備的作業：已開始，而且截止日在今天之後。
         fetchDailyQuery("作業", supabaseClient.from("Homework Status")
           .select("*")
           .lte("starttime", selectedDate)
@@ -790,7 +799,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             renderDailyData(dayData, selectedDate);
           }, requestId);
 
-        // 今天可以準備的考試：已開始，而且考試日在今天之後。
         fetchDailyQuery("考試", supabaseClient.from("Test Status")
           .select("*")
           .lte("starttime", selectedDate)
@@ -801,7 +809,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             renderDailyData(dayData, selectedDate);
           }, requestId);
 
-        // 服裝：抓選定日期所在週，只顯示當天。
         fetchDailyQuery("服裝", supabaseClient.from("Clothes Status")
           .select("*")
           .lte("weekstart", selectedDate)
@@ -811,7 +818,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             renderDailyData(dayData, selectedDate);
           }, requestId);
 
-        // 注意事項：開始日與結束日都包含在有效範圍內。
         fetchDailyQuery("注意事項", supabaseClient.from("Note Status")
           .select("*")
           .lte("starttime", selectedDate)
@@ -870,21 +876,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const html = (!data || data.length === 0) ? '<div class="empty">目前沒有人缺繳</div>' : `<ol>` + data.map(item =>`<li><b>${esc(item.details)}</b>：${esc(item.failurelist)}</li>`).join('') + `</ol>`;
         if(container) container.innerHTML = html;
         if(weeklyFailureContainer) weeklyFailureContainer.innerHTML = html;
-      }
-
-      async function fetchBlog(){ return;
-        const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false}).limit(5);
-        if(error || !data){ return; }
-        dataCache.blog = data;
-        renderBlog(data);
-      }
-
-      function renderBlog(data) {
-        const container = document.getElementById('blog-content');
-        const weeklyBlogContainer = document.getElementById('weekly-blog-content');
-        const html = (!data || data.length === 0) ? '<div class="empty">還沒有班級紀錄</div>' : `<ul style="list-style-type: none; padding-left: 0;">` + data.map(item =>`<li style="margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;"><b>${item.title}</b> <span style="color:gray; font-size:0.9em;">(${item.postdate})</span><div style="white-space:pre-wrap; margin-top:4px;">${item.blog}</div></li>`).join('') + `</ul>`;
-        if(container) container.innerHTML = html;
-        if(weeklyBlogContainer) weeklyBlogContainer.innerHTML = html;
       }
 
       async function fetchWeeklyData(selectedDate){
@@ -1025,8 +1016,8 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             }
             if(selectedValue === "failure" && typeof loadFailureList === "function") loadFailureList();
             if(selectedValue === "blog") {
-              if(typeof loadBlogList === "function") loadBlogList();
-              if(typeof resetBlogForm === "function") resetBlogForm();
+              if(typeof loadBlogManagerList === "function") loadBlogManagerList();
+              if(typeof resetBlogManagerForm === "function") resetBlogManagerForm();
             }
           }
         }
@@ -1411,84 +1402,88 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         });
       }
 
-      const blogInsertBtn = document.getElementById("blog-insert-btn");
-      const blogCancelEditBtn = document.getElementById("blog-cancel-edit-btn");
-      const loadBlogBtn = document.getElementById("load-blog-list-btn");
-      const blogListContainer = document.getElementById("blog-list-container");
+      // ---------------------------------------------
+      // Blog Backend Manager Logic (後台 Blog 管理)
+      // ---------------------------------------------
+      const blogManagerInsertBtn = document.getElementById("blog-insert-btn");
+      const blogManagerCancelEditBtn = document.getElementById("blog-cancel-edit-btn");
+      const loadBlogManagerBtn = document.getElementById("load-blog-list-btn");
+      const blogManagerListContainer = document.getElementById("blog-list-container");
 
-      const blogFormTitle = document.getElementById("blog-form-title");
-      const blogEditIdInput = document.getElementById("blog-edit-id");
-      const blogTitleInput = document.getElementById("blog-insert-title");
-      const blogDateInput = document.getElementById("blog-insert-postdate");
-      const blogDetailInput = document.getElementById("blog-insert-detail");
+      const blogManagerFormTitle = document.getElementById("blog-manager-form-title");
+      const blogManagerEditIdInput = document.getElementById("blog-edit-id");
+      const blogManagerTitleInput = document.getElementById("blog-insert-title");
+      const blogManagerDateInput = document.getElementById("blog-insert-postdate");
+      const blogManagerDetailInput = document.getElementById("blog-insert-detail");
 
-      if(blogInsertBtn){
-        blogInsertBtn.addEventListener("click", async() =>{
-          const blogtitle = blogTitleInput.value;
-          const blogdate = blogDateInput.value;
-          const blogdetail = blogDetailInput.value;
-          const editId = blogEditIdInput.value;
+      if(blogManagerInsertBtn){
+        blogManagerInsertBtn.addEventListener("click", async() =>{
+          const blogtitle = blogManagerTitleInput.value;
+          const blogdate = blogManagerDateInput.value;
+          const blogdetail = blogManagerDetailInput.value;
+          const editId = blogManagerEditIdInput.value;
           if(!blogtitle || !blogdate || !blogdetail){ alert("請完整填寫Blog資訊!"); return; }
 
           if(editId){
             const {error} = await supabaseClient.from("Blog Status").update({title: blogtitle, postdate: blogdate, blog: blogdetail}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("Blog修改成功!"); resetBlogForm(); loadBlogList(); }
+            if(error) alert("Error: " + error.message); else { alert("Blog修改成功!"); resetBlogManagerForm(); loadBlogManagerList(); }
           }else{
             const {error} = await supabaseClient.from("Blog Status").insert([{title: blogtitle, postdate: blogdate, blog: blogdetail}]);
-            if(error) alert("Error: " + error.message); else { alert("Blog新增成功!"); resetBlogForm(); loadBlogList(); }
+            if(error) alert("Error: " + error.message); else { alert("Blog新增成功!"); resetBlogManagerForm(); loadBlogManagerList(); }
           }
         });
       }
-      if(blogCancelEditBtn) blogCancelEditBtn.addEventListener("click", resetBlogForm);
+      if(blogManagerCancelEditBtn) blogManagerCancelEditBtn.addEventListener("click", resetBlogManagerForm);
 
-      function resetBlogForm(){
-        blogEditIdInput.value = "";
-        blogTitleInput.value = "";
+      function resetBlogManagerForm(){
+        blogManagerEditIdInput.value = "";
+        blogManagerTitleInput.value = "";
         const now = new Date();
         const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-        blogDateInput.value = taiwanTime.toISOString().split('T')[0];
-        blogDetailInput.value = "";
-        blogFormTitle.innerText = "新增 Blog";
-        blogInsertBtn.innerText = "確認新增";
-        blogCancelEditBtn.style.display = "none";
+        blogManagerDateInput.value = taiwanTime.toISOString().split('T')[0];
+        blogManagerDetailInput.value = "";
+        blogManagerFormTitle.innerText = "新增 Blog";
+        blogManagerInsertBtn.innerText = "確認新增";
+        blogManagerCancelEditBtn.style.display = "none";
       }
 
-      async function loadBlogList(){
-        if(!blogListContainer) return;
-        blogListContainer.innerHTML = "載入中...";
+      async function loadBlogManagerList(){
+        if(!blogManagerListContainer) return;
+        blogManagerListContainer.innerHTML = "載入中...";
         const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false});
-        if(error){ blogListContainer.innerHTML = "Error：" + error.message; return; }
-        if(!data || data.length === 0){ blogListContainer.innerHTML = "<div>目前沒有 Blog 資料</div>"; return; }
+        if(error){ blogManagerListContainer.innerHTML = "Error：" + error.message; return; }
+        if(!data || data.length === 0){ blogManagerListContainer.innerHTML = "<div>目前沒有 Blog 資料</div>"; return; }
 
         let html = `<table><thead><tr><th>標題</th><th>上傳日期</th><th style="width: 45%;">內容</th><th>操作</th></tr></thead><tbody>`;
         data.forEach(item => {
           const safeTitle = item.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
           const safeBlog = item.blog.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          html += `<tr><td>${item.title}</td><td style="text-align: center;">${item.postdate}</td><td style="white-space: pre-wrap;">${item.blog}</td><td style="text-align: center;"><button onclick="prepareEditBlog('${item.id}', \`${safeTitle}\`, '${item.postdate}', \`${safeBlog}\`)">修改</button><button onclick="deleteBlog('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button></td></tr>`;
+          html += `<tr><td>${item.title}</td><td style="text-align: center;">${item.postdate}</td><td style="white-space: pre-wrap;">${esc(item.blog).substring(0, 100)}...</td><td style="text-align: center;"><button onclick="prepareEditBlogManager('${item.id}', \`${safeTitle}\`, '${item.postdate}', \`${safeBlog}\`)">修改</button><button onclick="deleteBlogManager('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button></td></tr>`;
         });
         html += `</tbody></table>`;
-        blogListContainer.innerHTML = html;
+        blogManagerListContainer.innerHTML = html;
       }
-      if(loadBlogBtn) loadBlogBtn.addEventListener("click", loadBlogList);
+      if(loadBlogManagerBtn) loadBlogManagerBtn.addEventListener("click", loadBlogManagerList);
 
-      window.prepareEditBlog = function(id, title, date, blog){
-        blogEditIdInput.value = id;
-        blogTitleInput.value = title;
-        blogDateInput.value = date;
-        blogDetailInput.value = blog;
-        blogFormTitle.innerText = "修改 Blog";
-        blogInsertBtn.innerText = "確認修改";
-        blogCancelEditBtn.style.display = "inline-block";
-        window.scrollTo({top: blogFormTitle.offsetTop, behavior: 'smooth'});
+      window.prepareEditBlogManager = function(id, title, date, blog){
+        blogManagerEditIdInput.value = id;
+        blogManagerTitleInput.value = title;
+        blogManagerDateInput.value = date;
+        blogManagerDetailInput.value = blog;
+        blogManagerFormTitle.innerText = "修改 Blog";
+        blogManagerInsertBtn.innerText = "確認修改";
+        blogManagerCancelEditBtn.style.display = "inline-block";
+        window.scrollTo({top: blogManagerFormTitle.offsetTop, behavior: 'smooth'});
       };
 
-      window.deleteBlog = async function(id){
+      window.deleteBlogManager = async function(id){
         if(!confirm("確定要刪除這筆 Blog 嗎?")) return;
         const {error} = await supabaseClient.from("Blog Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除 Blog!"); loadBlogList(); }
+        if(error) alert("Error：" + error.message); else { alert("已成功刪除 Blog!"); loadBlogManagerList(); }
       };
 
-      /* ===== v3：帳號、身分組、公告、待辦、日記 ===== */
+
+      /* ===== v3：帳號、身分組、公告、待辦、部落格 ===== */
       const $ = id => document.getElementById(id);
       const ROLE = {admin: '管理員', teacher: '導師', monitor: '班長', officer: '幹部', student: '學生'};
       const FORM_NAMES = {homework: '作業', test: '考試', note: '注意事項', failure: '缺繳名單', clothes: '服裝', announce: '緊急通告', accounts: '帳號管理'};
@@ -1576,7 +1571,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           const {data} = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
           me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email, must_change: !!(data && data.must_change_password)};
         }
-        // 優先顯示暱稱/稱謂（title），若無則依序使用 real_name 或 username
         const displayName = me ? (me.title || me.real_name || me.username || '完成註冊') : '';
         $('account-btn').innerHTML = me
           ? `${avatar(me)}<span class="name">${esc(displayName)}</span>`
@@ -1593,7 +1587,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         }, 0);
       });
 
-      /* --- 緊急通告：只保留最新一則，發布新的就覆蓋舊的 --- */
+      /* --- 緊急通告 --- */
       async function currentAnnounce(){
         const {data} = await supabaseClient.from('announcements').select('*').order('created_at', {ascending: false}).limit(1);
         return (data && data[0]) || null;
@@ -1655,7 +1649,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(!username || !real){ alert('請填寫帳號名稱與真實姓名'); return; }
         if(username.includes('@') || /\s/.test(username)){ alert('帳號名稱不能包含 @ 或空白'); return; }
 
-        // 註冊：帳號名稱、姓名、暱稱隨註冊一起送出，由資料庫自動建立個人資料
         if(registering){
           if(!email){ alert('請輸入 Email'); return; }
           if(pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
@@ -1696,24 +1689,20 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         alert('已儲存');
         showView('contact');
       });
-      /* --- 後台：依身分組顯示可用項目 --- */
+
       function initManager(){
         $('login-container').style.display = 'none';
         $('admin-container').style.display = 'block';
         const allow = me.role === 'officer' ? ['homework', 'test', 'note', 'failure']
-          : ['homework', 'test', 'note', 'failure', 'clothes', 'announce'].concat(me.role === 'admin' ? ['accounts'] : []);
+          : ['homework', 'test', 'note', 'failure', 'clothes', 'announce'].concat(me.role === 'admin' ? ['accounts', 'blog'] : ['blog']);
         const sel = $('status-select');
-        sel.innerHTML = '<option value="">-- 請選擇項目 --</option>' + allow.map(k => `<option value="${k}">${FORM_NAMES[k]}</option>`).join('');
+        sel.innerHTML = '<option value="">-- 請選擇項目 --</option>' + allow.map(k => `<option value="${k}">${FORM_NAMES[k] || (k==='blog'?'Blog 管理':'')}</option>`).join('');
         document.querySelectorAll('.form-box').forEach(b => b.style.display = 'none');
         ['homework', 'test', 'note'].forEach(t => {
           if(!$(t + '-filter-start').value) $(t + '-filter-start').value = today;
           if(!$(t + '-filter-end').value) $(t + '-filter-end').value = today;
         });
       }
-      $('status-select').addEventListener('change', e => {
-        if(e.target.value === 'announce') loadAnnounceList();
-        if(e.target.value === 'accounts') loadAccounts();
-      });
 
       let accountsCache = [];
       const getTemps = () => { try{ return JSON.parse(sessionStorage.getItem('tempPw') || '{}'); }catch(e){ return {}; } };
@@ -1723,12 +1712,11 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const pr = await supabaseClient.from('profiles').select('*').order('created_at');
         if(pr.error){ $('accounts-list').textContent = 'Error：' + pr.error.message; return; }
         accountsCache = pr.data;
-        // 對方改好密碼後，就不再顯示臨時密碼
         const temps = getTemps();
         let changed = false;
         pr.data.forEach(p => { if(temps[p.id] && !p.must_change_password){ delete temps[p.id]; changed = true; } });
         if(changed) setTemps(temps);
-        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>身分組</th><th>操作</th></tr></thead><tbody>` +
+        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>暱稱</th><th>身分組</th><th>操作</th></tr></thead><tbody>` +
           pr.data.map(p => {
             const self = p.id === me.id;
             const roleSel = `<select ${self ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
@@ -1766,7 +1754,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       window.delUser = async id => {
         const p = accountsCache.find(x => x.id === id);
         const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
-        if(!confirm(`確定要刪除「${name}」的帳號嗎？\n登入帳號、個人資料與待辦都會被刪除，無法復原。\n（他發過的日記會保留，作者顯示為「匿名」。）`)) return;
+        if(!confirm(`確定要刪除「${name}」的帳號嗎？\n登入帳號、個人資料與待辦都會被刪除，無法復原。\n（他發過的部落格會保留，作者顯示為「匿名」。）`)) return;
         const {error} = await supabaseClient.rpc('admin_delete_user', {uid: id});
         if(error){ alert('刪除失敗：' + error.message); return; }
         const t = getTemps(); delete t[id]; setTemps(t);
@@ -1824,36 +1812,141 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
       /* --- 班級部落格 --- */
+      let currentBlogData = [];
+
       async function loadBlog(){
         $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
         const {data, error} = await supabaseClient.from('Blog Status').select('*, profiles(username, real_name, title, avatar_url)')
           .order('postdate', {ascending: false}).order('id', {ascending: false}).limit(50);
         if(error){ $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
-        $('blog-feed').innerHTML = (data || []).map(p => {
-          const a = p.profiles, canDel = me && (p.author_id === me.id || me.role === 'admin');
-          return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>` +
-            (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${p.postdate}</div></div>` +
-            (canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '') + `</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
+        
+        currentBlogData = data || [];
+
+        $('blog-feed').innerHTML = currentBlogData.map(p => {
+          const a = p.profiles;
+          const canEdit = me && (p.author_id === me.id);
+          const canDel = me && (p.author_id === me.id || me.role === 'admin');
+          
+          // 將整段文字透過 esc() 變成純文字，並擋下所有 XSS 攻擊
+          let safeBlog = esc(p.blog);
+          
+          // 專門抓取 ![圖片](網址) 語法並轉換成安全的 <img> 標籤顯示
+          // 限定網址必須是安全的，不允許含有引號或空格，防止不當注入
+          safeBlog = safeBlog.replace(/!\[圖片\]\((https:\/\/[^\s")]+)\)/g, '<img src="$1" style="max-width: 100%; border-radius: 8px; margin: 10px 0; display: block; max-height: 400px; object-fit: contain;" alt="圖片">');
+
+          return `<article class="post">
+            <header>
+              ${avatar(a)}
+              <div class="grow">
+                <b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>
+                ${a && a.title ? `<span class="tag">${esc(a.title)}</span>` : ''}
+                <div class="due" style="margin:0">${p.postdate}</div>
+              </div>
+              ${canEdit ? `<button class="ghost" data-editpost="${p.id}">編輯</button>` : ''}
+              ${canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : ''}
+            </header>
+            <h4>${esc(p.title)}</h4>
+            <!-- 使用 note-text 類別 (擁有 white-space: pre-wrap) 來保留換行 -->
+            <div class="note-text" style="margin-top:10px;">${safeBlog}</div>
+          </article>`;
         }).join('') || '<div class="empty">還沒有人分享，當第一個吧</div>';
       }
+
+      // 文章操作 (刪除、進入編輯模式)
       $('blog-feed').addEventListener('click', async e => {
-        const id = e.target.dataset.delpost;
-        if(!id || !confirm('確定要刪除這篇日記嗎?')) return;
-        await supabaseClient.from('Blog Status').delete().eq('id', id);
+        const delId = e.target.dataset.delpost;
+        if(delId){
+          if(!confirm('確定要刪除這篇部落格嗎?')) return;
+          await supabaseClient.from('Blog Status').delete().eq('id', delId);
+          loadBlog();
+          return;
+        }
+
+        const editId = e.target.dataset.editpost;
+        if(editId){
+          const post = currentBlogData.find(x => String(x.id) === editId);
+          if(!post) return;
+          $('blog-composer-id').value = post.id;
+          $('blog-new-title').value = post.title;
+          $('blog-new-body').value = post.blog;
+          $('blog-composer-title').textContent = '編輯部落格';
+          $('blog-new-post').textContent = '儲存修改';
+          $('blog-cancel-edit').style.display = 'inline-block';
+          window.scrollTo({top: $('view-blog-container').offsetTop, behavior: 'smooth'});
+        }
+      });
+
+      // 取消編輯
+      $('blog-cancel-edit').addEventListener('click', () => {
+        $('blog-composer-id').value = '';
+        $('blog-new-title').value = '';
+        $('blog-new-body').value = '';
+        $('blog-composer-title').textContent = '寫一篇';
+        $('blog-new-post').textContent = '發佈';
+        $('blog-cancel-edit').style.display = 'none';
+      });
+
+      // 發佈與儲存修改
+      $('blog-new-post').addEventListener('click', async () => {
+        const title = $('blog-new-title').value.trim();
+        const body = $('blog-new-body').value.trim();
+        const editId = $('blog-composer-id').value;
+        
+        if(!title || !body){ alert('請填寫標題與內容'); return; }
+        
+        if(editId) {
+          const {error} = await supabaseClient.from('Blog Status').update({title, blog: body}).eq('id', editId);
+          if(error){ alert('修改失敗：' + error.message); return; }
+          alert('部落格已成功修改！');
+        } else {
+          const {error} = await supabaseClient.from('Blog Status').insert({title, blog: body, postdate: today});
+          if(error){ alert('發佈失敗：' + error.message); return; }
+        }
+        
+        $('blog-cancel-edit').click(); // 清空表單並恢復預設狀態
         loadBlog();
       });
-      $('blog-new-post').addEventListener('click', async () => {
-        const title = $('blog-new-title').value.trim(), body = $('blog-new-body').value.trim();
-        if(!title || !body){ alert('請填寫標題與內容'); return; }
-        const {error} = await supabaseClient.from('Blog Status').insert({title, blog: body, postdate: today});
-        if(error){ alert('發佈失敗：' + error.message); return; }
-        $('blog-new-title').value = ''; $('blog-new-body').value = '';
-        loadBlog();
+
+      // 上傳圖片並插入自訂圖片語法
+      $('blog-new-image').addEventListener('change', async e => {
+        const f = e.target.files[0];
+        if(!f) return;
+        if(f.size > 5 * 1024 * 1024){ alert('圖片請小於 5MB'); return; }
+        
+        $('blog-image-uploading').style.display = 'inline-block';
+        
+        const ext = f.name.split('.').pop();
+        const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+        const path = `${me.id}/${filename}`;
+        
+        //上傳到名為 'blog_images' 的 Bucket 中
+        const {error: ue} = await supabaseClient.storage.from('blog_images').upload(path, f, {contentType: f.type});
+        
+        $('blog-image-uploading').style.display = 'none';
+        
+        if(ue){
+          alert('圖片上傳失敗：' + ue.message + '\n\n【開發者提醒】請確定系統管理員已在 Supabase 建立一個名為「blog_images」的公開 Storage Bucket，並允許使用者寫入。');
+          e.target.value = '';
+          return;
+        }
+        
+        const imgUrl = supabaseClient.storage.from('blog_images').getPublicUrl(path).data.publicUrl;
+        
+        // 取得 textarea 目前的游標位置來插入語法
+        const body = $('blog-new-body');
+        const cursorPosition = body.selectionStart;
+        const textBefore = body.value.substring(0, cursorPosition);
+        const textAfter = body.value.substring(cursorPosition);
+        // 繼續使用相同的結構標記圖片，我們會在顯示時將它專門轉換回來
+        const imgMarkdown = `\n![圖片](${imgUrl})\n`;
+        
+        body.value = textBefore + imgMarkdown + textAfter;
+        body.focus();
+        e.target.value = '';
       });
 
       fetchAnnounce();
 
-      // 手機版：把管理表格每格加上欄位標籤，讓表格可轉成卡片顯示
       new MutationObserver(() => {
         document.querySelectorAll('#admin-container table').forEach(t => {
           if (t.dataset.labeled) return;
