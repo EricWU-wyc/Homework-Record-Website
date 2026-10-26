@@ -308,7 +308,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議輸入 幹部職位+真實姓名"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議輸入 暱稱+真名"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
@@ -1560,7 +1560,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(p !== $('reset-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
         const {error} = await supabaseClient.auth.updateUser({password: p});
         if(error){ alert('設定失敗：' + error.message); return; }
-        await supabaseClient.from('profiles').update({must_change_password: false}).eq('id', me.id);
         $('reset-pass').value = ''; $('reset-pass2').value = '';
         await refreshMe();
         alert('密碼已更新');
