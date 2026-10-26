@@ -311,7 +311,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議 暱稱+真名"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
@@ -1830,7 +1830,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           .order('postdate', {ascending: false}).order('id', {ascending: false}).limit(50);
         if(error){ $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
         $('blog-feed').innerHTML = (data || []).map(p => {
-          const a = p.profiles, canDel = me && (p.author_id === me.id || isStaff());
+          const a = p.profiles, canDel = me && (p.author_id === me.id || me.role === 'admin');
           return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>` +
             (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${p.postdate}</div></div>` +
             (canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '') + `</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
