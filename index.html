@@ -308,12 +308,24 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議輸入 幹部職位+真實姓名"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
+            <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
             <button id="profile-skip" class="ghost">稍後再填</button>
             <button id="logout-btn" class="ghost">登出</button>
+          </div>
+        </div>
+
+        <div id="view-reset-container" style="display: none;">
+          <div class="auth-card">
+            <h2>設定新密碼</h2>
+            <p class="hint">你目前使用的是管理員提供的臨時密碼，請先設定自己的新密碼才能繼續使用。</p>
+            <label>新密碼<input type="password" id="reset-pass" autocomplete="new-password"></label>
+            <label>確認新密碼<input type="password" id="reset-pass2" autocomplete="new-password"></label>
+            <button id="reset-save">儲存新密碼</button>
+            <button id="reset-logout" class="ghost">登出</button>
           </div>
         </div>
 
@@ -342,14 +354,11 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
 
             <div id="announce-form" class="form-box" style="display: none;">
-              <h3>新增緊急通告</h3>
-              <label>開始日期：<input type="date" id="announce-start"></label>&nbsp;&nbsp;&nbsp;
-              <label>結束日期：<input type="date" id="announce-end"></label><br><br>
-              <label>通告內容：<br><textarea id="announce-text" rows="4" style="width: 80%; resize: vertical; margin-top: 5px;" placeholder="會顯示在聯絡簿最上方"></textarea></label><br><br>
-              <button id="announce-add">發布通告</button>
-              <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
-              <h3>現有通告</h3>
-              <div id="announce-list"></div>
+              <h3>緊急通告</h3>
+              <p class="hint">同一時間只會有一則通告。發布新的會直接覆蓋舊的，清除後首頁就不再顯示。</p>
+              <div id="announce-list" style="margin-bottom: 14px;"></div>
+              <textarea id="announce-text" rows="4" style="width: 80%; resize: vertical;" placeholder="輸入通告內容，會顯示在聯絡簿最上方"></textarea><br><br>
+              <button id="announce-add">發布並覆蓋</button>
             </div>
 
             <div id="accounts-form" class="form-box" style="display: none;">
@@ -1494,9 +1503,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       }
 
       /* --- 畫面切換 --- */
-      const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile'];
+      const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile', 'reset'];
       let registering = false;
       function showView(v){
+        if(me && me.must_change && v !== 'reset') v = 'reset';
         if((v === 'todo' || v === 'blog') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'profile' && !me && !registering){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'manager' && !isWriter()){ v = me ? 'contact' : 'auth'; }
@@ -1543,13 +1553,26 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('login-pass').addEventListener('keydown', e => { if(e.key === 'Enter') $('login-go').click(); });
       $('profile-skip').addEventListener('click', () => { try{ sessionStorage.setItem('skipProfile', '1'); }catch(e){} showView('contact'); });
       $('logout-btn').addEventListener('click', () => supabaseClient.auth.signOut());
+      $('reset-logout').addEventListener('click', () => supabaseClient.auth.signOut());
+      $('reset-save').addEventListener('click', async () => {
+        const p = $('reset-pass').value;
+        if(p.length < 6){ alert('密碼至少需要 6 碼'); return; }
+        if(p !== $('reset-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
+        const {error} = await supabaseClient.auth.updateUser({password: p});
+        if(error){ alert('設定失敗：' + error.message); return; }
+        await supabaseClient.from('profiles').update({must_change_password: false}).eq('id', me.id);
+        $('reset-pass').value = ''; $('reset-pass2').value = '';
+        await refreshMe();
+        alert('密碼已更新');
+        showView('contact');
+      });
 
       async function refreshMe(){
         const {data: {session}} = await supabaseClient.auth.getSession();
         me = null;
         if(session){
           const {data} = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
-          me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email};
+          me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email, must_change: !!(data && data.must_change_password)};
         }
         // 優先顯示暱稱/稱謂（title），若無則依序使用 real_name 或 username
         const displayName = me ? (me.title || me.real_name || me.username || '完成註冊') : '';
@@ -1562,23 +1585,42 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       supabaseClient.auth.onAuthStateChange((ev) => {
         setTimeout(async () => {
           await refreshMe();
+          if(me && me.must_change){ showView('reset'); return; }
           if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
 
-      /* --- 緊急通告 --- */
-      async function fetchAnnounce(){
-        const {data, error} = await supabaseClient.from('announcements')
-          .select('*')
-          .order('created_at', {ascending: false})
-          .limit(1);
-        if(error){
-          $('announce-bar').innerHTML = '';
-          return;
-        }
-        $('announce-bar').innerHTML = (data || []).map(a => `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>`).join('');
+      /* --- 緊急通告：只保留最新一則，發布新的就覆蓋舊的 --- */
+      async function currentAnnounce(){
+        const {data} = await supabaseClient.from('announcements').select('*').order('created_at', {ascending: false}).limit(1);
+        return (data && data[0]) || null;
       }
+      async function fetchAnnounce(){
+        const a = await currentAnnounce();
+        $('announce-bar').innerHTML = a ? `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>` : '';
+      }
+      async function loadAnnounceList(){
+        const a = await currentAnnounce();
+        $('announce-list').innerHTML = a
+          ? `<div class="alert" style="margin-bottom:10px"><b>目前通告</b><div class="note-text">${esc(a.content)}</div></div><button id="announce-clear" style="background-color:#e74c3c">清除通告</button>`
+          : '<div class="empty">目前沒有通告</div>';
+        $('announce-text').value = a ? a.content : '';
+      }
+      $('announce-add').addEventListener('click', async () => {
+        const content = $('announce-text').value.trim();
+        if(!content){ alert('請輸入通告內容'); return; }
+        const {data, error} = await supabaseClient.from('announcements').insert({content, starttime: today, endtime: '2099-12-31'}).select('id').single();
+        if(error){ alert('Error：' + error.message); return; }
+        await supabaseClient.from('announcements').delete().lt('id', data.id);
+        alert('通告已更新');
+        loadAnnounceList(); fetchAnnounce();
+      });
+      $('announce-list').addEventListener('click', async e => {
+        if(e.target.id !== 'announce-clear' || !confirm('確定要清除目前的通告嗎?')) return;
+        await supabaseClient.from('announcements').delete().gt('id', 0);
+        loadAnnounceList(); fetchAnnounce();
+      });
 
       /* --- 個人資料 --- */
       function fillProfile(){
@@ -1597,6 +1639,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         $('logout-btn').style.display = registering ? 'none' : 'inline-block';
         $('profile-save').textContent = registering ? '建立帳號' : '儲存';
         $('profile-file').value = '';
+        $('profile-pass2').value = '';
       }
       $('profile-file').addEventListener('change', e => {
         const f = e.target.files[0];
@@ -1610,25 +1653,19 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(!username || !real){ alert('請填寫帳號名稱與真實姓名'); return; }
         if(username.includes('@') || /\s/.test(username)){ alert('帳號名稱不能包含 @ 或空白'); return; }
 
-        // 註冊時：直接從這個表單取得 Email + 密碼建立 Supabase 帳號，不再另外跳出 Email／密碼輸入。
+        // 註冊：帳號名稱、姓名、暱稱隨註冊一起送出，由資料庫自動建立個人資料
         if(registering){
           if(!email){ alert('請輸入 Email'); return; }
-          if(!pass || pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
-          const {data, error} = await supabaseClient.auth.signUp({email, password: pass});
+          if(pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
+          if(pass !== $('profile-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
+          const {data: taken} = await supabaseClient.rpc('email_for_username', {u: username});
+          if(taken){ alert('這個帳號名稱已被使用'); return; }
+          const {data, error} = await supabaseClient.auth.signUp({email, password: pass, options: {data: {username, real_name: real, title: $('profile-nick').value.trim() || null}}});
           if(error){ alert('註冊失敗：' + error.message); return; }
-          if(!data.user){ alert('註冊失敗：無法建立帳號'); return; }
-          me = {id: data.user.id, email: data.user.email, role: 'student'};
           registering = false;
-          // 若資料庫有自動建立 profiles 的 trigger，這裡直接更新；若尚未出現，短暫重試一次。
-          let profileSaved = false;
-          for(let i = 0; i < 5; i++){
-            const {error: pe} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null}).eq('id', me.id);
-            if(!pe){ profileSaved = true; break; }
-            await new Promise(r => setTimeout(r, 300));
-          }
-          if(!profileSaved){ alert('帳號已建立，但個人資料儲存失敗，請稍後再從個人資料頁補上。'); }
+          $('profile-pass').value = ''; $('profile-pass2').value = '';
+          if(!data.session){ alert('註冊成功！請到信箱點擊驗證連結後，再用帳號名稱登入。'); showView('auth'); return; }
           await refreshMe();
-          $('profile-pass').value = '';
           alert('註冊成功！');
           showView('contact');
           return;
@@ -1636,6 +1673,8 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
         if(!me){ alert('請先登入'); return; }
         if(!me.username && pass.length < 6){ alert('請設定至少 6 碼的密碼'); return; }
+        if(pass && pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
+        if(pass && pass !== $('profile-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
         let avatar_url = me.avatar_url || null;
         const f = $('profile-file').files[0];
         if(f){
@@ -1668,22 +1707,35 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           if(!$(t + '-filter-start').value) $(t + '-filter-start').value = today;
           if(!$(t + '-filter-end').value) $(t + '-filter-end').value = today;
         });
-        if(!$('announce-start').value) $('announce-start').value = today;
-        if(!$('announce-end').value) $('announce-end').value = today;
       }
       $('status-select').addEventListener('change', e => {
         if(e.target.value === 'announce') loadAnnounceList();
         if(e.target.value === 'accounts') loadAccounts();
       });
 
+      let accountsCache = [];
       async function loadAccounts(){
         $('accounts-list').textContent = '載入中...';
-        const {data, error} = await supabaseClient.from('profiles').select('*').order('created_at');
-        if(error){ $('accounts-list').textContent = 'Error：' + error.message; return; }
-        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>身分組</th></tr></thead><tbody>` +
-          data.map(p => `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td><select ${p.id === me.id ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
-          Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select></td></tr>`).join('') + `</tbody></table>`;
+        const pr = await supabaseClient.from('profiles').select('*').order('created_at');
+        if(pr.error){ $('accounts-list').textContent = 'Error：' + pr.error.message; return; }
+        accountsCache = pr.data;
+        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>身分組</th><th>操作</th></tr></thead><tbody>` +
+          pr.data.map(p => `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td><select ${p.id === me.id ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
+          Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select></td><td>${p.id === me.id ? '' : `<button class="ghost" onclick="resetPw('${p.id}')">重設密碼</button>`}</td></tr>`).join('') + `</tbody></table>`;
       }
+      window.resetPw = async id => {
+        const p = accountsCache.find(x => x.id === id);
+        const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
+        if(!confirm(`要重設「${name}」的密碼嗎？\n請先確認對方身分。舊密碼會立刻失效。`)) return;
+        const {data, error} = await supabaseClient.functions.invoke('reset-password', {body: {user_id: id}});
+        if(error || !data || !data.temp){
+          let msg = error ? error.message : ((data && data.error) || '未知錯誤');
+          try{ if(error && error.context) msg = (await error.context.json()).error || msg; }catch(_){}
+          alert('重設失敗：' + msg);
+          return;
+        }
+        prompt(`「${name}」的臨時密碼（可複製）。\n請私下告訴本人，對方登入後會被要求設定新密碼。`, data.temp);
+      };
       window.setRole = async (id, role) => {
         const {error} = await supabaseClient.from('profiles').update({role}).eq('id', id);
         alert(error ? '更新失敗：' + error.message : '身分組已更新');
