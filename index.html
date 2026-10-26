@@ -719,64 +719,112 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         else fetchWeeklyData(selectedDate);
       });
 
-      async function fetchAllData(selectedDate){
-        initGlobalData();
+      let dailyRequestId = 0;
 
+      // 一日檢視：四個區塊獨立載入。
+      // 不使用 Promise.all，避免其中一個 Supabase 查詢卡住時拖住整個畫面。
+      function fetchDailyQuery(label, query, onDone, requestId){
+        let finished = false;
+        const finish = (result) => {
+          if(finished || requestId !== dailyRequestId) return;
+          finished = true;
+          onDone(result);
+        };
+
+        const timer = setTimeout(() => {
+          finish({data: [], error: {message: `${label}讀取逾時，請稍後再試`}});
+        }, 10000);
+
+        Promise.resolve(query)
+          .then(result => {
+            clearTimeout(timer);
+            finish(result || {data: [], error: {message: `${label}沒有回傳資料`}});
+          })
+          .catch(error => {
+            clearTimeout(timer);
+            finish({data: [], error: {message: error?.message || `${label}讀取失敗`}});
+          });
+      }
+
+      function fetchAllData(selectedDate){
+        const requestId = ++dailyRequestId;
         const hwContainer = document.getElementById("homework-content");
         const testContainer = document.getElementById("test-content");
         const clothesContainer = document.getElementById("clothes-content");
         const noteContainer = document.getElementById("note-content");
+
+        if(!hwContainer || !testContainer || !clothesContainer || !noteContainer) return;
 
         hwContainer.innerHTML = "載入中...";
         testContainer.innerHTML = "載入中...";
         clothesContainer.innerHTML = "載入中...";
         noteContainer.innerHTML = "載入中...";
 
-        // 每個查詢獨立處理，避免其中一個 Supabase 請求卡住時，整個一日檢視永遠停在「載入中」。
-        const withTimeout = (promise, ms = 10000) => Promise.race([
-          promise,
-          new Promise(resolve => setTimeout(() => resolve({data: [], error: {message: '資料讀取逾時'}}), ms))
-        ]);
-
-        // 一日檢視：看「今天可以準備」的作業／考試。
-        // starttime <= 今天 < endtime，所以今天截止／今天考試的不會出現在這裡。
-        // 一週總覽則另外依 endtime 判斷每天「今天要交／要考」的項目。
-        const [hwRes, testRes, clothesRes, noteRes] = await Promise.all([
-          withTimeout(supabaseClient.from("Homework Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true})),
-          withTimeout(supabaseClient.from("Test Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true})),
-          withTimeout(supabaseClient.from("Clothes Status").select("*").lte("weekstart", selectedDate).gte("weekend", selectedDate)),
-          // 注意事項：開始日 <= 今天 <= 結束日，結束日當天也算有效。
-          withTimeout(supabaseClient.from("Note Status").select("*").lte("starttime", selectedDate).gte("endtime", selectedDate).order("endtime", {ascending: true}))
-        ]);
-
         const dayData = {
-          homework: hwRes.data || [],
-          homeworkError: hwRes.error,
-          test: testRes.data || [],
-          testError: testRes.error,
-          clothes: clothesRes.data || [],
-          clothesError: clothesRes.error,
-          note: noteRes.data || [],
-          noteError: noteRes.error
+          homework: [], homeworkError: null,
+          test: [], testError: null,
+          clothes: [], clothesError: null,
+          note: [], noteError: null
         };
 
-        dataCache.daily[selectedDate] = dayData;
-        renderDailyData(dayData, selectedDate);
+        // 今天可以準備的作業：已開始，而且截止日在今天之後。
+        fetchDailyQuery("作業", supabaseClient.from("Homework Status")
+          .select("*")
+          .lte("starttime", selectedDate)
+          .gt("endtime", selectedDate)
+          .order("endtime", {ascending: true}), result => {
+            dayData.homework = result?.data || [];
+            dayData.homeworkError = result?.error || null;
+            renderDailyData(dayData, selectedDate);
+          }, requestId);
+
+        // 今天可以準備的考試：已開始，而且考試日在今天之後。
+        fetchDailyQuery("考試", supabaseClient.from("Test Status")
+          .select("*")
+          .lte("starttime", selectedDate)
+          .gt("endtime", selectedDate)
+          .order("endtime", {ascending: true}), result => {
+            dayData.test = result?.data || [];
+            dayData.testError = result?.error || null;
+            renderDailyData(dayData, selectedDate);
+          }, requestId);
+
+        // 服裝：抓選定日期所在週，只顯示當天。
+        fetchDailyQuery("服裝", supabaseClient.from("Clothes Status")
+          .select("*")
+          .lte("weekstart", selectedDate)
+          .gte("weekend", selectedDate), result => {
+            dayData.clothes = result?.data || [];
+            dayData.clothesError = result?.error || null;
+            renderDailyData(dayData, selectedDate);
+          }, requestId);
+
+        // 注意事項：開始日與結束日都包含在有效範圍內。
+        fetchDailyQuery("注意事項", supabaseClient.from("Note Status")
+          .select("*")
+          .lte("starttime", selectedDate)
+          .gte("endtime", selectedDate)
+          .order("endtime", {ascending: true}), result => {
+            dayData.note = result?.data || [];
+            dayData.noteError = result?.error || null;
+            renderDailyData(dayData, selectedDate);
+          }, requestId);
       }
 
       function renderDailyData(data, selectedDate) {
         const hwContainer = document.getElementById("homework-content");
-        if(data.homeworkError){ hwContainer.innerHTML = "載入失敗"; }
+        if(data.homeworkError){ hwContainer.innerHTML = `載入失敗：${esc(data.homeworkError.message || '未知錯誤')}`; }
         else if(data.homework.length === 0){ hwContainer.innerHTML = '<div class="empty">今天沒有可完成的作業</div>'; }
-        else { hwContainer.innerHTML = `<ol>` + data.homework.map(item =>`<li>${esc(item.details)} <span class="due">期限 ${item.endtime}</span></li>`).join('') + `</ol>`; }
+        else { hwContainer.innerHTML = `<ol>` + data.homework.map(item =>`<li>${esc(item.details)} <span class="due">期限 ${esc(item.endtime)}</span></li>`).join('') + `</ol>`; }
 
         const testContainer = document.getElementById("test-content");
-        if(data.testError){ testContainer.innerHTML = "載入失敗"; }
+        if(data.testError){ testContainer.innerHTML = `載入失敗：${esc(data.testError.message || '未知錯誤')}`; }
         else if(data.test.length === 0){ testContainer.innerHTML = '<div class="empty">今天沒有可準備的考試</div>'; }
-        else { testContainer.innerHTML = `<ol>` + data.test.map(item =>`<li>${esc(item.details)} <span class="due">考試 ${item.endtime}</span></li>`).join('') + `</ol>`; }
+        else { testContainer.innerHTML = `<ol>` + data.test.map(item =>`<li>${esc(item.details)} <span class="due">考試 ${esc(item.endtime)}</span></li>`).join('') + `</ol>`; }
 
         const clothesContainer = document.getElementById("clothes-content");
-        if(data.clothesError || !data.clothes || data.clothes.length === 0){ clothesContainer.innerHTML = '<div class="empty">這週還沒有服裝規定</div>'; }
+        if(data.clothesError){ clothesContainer.innerHTML = `載入失敗：${esc(data.clothesError.message || '未知錯誤')}`; }
+        else if(!data.clothes || data.clothes.length === 0){ clothesContainer.innerHTML = '<div class="empty">這週還沒有服裝規定</div>'; }
         else {
           const item = data.clothes[0];
           const date = new Date(selectedDate + 'T00:00:00');
@@ -787,12 +835,13 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           const clothes = key ? (item[key] || '放假') : '放假';
 
           clothesContainer.innerHTML = `
-            <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>日期：</b> ${selectedDate}</p>
+            <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>日期：</b> ${esc(selectedDate)}</p>
             <div style="font-size:1.05em;"><b>${dayNames[day] || '週末'}</b>：${esc(clothes)}</div>`;
         }
 
         const noteContainer = document.getElementById("note-content");
-        if(data.noteError || !data.note || data.note.length === 0){ noteContainer.innerHTML = '<div class="empty">今天沒有注意事項</div>'; }
+        if(data.noteError){ noteContainer.innerHTML = `載入失敗：${esc(data.noteError.message || '未知錯誤')}`; }
+        else if(!data.note || data.note.length === 0){ noteContainer.innerHTML = '<div class="empty">今天沒有注意事項</div>'; }
         else { noteContainer.innerHTML = `<ol>` + data.note.map(item =>`<li><div class="note-text">${esc(item.details)}</div></li>`).join('') + `</ol>`; }
       }
 
@@ -1517,6 +1566,19 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
+
+      /* --- 緊急通告 --- */
+      async function fetchAnnounce(){
+        const {data, error} = await supabaseClient.from('announcements')
+          .select('*')
+          .order('created_at', {ascending: false})
+          .limit(1);
+        if(error){
+          $('announce-bar').innerHTML = '';
+          return;
+        }
+        $('announce-bar').innerHTML = (data || []).map(a => `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>`).join('');
+      }
 
       /* --- 個人資料 --- */
       function fillProfile(){
