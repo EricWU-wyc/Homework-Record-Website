@@ -177,7 +177,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         <div class="nav-menu">
           <button class="nav-btn active" id="nav-contact">聯絡簿</button>
           <button class="nav-btn hidden" id="nav-manager">後台管理</button>
-          <button class="nav-btn" id="nav-blog">班級部落格</button>
+          <button class="nav-btn" id="nav-blog">班級日記</button>
           <button class="nav-btn hidden" id="nav-todo">我的待辦</button>          
         </div>
       </div>
@@ -275,7 +275,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-blog-container" style="display: none;">
-          <div class="header-container"><div><h1>班級部落格</h1><p class="hint" style="margin:2px 0 0">分享你的日常，大家一起交流</p></div></div>
+          <div class="header-container"><div><h1>班級部落格</h1><p class="hint" style="margin:2px 0 0">分享你的日常，大家一起交流（僅登入者可見）</p></div></div>
           <div class="section-box composer view-gap" style="min-height:0">
             <h3>寫一篇</h3>
             <input id="blog-new-title" placeholder="標題">
@@ -293,21 +293,9 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
               <input type="text" id="login-email" placeholder="帳號名稱" autocomplete="username">
               <input type="password" id="login-pass" placeholder="密碼" autocomplete="current-password">
               <button id="login-go">登入</button>
-              <p class="hint"><a href="#" data-tab="signup">第一次使用？註冊</a> <a href="#" data-tab="forgot">忘記密碼</a></p>
+              <p class="hint"><a href="#" data-tab="signup">第一次使用？註冊</a></p>
             </div>
-            <div id="auth-signup" style="display: none;">
-              <p class="hint">輸入 Email，我們會寄出驗證信。點開信中的連結後，再設定帳號名稱、密碼與個人資料。</p>
-              <input type="email" id="signup-email" placeholder="Email" autocomplete="email">
-              <button id="signup-go">寄送驗證信</button>
-              <p class="hint"><a href="#" data-tab="login">已有帳號？登入</a></p>
-            </div>
-            <div id="auth-forgot" style="display: none;">
-              <p class="hint">輸入註冊用的 Email，我們會寄出重設密碼的連結。</p>
-              <input type="email" id="forgot-email" placeholder="Email" autocomplete="email">
-              <button id="forgot-go">寄送重設連結</button>
-              <p class="hint"><a href="#" data-tab="login">回到登入</a></p>
-            </div>
-          </div>
+</div>
         </div>
 
         <div id="view-profile-container" style="display: none;">
@@ -322,6 +310,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             <label>真實姓名<input id="profile-real"></label>
             <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
+            <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
             <button id="profile-skip" class="ghost">稍後再填</button>
             <button id="logout-btn" class="ghost">登出</button>
@@ -1446,9 +1435,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       /* --- 畫面切換 --- */
       const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile'];
+      let registering = false;
       function showView(v){
-        // 班級日記：未登入也可以瀏覽；只有登入後才顯示發文/編輯功能
-        if((v === 'todo' || v === 'profile') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
+        if((v === 'todo' || v === 'blog') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
+        if(v === 'profile' && !me && !registering){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'manager' && !isWriter()){ v = me ? 'contact' : 'auth'; }
         VIEWS.forEach(n => $('view-' + n + '-container').style.display = (n === v) ? 'block' : 'none');
         ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
@@ -1457,7 +1447,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(v === 'manager') initManager();
         if(v === 'profile') fillProfile();
         if(v === 'contact') fetchAnnounce();
-        if(v === 'blog') updateBlogComposer();
       }
       ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
       $('account-btn').addEventListener('click', () => showView(me ? 'profile' : 'auth'));
@@ -1467,9 +1456,17 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const t = e.target.dataset.tab;
         if(!t) return;
         e.preventDefault();
-        ['login', 'signup', 'forgot'].forEach(n => $('auth-' + n).style.display = (n === t) ? 'block' : 'none');
+        if(t === 'signup'){
+          registering = true;
+          showView('profile');
+          fillProfile();
+          return;
+        }
+        if(t === 'login'){
+          registering = false;
+          showView('auth');
+        }
       });
-      const pageUrl = () => location.href.split('#')[0];
       $('login-go').addEventListener('click', async () => {
         const id = $('login-email').value.trim();
         let email = id;
@@ -1484,18 +1481,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         setTimeout(() => showView('contact'), 400);
       });
       $('login-pass').addEventListener('keydown', e => { if(e.key === 'Enter') $('login-go').click(); });
-      $('signup-go').addEventListener('click', async () => {
-        const email = $('signup-email').value.trim();
-        if(!email){ alert('請輸入 Email'); return; }
-        const {error} = await supabaseClient.auth.signInWithOtp({email, options: {emailRedirectTo: pageUrl(), shouldCreateUser: true}});
-        if(error) alert('寄送失敗：' + error.message); else alert('驗證信已寄出，請到信箱點擊連結（也請檢查垃圾郵件）。');
-      });
-      $('forgot-go').addEventListener('click', async () => {
-        const email = $('forgot-email').value.trim();
-        if(!email){ alert('請輸入 Email'); return; }
-        const {error} = await supabaseClient.auth.resetPasswordForEmail(email, {redirectTo: pageUrl()});
-        if(error) alert('寄送失敗：' + error.message); else alert('重設連結已寄出，請到信箱查看。');
-      });
       $('profile-skip').addEventListener('click', () => { try{ sessionStorage.setItem('skipProfile', '1'); }catch(e){} showView('contact'); });
       $('logout-btn').addEventListener('click', () => supabaseClient.auth.signOut());
 
@@ -1517,24 +1502,27 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       supabaseClient.auth.onAuthStateChange((ev) => {
         setTimeout(async () => {
           await refreshMe();
-          if(ev === 'PASSWORD_RECOVERY'){ showView('profile'); $('profile-msg').textContent = '請輸入新密碼後按儲存'; }
-          else if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
+          if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
 
       /* --- 個人資料 --- */
       function fillProfile(){
-        const first = !me.username;
-        $('profile-title').textContent = first ? '完成註冊資料' : '個人資料';
-        $('profile-msg').textContent = first ? '信箱驗證完成！請設定帳號名稱與密碼。' : `${me.email} 身分組：${ROLE[me.role] || '學生'}`;
-        $('profile-username').value = me.username || '';
-        $('profile-real').value = me.real_name || '';
-        $('profile-nick').value = me.title || '';
+        const first = registering || !me?.username;
+        $('profile-title').textContent = registering ? '註冊帳號' : (first ? '完成註冊資料' : '個人資料');
+        $('profile-msg').textContent = registering ? '請填寫以下資料建立帳號。' : (first ? '請設定帳號名稱與個人資料。' : `${me.email} 身分組：${ROLE[me.role] || '學生'}`);
+        $('profile-username').value = me?.username || '';
+        $('profile-real').value = me?.real_name || '';
+        $('profile-nick').value = me?.title || '';
         $('profile-pass').value = '';
-        $('profile-pass').placeholder = first ? '設定密碼（至少 6 碼）' : '不修改請留空';
-        $('profile-av').innerHTML = avatar(me, 'lg');
-        $('profile-skip').style.display = first ? 'inline-block' : 'none';
+        $('profile-pass').placeholder = registering ? '設定密碼（至少 6 碼）' : (first ? '設定密碼（至少 6 碼）' : '不修改請留空');
+        $('profile-email-wrap').style.display = registering ? 'block' : 'none';
+        $('profile-email').value = me?.email || '';
+        $('profile-av').innerHTML = me ? avatar(me, 'lg') : '<span class="av lg">＋</span>';
+        $('profile-skip').style.display = registering || first ? 'none' : 'inline-block';
+        $('logout-btn').style.display = registering ? 'none' : 'inline-block';
+        $('profile-save').textContent = registering ? '建立帳號' : '儲存';
         $('profile-file').value = '';
       }
       $('profile-file').addEventListener('change', e => {
@@ -1542,9 +1530,38 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(f) $('profile-av').innerHTML = `<img class="av lg" src="${URL.createObjectURL(f)}" alt="">`;
       });
       $('profile-save').addEventListener('click', async () => {
-        const username = $('profile-username').value.trim(), real = $('profile-real').value.trim(), pass = $('profile-pass').value;
+        const username = $('profile-username').value.trim();
+        const real = $('profile-real').value.trim();
+        const pass = $('profile-pass').value;
+        const email = $('profile-email').value.trim();
         if(!username || !real){ alert('請填寫帳號名稱與真實姓名'); return; }
         if(username.includes('@') || /\s/.test(username)){ alert('帳號名稱不能包含 @ 或空白'); return; }
+
+        // 註冊時：直接從這個表單取得 Email + 密碼建立 Supabase 帳號，不再另外跳出 Email／密碼輸入。
+        if(registering){
+          if(!email){ alert('請輸入 Email'); return; }
+          if(!pass || pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
+          const {data, error} = await supabaseClient.auth.signUp({email, password: pass});
+          if(error){ alert('註冊失敗：' + error.message); return; }
+          if(!data.user){ alert('註冊失敗：無法建立帳號'); return; }
+          me = {id: data.user.id, email: data.user.email, role: 'student'};
+          registering = false;
+          // 若資料庫有自動建立 profiles 的 trigger，這裡直接更新；若尚未出現，短暫重試一次。
+          let profileSaved = false;
+          for(let i = 0; i < 5; i++){
+            const {error: pe} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null}).eq('id', me.id);
+            if(!pe){ profileSaved = true; break; }
+            await new Promise(r => setTimeout(r, 300));
+          }
+          if(!profileSaved){ alert('帳號已建立，但個人資料儲存失敗，請稍後再從個人資料頁補上。'); }
+          await refreshMe();
+          $('profile-pass').value = '';
+          alert('註冊成功！');
+          showView('contact');
+          return;
+        }
+
+        if(!me){ alert('請先登入'); return; }
         if(!me.username && pass.length < 6){ alert('請設定至少 6 碼的密碼'); return; }
         let avatar_url = me.avatar_url || null;
         const f = $('profile-file').files[0];
@@ -1565,49 +1582,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         alert('已儲存');
         showView('contact');
       });
-
-      /* --- 緊急通告 --- */
-      async function fetchAnnounce(){
-        const {data} = await supabaseClient.from('announcements')
-          .select('*')
-          .order('created_at', {ascending: false})
-          .limit(1);
-        $('announce-bar').innerHTML = (data || []).map(a => `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>`).join('');
-      }
-      async function loadAnnounceList(){
-        $('announce-list').textContent = '載入中...';
-        const {data, error} = await supabaseClient.from('announcements')
-          .select('*')
-          .order('created_at', {ascending: false})
-          .limit(30);
-        if(error){ $('announce-list').textContent = 'Error：' + error.message; return; }
-        $('announce-list').innerHTML = (data || []).length ? `<table><thead><tr><th>開始</th><th>結束</th><th>內容</th><th>操作</th></tr></thead><tbody>` +
-          data.map(a => `<tr><td>${a.starttime || '-'}</td><td>${a.endtime || '-'}</td><td style="white-space:pre-wrap">${esc(a.content)}</td><td><button onclick="delAnnounce(${a.id})" style="background-color:#e74c3c">刪除</button></td></tr>`).join('') + `</tbody></table>` : '<div class="empty">目前沒有通告</div>';
-      }
-      $('announce-add').addEventListener('click', async () => {
-        const content = $('announce-text').value.trim();
-        const s = $('announce-start').value || today;
-        const e = $('announce-end').value || today;
-        if(!content){ alert('請填寫通告內容'); return; }
-
-        const { data: existing } = await supabaseClient.from('announcements').select('id');
-        if (existing && existing.length > 0) {
-          const ids = existing.map(x => x.id);
-          await supabaseClient.from('announcements').delete().in('id', ids);
-        }
-
-        const {error} = await supabaseClient.from('announcements').insert({content, starttime: s, endtime: e});
-        if(error){ alert('Error：' + error.message); return; }
-        $('announce-text').value = '';
-        loadAnnounceList(); 
-        fetchAnnounce();
-      });
-      window.delAnnounce = async id => {
-        if(!confirm('確定要刪除這則通告嗎?')) return;
-        await supabaseClient.from('announcements').delete().eq('id', id);
-        loadAnnounceList(); fetchAnnounce();
-      };
-
       /* --- 後台：依身分組顯示可用項目 --- */
       function initManager(){
         $('login-container').style.display = 'none';
@@ -1689,80 +1663,30 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
       /* --- 班級日記 --- */
-      function updateBlogComposer(){
-        // 未登入：只看得到日記，不顯示任何編輯/發文介面
-        // 已登入：顯示發文區
-        $('blog-composer').style.display = me ? 'block' : 'none';
-      }
-
       async function loadBlog(){
         $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
-        // 這裡不要求登入，因此匿名使用者也會正常讀取班級日記
         const {data, error} = await supabaseClient.from('Blog Status').select('*, profiles(username, real_name, title, avatar_url)')
           .order('postdate', {ascending: false}).order('id', {ascending: false}).limit(50);
         if(error){ $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
         $('blog-feed').innerHTML = (data || []).map(p => {
-          const a = p.profiles;
-          const canEdit = !!me && (p.author_id === me.id || isStaff());
-          const canDel = !!me && (p.author_id === me.id || isStaff());
-          const editBtn = canEdit ? `<button class="ghost" data-editpost="${p.id}">編輯</button>` : '';
-          const delBtn = canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '';
+          const a = p.profiles, canDel = me && (p.author_id === me.id || isStaff());
           return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>` +
-            (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${esc(p.postdate)}</div></div>` +
-            `${editBtn}${delBtn}</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
+            (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${p.postdate}</div></div>` +
+            (canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '') + `</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
         }).join('') || '<div class="empty">還沒有人分享，當第一個吧</div>';
       }
-
       $('blog-feed').addEventListener('click', async e => {
-        const editId = e.target.dataset.editpost;
-        const delId = e.target.dataset.delpost;
-
-        if(editId){
-          const {data, error} = await supabaseClient.from('Blog Status').select('id, title, blog, postdate, author_id').eq('id', editId).maybeSingle();
-          if(error || !data){ alert('讀取日記失敗'); return; }
-          if(!me || (data.author_id !== me.id && !isStaff())){ alert('請先登入，且只能編輯自己發布的日記'); return; }
-          $('blog-edit-id').value = data.id;
-          $('blog-new-title').value = data.title || '';
-          $('blog-new-body').value = data.blog || '';
-          $('blog-new-post').textContent = '儲存修改';
-          $('blog-new-post').dataset.editing = data.id;
-          $('blog-new-title').focus();
-          window.scrollTo({top: $('blog-composer').offsetTop, behavior: 'smooth'});
-          return;
-        }
-
-        if(delId){
-          if(!me){ alert('請先登入'); return; }
-          if(!confirm('確定要刪除這篇日記嗎?')) return;
-          const {error} = await supabaseClient.from('Blog Status').delete().eq('id', delId);
-          if(error) alert('刪除失敗：' + error.message);
-          loadBlog();
-        }
+        const id = e.target.dataset.delpost;
+        if(!id || !confirm('確定要刪除這篇部落格嗎?')) return;
+        await supabaseClient.from('Blog Status').delete().eq('id', id);
+        loadBlog();
       });
-
       $('blog-new-post').addEventListener('click', async () => {
-        if(!me){ alert('請先登入才能發佈或編輯班級日記'); return; }
         const title = $('blog-new-title').value.trim(), body = $('blog-new-body').value.trim();
         if(!title || !body){ alert('請填寫標題與內容'); return; }
-
-        const editingId = $('blog-new-post').dataset.editing;
-        let result;
-        if(editingId){
-          result = await supabaseClient.from('Blog Status')
-            .update({title, blog: body})
-            .eq('id', editingId)
-            .eq('author_id', me.id);
-        }else{
-          result = await supabaseClient.from('Blog Status')
-            .insert({title, blog: body, postdate: today, author_id: me.id});
-        }
-
-        if(result.error){ alert((editingId ? '修改' : '發佈') + '失敗：' + result.error.message); return; }
-        $('blog-new-title').value = '';
-        $('blog-new-body').value = '';
-        $('blog-new-post').textContent = '發佈';
-        delete $('blog-new-post').dataset.editing;
-        $('blog-edit-id').value = '';
+        const {error} = await supabaseClient.from('Blog Status').insert({title, blog: body, postdate: today});
+        if(error){ alert('發佈失敗：' + error.message); return; }
+        $('blog-new-title').value = ''; $('blog-new-body').value = '';
         loadBlog();
       });
 
