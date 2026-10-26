@@ -308,7 +308,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議是 幹部職位 + 真名"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
@@ -722,21 +722,20 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       async function fetchAllData(selectedDate){
         initGlobalData();
 
-        if (dataCache.daily[selectedDate]) {
-          renderDailyData(dataCache.daily[selectedDate]);
-          return;
-        }
-
+        // 一日檢視每次切換日期都重新抓取，避免後台更新後仍顯示舊快取。
         document.getElementById("homework-content").innerHTML = "載入中...";
         document.getElementById("test-content").innerHTML = "載入中...";
         document.getElementById("clothes-content").innerHTML = "載入中...";
         document.getElementById("note-content").innerHTML = "載入中...";
 
+        // 一日檢視的作業／考試：顯示「今天可以準備」的項目。
+        // starttime <= 今天 < endtime，因此今天截止／今天考試的不會出現在這裡。
+        // 一週總覽則另外依 endtime 判斷每天「今天要交／要考」的項目。
         const [hwRes, testRes, clothesRes, noteRes] = await Promise.all([
           supabaseClient.from("Homework Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true}),
           supabaseClient.from("Test Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true}),
           supabaseClient.from("Clothes Status").select("*").lte("weekstart", selectedDate).gte("weekend", selectedDate),
-          supabaseClient.from("Note Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true})
+          supabaseClient.from("Note Status").select("*").lte("starttime", selectedDate).gte("endtime", selectedDate).order("endtime", {ascending: true})
         ]);
 
         const dayData = {
@@ -751,33 +750,34 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         };
 
         dataCache.daily[selectedDate] = dayData;
-        renderDailyData(dayData);
+        renderDailyData(dayData, selectedDate);
       }
 
-      function renderDailyData(data) {
+      function renderDailyData(data, selectedDate) {
         const hwContainer = document.getElementById("homework-content");
         if(data.homeworkError){ hwContainer.innerHTML = "載入失敗"; }
-        else if(data.homework.length === 0){ hwContainer.innerHTML = '<div class="empty">今天沒有作業</div>'; }
+        else if(data.homework.length === 0){ hwContainer.innerHTML = '<div class="empty">今天沒有可完成的作業</div>'; }
         else { hwContainer.innerHTML = `<ol>` + data.homework.map(item =>`<li>${esc(item.details)} <span class="due">期限 ${item.endtime}</span></li>`).join('') + `</ol>`; }
 
         const testContainer = document.getElementById("test-content");
         if(data.testError){ testContainer.innerHTML = "載入失敗"; }
-        else if(data.test.length === 0){ testContainer.innerHTML = '<div class="empty">今天沒有考試</div>'; }
+        else if(data.test.length === 0){ testContainer.innerHTML = '<div class="empty">今天沒有可準備的考試</div>'; }
         else { testContainer.innerHTML = `<ol>` + data.test.map(item =>`<li>${esc(item.details)} <span class="due">考試 ${item.endtime}</span></li>`).join('') + `</ol>`; }
 
         const clothesContainer = document.getElementById("clothes-content");
         if(data.clothesError || !data.clothes || data.clothes.length === 0){ clothesContainer.innerHTML = '<div class="empty">這週還沒有服裝規定</div>'; }
         else {
           const item = data.clothes[0];
+          const date = new Date(selectedDate + 'T00:00:00');
+          const day = date.getDay();
+          const clothesMap = {1:'mon', 2:'tue', 3:'wed', 4:'thur', 5:'fri'};
+          const dayNames = {1:'星期一', 2:'星期二', 3:'星期三', 4:'星期四', 5:'星期五'};
+          const key = clothesMap[day];
+          const clothes = key ? (item[key] || '放假') : '放假';
+
           clothesContainer.innerHTML = `
-            <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>週次：</b> ${item.weekstart} ~ ${item.weekend}</p>
-            <ul style="padding-left:15px;">
-              <li>一：${item.mon || "放假"}</li>
-              <li>二：${item.tue || "放假"}</li>
-              <li>三：${item.wed || "放假"}</li>
-              <li>四：${item.thur || "放假"}</li>
-              <li>五：${item.fri || "放假"}</li>
-            </ul>`;
+            <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>日期：</b> ${selectedDate}</p>
+            <div style="font-size:1.05em;"><b>${dayNames[day] || '週末'}</b>：${esc(clothes)}</div>`;
         }
 
         const noteContainer = document.getElementById("note-content");
@@ -1662,7 +1662,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       });
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
-      /* --- 班級日記 --- */
+      /* --- 班級部落格 --- */
       async function loadBlog(){
         $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
         const {data, error} = await supabaseClient.from('Blog Status').select('*, profiles(username, real_name, title, avatar_url)')
@@ -1677,7 +1677,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       }
       $('blog-feed').addEventListener('click', async e => {
         const id = e.target.dataset.delpost;
-        if(!id || !confirm('確定要刪除這篇部落格嗎?')) return;
+        if(!id || !confirm('確定要刪除這篇日記嗎?')) return;
         await supabaseClient.from('Blog Status').delete().eq('id', id);
         loadBlog();
       });
