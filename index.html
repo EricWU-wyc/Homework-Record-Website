@@ -1447,7 +1447,8 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       /* --- 畫面切換 --- */
       const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile'];
       function showView(v){
-        if((v === 'todo' || v === 'blog' || v === 'profile') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
+        // 班級日記：未登入也可以瀏覽；只有登入後才顯示發文/編輯功能
+        if((v === 'todo' || v === 'profile') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'manager' && !isWriter()){ v = me ? 'contact' : 'auth'; }
         VIEWS.forEach(n => $('view-' + n + '-container').style.display = (n === v) ? 'block' : 'none');
         ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
@@ -1456,6 +1457,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(v === 'manager') initManager();
         if(v === 'profile') fillProfile();
         if(v === 'contact') fetchAnnounce();
+        if(v === 'blog') updateBlogComposer();
       }
       ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
       $('account-btn').addEventListener('click', () => showView(me ? 'profile' : 'auth'));
@@ -1687,30 +1689,80 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
       /* --- 班級日記 --- */
+      function updateBlogComposer(){
+        // 未登入：只看得到日記，不顯示任何編輯/發文介面
+        // 已登入：顯示發文區
+        $('blog-composer').style.display = me ? 'block' : 'none';
+      }
+
       async function loadBlog(){
         $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
+        // 這裡不要求登入，因此匿名使用者也會正常讀取班級日記
         const {data, error} = await supabaseClient.from('Blog Status').select('*, profiles(username, real_name, title, avatar_url)')
           .order('postdate', {ascending: false}).order('id', {ascending: false}).limit(50);
         if(error){ $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
         $('blog-feed').innerHTML = (data || []).map(p => {
-          const a = p.profiles, canDel = me && (p.author_id === me.id || isStaff());
+          const a = p.profiles;
+          const canEdit = !!me && (p.author_id === me.id || isStaff());
+          const canDel = !!me && (p.author_id === me.id || isStaff());
+          const editBtn = canEdit ? `<button class="ghost" data-editpost="${p.id}">編輯</button>` : '';
+          const delBtn = canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '';
           return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>` +
-            (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${p.postdate}</div></div>` +
-            (canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : '') + `</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
+            (a && a.title ? `<span class="tag">${esc(a.title)}</span>` : '') + `<div class="due" style="margin:0">${esc(p.postdate)}</div></div>` +
+            `${editBtn}${delBtn}</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`;
         }).join('') || '<div class="empty">還沒有人分享，當第一個吧</div>';
       }
+
       $('blog-feed').addEventListener('click', async e => {
-        const id = e.target.dataset.delpost;
-        if(!id || !confirm('確定要刪除這篇日記嗎?')) return;
-        await supabaseClient.from('Blog Status').delete().eq('id', id);
-        loadBlog();
+        const editId = e.target.dataset.editpost;
+        const delId = e.target.dataset.delpost;
+
+        if(editId){
+          const {data, error} = await supabaseClient.from('Blog Status').select('id, title, blog, postdate, author_id').eq('id', editId).maybeSingle();
+          if(error || !data){ alert('讀取日記失敗'); return; }
+          if(!me || (data.author_id !== me.id && !isStaff())){ alert('請先登入，且只能編輯自己發布的日記'); return; }
+          $('blog-edit-id').value = data.id;
+          $('blog-new-title').value = data.title || '';
+          $('blog-new-body').value = data.blog || '';
+          $('blog-new-post').textContent = '儲存修改';
+          $('blog-new-post').dataset.editing = data.id;
+          $('blog-new-title').focus();
+          window.scrollTo({top: $('blog-composer').offsetTop, behavior: 'smooth'});
+          return;
+        }
+
+        if(delId){
+          if(!me){ alert('請先登入'); return; }
+          if(!confirm('確定要刪除這篇日記嗎?')) return;
+          const {error} = await supabaseClient.from('Blog Status').delete().eq('id', delId);
+          if(error) alert('刪除失敗：' + error.message);
+          loadBlog();
+        }
       });
+
       $('blog-new-post').addEventListener('click', async () => {
+        if(!me){ alert('請先登入才能發佈或編輯班級日記'); return; }
         const title = $('blog-new-title').value.trim(), body = $('blog-new-body').value.trim();
         if(!title || !body){ alert('請填寫標題與內容'); return; }
-        const {error} = await supabaseClient.from('Blog Status').insert({title, blog: body, postdate: today});
-        if(error){ alert('發佈失敗：' + error.message); return; }
-        $('blog-new-title').value = ''; $('blog-new-body').value = '';
+
+        const editingId = $('blog-new-post').dataset.editing;
+        let result;
+        if(editingId){
+          result = await supabaseClient.from('Blog Status')
+            .update({title, blog: body})
+            .eq('id', editingId)
+            .eq('author_id', me.id);
+        }else{
+          result = await supabaseClient.from('Blog Status')
+            .insert({title, blog: body, postdate: today, author_id: me.id});
+        }
+
+        if(result.error){ alert((editingId ? '修改' : '發佈') + '失敗：' + result.error.message); return; }
+        $('blog-new-title').value = '';
+        $('blog-new-body').value = '';
+        $('blog-new-post').textContent = '發佈';
+        delete $('blog-new-post').dataset.editing;
+        $('blog-edit-id').value = '';
         loadBlog();
       });
 
