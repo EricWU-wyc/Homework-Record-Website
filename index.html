@@ -173,11 +173,11 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
     <aside id="sidebar">
       <div class="sidebar-top">
-        <h2>407 班級網站</h2>
+        <h2>407 班級專區</h2>
         <div class="nav-menu">
           <button class="nav-btn active" id="nav-contact">聯絡簿</button>
-          <button class="nav-btn" id="nav-todo">我的待辦</button>
-          <button class="nav-btn" id="nav-blog">部落格</button>
+          <button class="nav-btn hidden" id="nav-todo">我的待辦</button>
+          <button class="nav-btn" id="nav-blog">班級日記</button>
           <button class="nav-btn hidden" id="nav-manager">後台管理</button>
         </div>
       </div>
@@ -320,9 +320,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂<input id="profile-nick" placeholder="輸入暱稱即可"></label>
+            <label>稱謂<input id="profile-nick" placeholder="例如：同學、小組長"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <button id="profile-save">儲存</button>
+            <button id="profile-skip" class="ghost">稍後再填</button>
             <button id="logout-btn" class="ghost">登出</button>
           </div>
         </div>
@@ -590,7 +591,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       </div>
 
       <footer class="site-footer">
-        FDHS 407 線上聯絡簿 | Ver. 3.0.0 帳號、待辦、緊急通告與Blog
+        FDHS 407 線上聯絡簿 | Ver. 3.0.0 帳號、待辦、緊急通告與班級日記
       </footer>
     </main>
 
@@ -1486,6 +1487,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const {error} = await supabaseClient.auth.resetPasswordForEmail(email, {redirectTo: pageUrl()});
         if(error) alert('寄送失敗：' + error.message); else alert('重設連結已寄出，請到信箱查看。');
       });
+      $('profile-skip').addEventListener('click', () => { try{ sessionStorage.setItem('skipProfile', '1'); }catch(e){} showView('contact'); });
       $('logout-btn').addEventListener('click', () => supabaseClient.auth.signOut());
 
       async function refreshMe(){
@@ -1499,12 +1501,13 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           ? `${avatar(me)}<span class="name">${esc(me.real_name || me.username || '完成註冊')}</span>`
           : `<span class="av">＋</span><span class="name">登入 / 註冊</span>`;
         $('nav-manager').classList.toggle('hidden', !isWriter());
+        $('nav-todo').classList.toggle('hidden', !me);
       }
       supabaseClient.auth.onAuthStateChange((ev) => {
         setTimeout(async () => {
           await refreshMe();
           if(ev === 'PASSWORD_RECOVERY'){ showView('profile'); $('profile-msg').textContent = '請輸入新密碼後按儲存'; }
-          else if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION')) showView('profile');
+          else if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
@@ -1520,6 +1523,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         $('profile-pass').value = '';
         $('profile-pass').placeholder = first ? '設定密碼（至少 6 碼）' : '不修改請留空';
         $('profile-av').innerHTML = avatar(me, 'lg');
+        $('profile-skip').style.display = first ? 'inline-block' : 'none';
         $('profile-file').value = '';
       }
       $('profile-file').addEventListener('change', e => {
