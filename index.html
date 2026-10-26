@@ -290,7 +290,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             <h2>登入</h2>
             <p class="hint" id="auth-msg"></p>
             <div id="auth-login">
-              <input type="email" id="login-email" placeholder="Email" autocomplete="email">
+              <input type="text" id="login-email" placeholder="帳號名稱" autocomplete="username">
               <input type="password" id="login-pass" placeholder="密碼" autocomplete="current-password">
               <button id="login-go">登入</button>
               <p class="hint"><a href="#" data-tab="signup">第一次使用？註冊</a>　<a href="#" data-tab="forgot">忘記密碼</a></p>
@@ -1469,8 +1469,15 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       });
       const pageUrl = () => location.href.split('#')[0];
       $('login-go').addEventListener('click', async () => {
-        const {error} = await supabaseClient.auth.signInWithPassword({email: $('login-email').value.trim(), password: $('login-pass').value});
-        if(error){ alert('登入失敗：Email 或密碼不正確'); return; }
+        const id = $('login-email').value.trim();
+        let email = id;
+        if(!id.includes('@')){
+          const {data} = await supabaseClient.rpc('email_for_username', {u: id});
+          email = data;
+        }
+        if(!email){ alert('登入失敗：帳號或密碼不正確'); return; }
+        const {error} = await supabaseClient.auth.signInWithPassword({email, password: $('login-pass').value});
+        if(error){ alert('登入失敗：帳號或密碼不正確'); return; }
         $('login-pass').value = '';
         setTimeout(() => showView('contact'), 400);
       });
@@ -1533,6 +1540,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('profile-save').addEventListener('click', async () => {
         const username = $('profile-username').value.trim(), real = $('profile-real').value.trim(), pass = $('profile-pass').value;
         if(!username || !real){ alert('請填寫帳號名稱與真實姓名'); return; }
+        if(username.includes('@') || /\s/.test(username)){ alert('帳號名稱不能包含 @ 或空白'); return; }
         if(!me.username && pass.length < 6){ alert('請設定至少 6 碼的密碼'); return; }
         let avatar_url = me.avatar_url || null;
         const f = $('profile-file').files[0];
