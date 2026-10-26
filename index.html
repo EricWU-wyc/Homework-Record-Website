@@ -308,7 +308,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議是 幹部職位 + 真名"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
@@ -722,20 +722,31 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       async function fetchAllData(selectedDate){
         initGlobalData();
 
-        // 一日檢視每次切換日期都重新抓取，避免後台更新後仍顯示舊快取。
-        document.getElementById("homework-content").innerHTML = "載入中...";
-        document.getElementById("test-content").innerHTML = "載入中...";
-        document.getElementById("clothes-content").innerHTML = "載入中...";
-        document.getElementById("note-content").innerHTML = "載入中...";
+        const hwContainer = document.getElementById("homework-content");
+        const testContainer = document.getElementById("test-content");
+        const clothesContainer = document.getElementById("clothes-content");
+        const noteContainer = document.getElementById("note-content");
 
-        // 一日檢視的作業／考試：顯示「今天可以準備」的項目。
-        // starttime <= 今天 < endtime，因此今天截止／今天考試的不會出現在這裡。
+        hwContainer.innerHTML = "載入中...";
+        testContainer.innerHTML = "載入中...";
+        clothesContainer.innerHTML = "載入中...";
+        noteContainer.innerHTML = "載入中...";
+
+        // 每個查詢獨立處理，避免其中一個 Supabase 請求卡住時，整個一日檢視永遠停在「載入中」。
+        const withTimeout = (promise, ms = 10000) => Promise.race([
+          promise,
+          new Promise(resolve => setTimeout(() => resolve({data: [], error: {message: '資料讀取逾時'}}), ms))
+        ]);
+
+        // 一日檢視：看「今天可以準備」的作業／考試。
+        // starttime <= 今天 < endtime，所以今天截止／今天考試的不會出現在這裡。
         // 一週總覽則另外依 endtime 判斷每天「今天要交／要考」的項目。
         const [hwRes, testRes, clothesRes, noteRes] = await Promise.all([
-          supabaseClient.from("Homework Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true}),
-          supabaseClient.from("Test Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true}),
-          supabaseClient.from("Clothes Status").select("*").lte("weekstart", selectedDate).gte("weekend", selectedDate),
-          supabaseClient.from("Note Status").select("*").lte("starttime", selectedDate).gte("endtime", selectedDate).order("endtime", {ascending: true})
+          withTimeout(supabaseClient.from("Homework Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true})),
+          withTimeout(supabaseClient.from("Test Status").select("*").lte("starttime", selectedDate).gt("endtime", selectedDate).order("endtime", {ascending: true})),
+          withTimeout(supabaseClient.from("Clothes Status").select("*").lte("weekstart", selectedDate).gte("weekend", selectedDate)),
+          // 注意事項：開始日 <= 今天 <= 結束日，結束日當天也算有效。
+          withTimeout(supabaseClient.from("Note Status").select("*").lte("starttime", selectedDate).gte("endtime", selectedDate).order("endtime", {ascending: true}))
         ]);
 
         const dayData = {
