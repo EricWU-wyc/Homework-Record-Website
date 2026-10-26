@@ -164,6 +164,9 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
   .todo-add input:first-child{flex:1 1 100%}
   .auth-card{margin:12px auto;padding:22px 16px}
 }
+.temp-pw{margin-top:8px;font-size:.9rem}
+.temp-pw code{padding:2px 8px;font-size:1.05rem;font-weight:700;letter-spacing:.2em;background:var(--soft);border-radius:6px}
+.temp-pw button{padding:3px 10px;font-size:.8rem}
 </style>
   </head>
   
@@ -308,7 +311,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議輸入 暱稱+真名"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="建議 暱稱+真名"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
@@ -1713,15 +1716,39 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       });
 
       let accountsCache = [];
+      const getTemps = () => { try{ return JSON.parse(sessionStorage.getItem('tempPw') || '{}'); }catch(e){ return {}; } };
+      const setTemps = o => { try{ sessionStorage.setItem('tempPw', JSON.stringify(o)); }catch(e){} };
       async function loadAccounts(){
         $('accounts-list').textContent = '載入中...';
         const pr = await supabaseClient.from('profiles').select('*').order('created_at');
         if(pr.error){ $('accounts-list').textContent = 'Error：' + pr.error.message; return; }
         accountsCache = pr.data;
+        // 對方改好密碼後，就不再顯示臨時密碼
+        const temps = getTemps();
+        let changed = false;
+        pr.data.forEach(p => { if(temps[p.id] && !p.must_change_password){ delete temps[p.id]; changed = true; } });
+        if(changed) setTemps(temps);
         $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>身分組</th><th>操作</th></tr></thead><tbody>` +
-          pr.data.map(p => `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td><select ${p.id === me.id ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
-          Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select></td><td>${p.id === me.id ? '' : `<button class="ghost" onclick="resetPw('${p.id}')">重設密碼</button>`}</td></tr>`).join('') + `</tbody></table>`;
+          pr.data.map(p => {
+            const self = p.id === me.id;
+            const roleSel = `<select ${self ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
+              Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select>`;
+            const tp = temps[p.id];
+            const ops = self ? '' :
+              `<button class="ghost" onclick="resetPw('${p.id}')">重設密碼</button> <button class="ghost" style="color:#e74c3c" onclick="delUser('${p.id}')">刪除帳號</button>` +
+              (tp ? `<div class="temp-pw"><span class="tag">待改密碼</span> 臨時密碼 <code>${esc(tp)}</code> <button class="ghost" onclick="copyPw('${p.id}', this)">複製</button></div>`
+                  : (p.must_change_password ? '<div class="temp-pw"><span class="tag">待改密碼</span></div>' : ''));
+            return `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td>${roleSel}</td><td>${ops}</td></tr>`;
+          }).join('') + `</tbody></table>`;
       }
+      window.copyPw = async (id, btn) => {
+        const t = getTemps()[id];
+        if(!t) return;
+        try{ await navigator.clipboard.writeText(t); }catch(e){ prompt('請手動複製：', t); return; }
+        const old = btn.textContent;
+        btn.textContent = '已複製';
+        setTimeout(() => btn.textContent = old, 1500);
+      };
       window.resetPw = async id => {
         const p = accountsCache.find(x => x.id === id);
         const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
@@ -1733,7 +1760,17 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           alert('重設失敗：' + msg);
           return;
         }
-        prompt(`「${name}」的臨時密碼（可複製）。\n請私下告訴本人，對方登入後會被要求設定新密碼。`, data.temp);
+        const t = getTemps(); t[id] = data.temp; setTemps(t);
+        loadAccounts();
+      };
+      window.delUser = async id => {
+        const p = accountsCache.find(x => x.id === id);
+        const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
+        if(!confirm(`確定要刪除「${name}」的帳號嗎？\n登入帳號、個人資料與待辦都會被刪除，無法復原。\n（他發過的日記會保留，作者顯示為「匿名」。）`)) return;
+        const {error} = await supabaseClient.rpc('admin_delete_user', {uid: id});
+        if(error){ alert('刪除失敗：' + error.message); return; }
+        const t = getTemps(); delete t[id]; setTemps(t);
+        loadAccounts();
       };
       window.setRole = async (id, role) => {
         const {error} = await supabaseClient.from('profiles').update({role}).eq('id', id);
