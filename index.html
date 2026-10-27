@@ -265,7 +265,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-todo-container" style="display: none;">
-          <div class="header-container"><div><h1>我的待辦</h1><p class="hint" style="margin:2px 0 0">勾選完成，也可以從作業、考試加入清單</p></div></div>
+          <div class="header-container"><div><h1>我的待辦</h1></div></div>
           <div class="dashboard-grid">
             <div class="section-box" style="grid-column: span 2;">
               <h3>待辦清單</h3>
@@ -280,7 +280,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-blog-container" style="display: none;">
-          <div class="header-container"><div><h1>班級部落格</h1><p class="hint" style="margin:2px 0 0">任何人都可以瀏覽；登入後才可以發文與編輯自己負責的日記。</p></div></div>
+          <div class="header-container"><div><h1>班級部落格</h1></div></div>
           <div id="blog-composer" class="section-box composer view-gap" style="min-height:0;display:none">
             <h3 id="blog-composer-title">寫一篇</h3>
             <input type="hidden" id="blog-edit-id">
@@ -294,7 +294,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-schedule-container" style="display: none;">
-          <div class="header-container"><div><h1>本週課表</h1><p class="hint">每週沿用預設課表；有調課時才套用該週異動。</p></div><label style="font-size:.9em">日期：<input type="date" id="schedule-date-picker"></label></div>
+          <div class="header-container"><div><h1>本週課表</h1></div><label style="font-size:.9em">日期：<input type="date" id="schedule-date-picker"></label></div>
           <div class="section-box schedule-table" id="schedule-content">載入中...</div>
         </div>
 
@@ -369,8 +369,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="accounts-form" class="form-box" style="display: none;">
               <h3>帳號與身分組</h3>
-              <p class="hint">新帳號由同學自行用 Email 註冊，註冊後在這裡指定身分組。</p>
-              <div class="hint" style="margin-bottom:10px">管理員可封鎖異常帳號；被封鎖的帳號將無法登入網站。生日僅供管理員辨識帳號。</div>
               <div id="accounts-list"></div>
             </div>
 
@@ -495,7 +493,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="clothes-form" class="form-box" style="display: none;">
               <h3>服裝設定</h3>
-              <p class="hint">預設服裝只設定一次。只有特殊週需要另外建立該週的異動。</p>
               <label>模式：<select id="clothes-mode"><option value="default">設定每週預設服裝</option><option value="override">設定特殊週異動</option></select></label>
               <div id="clothes-week-fields" style="display:none;margin-top:12px">
                 <label>該週開始日期：<input type="date" id="clothes-weekstart"></label>&nbsp;&nbsp;
@@ -513,7 +510,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="schedule-form" class="form-box" style="display:none">
               <h3>課表設定</h3>
-              <p class="hint">課表以預設課表為基礎；只有發生調課的週才建立特殊週資料。</p>
               <div id="schedule-default-editor">
                 <h4>預設課表初始化</h4>
                 <div id="schedule-default-grid"></div>
