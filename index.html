@@ -4,10 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
-    
-    <!-- 引入 Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script>
       const SUPABASE_URL = "https://ocwpamhemxddhujichkz.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jd3BhbWhlbXhkZGh1amljaGt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4OTYzNzUsImV4cCI6MjEwNDQ3MjM3NX0.N4N75_Y7dFNoOiSEBvKEcpHHMdxFfGC0P4PDmlNbTns";
@@ -42,6 +39,8 @@ aside.collapsed{left:-232px}
 #sidebar-toggle-btn:hover{background:var(--soft);filter:none}
 #sidebar-toggle-btn.collapsed{left:14px}
 
+#mobile-theme-toggle{display:none;position:fixed;top:14px;right:14px;z-index:120;width:42px;height:42px;padding:0;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.18);align-items:center;justify-content:center;font-size:18px}
+.schedule-table{width:100%;overflow:auto}.schedule-table table{min-width:720px}.schedule-cell{white-space:pre-wrap;line-height:1.45}.birthday-card{position:fixed;inset:0;z-index:2000;pointer-events:none;overflow:hidden}.confetti{position:absolute;top:-20px;width:9px;height:15px;background:var(--pri);animation:fall 2.8s linear forwards}@keyframes fall{to{transform:translate3d(var(--dx),110vh,0) rotate(720deg)}}
 main{flex:1;min-height:100vh;margin-left:232px;max-width:calc(100% - 232px);padding:32px 36px;display:flex;flex-direction:column;transition:margin-left .3s ease,max-width .3s ease}
 main.expanded{margin-left:0;max-width:100%;padding-left:64px}
 .main-content-body{flex:1}
@@ -96,6 +95,7 @@ th{text-align:left;font-size:.85rem;font-weight:600;color:var(--muted)}
   #failure-section,#blog-section{grid-column:1/-1 !important}
 }
 @media(max-width:760px){
+  #mobile-theme-toggle{display:flex}
   main,main.expanded{margin-left:0;max-width:100%;padding:20px 16px 96px}
   #sidebar-toggle-btn{display:none}
   aside,aside.collapsed{top:auto;left:0;right:0;bottom:0;width:auto;flex-direction:row;align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line)}
@@ -160,16 +160,13 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 .view-gap{margin-bottom:20px}
 @media(max-width:760px){
   .nav-btn{padding:10px 2px;font-size:.82rem}
-  .theme-switch-wrapper{order:1}
+  .theme-switch-wrapper{display:none}
   #account-btn{order:2;width:auto;margin:0 0 0 8px;padding:2px;border:0;border-radius:50%}
   #account-btn .name{display:none}
   .todo-add{flex-wrap:wrap}
   .todo-add input:first-child{flex:1 1 100%}
   .auth-card{margin:12px auto;padding:22px 16px}
 }
-.temp-pw{margin-top:8px;font-size:.9rem}
-.temp-pw code{padding:2px 8px;font-size:1.05rem;font-weight:700;letter-spacing:.2em;background:var(--soft);border-radius:6px}
-.temp-pw button{padding:3px 10px;font-size:.8rem}
 </style>
   </head>
   
@@ -184,7 +181,8 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           <button class="nav-btn active" id="nav-contact">聯絡簿</button>
           <button class="nav-btn hidden" id="nav-manager">後台管理</button>
           <button class="nav-btn" id="nav-blog">班級部落格</button>
-          <button class="nav-btn hidden" id="nav-todo">我的待辦</button>         
+          <button class="nav-btn hidden" id="nav-todo">我的待辦</button>
+          <button class="nav-btn" id="nav-schedule">課表</button>          
         </div>
       </div>
 
@@ -199,6 +197,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
       </div>
     </aside>
+    <button id="mobile-theme-toggle" class="ghost" title="切換深淺色">☾</button>
 
     <main id="main-content">
       <div class="main-content-body">
@@ -231,7 +230,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
               <div id="test-content">載入中...</div>
             </div>
             <div class="section-box" id="clothes-section">
-              <h3>當周衣著</h3>
+              <h3>本週服裝</h3>
               <div id="clothes-content">載入中...</div>
             </div>
             <div class="section-box" id="note-section">
@@ -281,30 +280,22 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         </div>
 
         <div id="view-blog-container" style="display: none;">
-          <div class="header-container">
-            <div>
-              <h1>班級部落格</h1>
-              <p class="hint" style="margin:2px 0 0">分享你的日常，支援上傳圖片，按下 Enter 即可換行</p>
-            </div>
-          </div>
-          
-          <div class="section-box composer view-gap" style="min-height:0">
+          <div class="header-container"><div><h1>班級部落格</h1><p class="hint" style="margin:2px 0 0">任何人都可以瀏覽；登入後才可以發文與編輯自己負責的日記。</p></div></div>
+          <div id="blog-composer" class="section-box composer view-gap" style="min-height:0;display:none">
             <h3 id="blog-composer-title">寫一篇</h3>
-            <input type="hidden" id="blog-composer-id">
+            <input type="hidden" id="blog-edit-id">
             <input id="blog-new-title" placeholder="標題">
-            <textarea id="blog-new-body" rows="6" placeholder="今天發生了什麼事？"></textarea>
-            
-            <div style="display:flex; gap:10px; align-items:center; margin-bottom: 12px; flex-wrap:wrap;">
-              <label class="ghost" style="padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem; margin:0;">
-                插入圖片 <input type="file" id="blog-new-image" accept="image/*" hidden>
-              </label>
-              <span id="blog-image-uploading" style="display:none; color:var(--muted); font-size:0.9rem;">圖片上傳中...</span>
-              <span style="flex:1"></span>
-              <button id="blog-new-post">發佈</button>
-              <button id="blog-cancel-edit" class="ghost" style="display:none; margin-left:8px;">取消編輯</button>
-            </div>
+            <input type="date" id="blog-new-date">
+            <textarea id="blog-new-body" rows="4" placeholder="今天發生了什麼事？"></textarea>
+            <button id="blog-new-post">發佈</button>
+            <button id="blog-cancel-edit" class="ghost" style="display:none">取消編輯</button>
           </div>
           <div id="blog-feed"></div>
+        </div>
+
+        <div id="view-schedule-container" style="display: none;">
+          <div class="header-container"><div><h1>本週課表</h1><p class="hint">每週沿用預設課表；有調課時才套用該週異動。</p></div><label style="font-size:.9em">日期：<input type="date" id="schedule-date-picker"></label></div>
+          <div class="section-box schedule-table" id="schedule-content">載入中...</div>
         </div>
 
         <div id="view-auth-container" style="display: none;">
@@ -330,24 +321,14 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
-            <label>暱稱<input id="profile-nick" placeholder="即顯示名稱"></label>
+            <label>生日<input type="date" id="profile-birthday"></label>
+            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
-            <label>確認密碼<input type="password" id="profile-pass2" autocomplete="new-password"></label>
+            <label id="profile-pass-confirm-wrap">確認密碼<input type="password" id="profile-pass-confirm" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
             <button id="profile-skip" class="ghost">稍後再填</button>
             <button id="logout-btn" class="ghost">登出</button>
-          </div>
-        </div>
-
-        <div id="view-reset-container" style="display: none;">
-          <div class="auth-card">
-            <h2>設定新密碼</h2>
-            <p class="hint">你目前使用的是管理員提供的臨時密碼，請先設定自己的新密碼才能繼續使用。</p>
-            <label>新密碼<input type="password" id="reset-pass" autocomplete="new-password"></label>
-            <label>確認新密碼<input type="password" id="reset-pass2" autocomplete="new-password"></label>
-            <button id="reset-save">儲存新密碼</button>
-            <button id="reset-logout" class="ghost">登出</button>
           </div>
         </div>
 
@@ -371,21 +352,25 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
                 <option value="note">注意事項</option>
                 <option value="failure">缺繳名單</option>
                 <option value="clothes">服裝</option>
-                <option value="blog">Blog 班級紀錄</option>
+                <option value="schedule">課表</option>
               </select>
             </div>
 
             <div id="announce-form" class="form-box" style="display: none;">
-              <h3>緊急通告</h3>
-              <p class="hint">同一時間只會有一則通告。發布新的會直接覆蓋舊的，清除後首頁就不再顯示。</p>
-              <div id="announce-list" style="margin-bottom: 14px;"></div>
-              <textarea id="announce-text" rows="4" style="width: 80%; resize: vertical;" placeholder="輸入通告內容，會顯示在聯絡簿最上方"></textarea><br><br>
-              <button id="announce-add">發布並覆蓋</button>
+              <h3>新增緊急通告</h3>
+              <label>開始日期：<input type="date" id="announce-start"></label>&nbsp;&nbsp;&nbsp;
+              <label>結束日期：<input type="date" id="announce-end"></label><br><br>
+              <label>通告內容：<br><textarea id="announce-text" rows="4" style="width: 80%; resize: vertical; margin-top: 5px;" placeholder="會顯示在聯絡簿最上方"></textarea></label><br><br>
+              <button id="announce-add">發布通告</button>
+              <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
+              <h3>現有通告</h3>
+              <div id="announce-list"></div>
             </div>
 
             <div id="accounts-form" class="form-box" style="display: none;">
               <h3>帳號與身分組</h3>
               <p class="hint">新帳號由同學自行用 Email 註冊，註冊後在這裡指定身分組。</p>
+              <div class="hint" style="margin-bottom:10px">管理員可封鎖異常帳號；被封鎖的帳號將無法登入網站。生日僅供管理員辨識帳號。</div>
               <div id="accounts-list"></div>
             </div>
 
@@ -509,109 +494,47 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             </div>
 
             <div id="clothes-form" class="form-box" style="display: none;">
-              <div id="clothes-setting">
-                <h3>設定服裝</h3>
-                
-                <label>該週開始日期：<input type="date" id="clothes-weekstart"></label>&nbsp;&nbsp;&nbsp;
-                <label>該週結束日期：<input type="date" id="clothes-weekend"></label><br><br>
-                
-                <table style="width: 40%; margin: 10px 0;">
-                  <tr>
-                    <td style="padding: 8px; width: 30%;">星期一</td>
-                    <td style="padding: 8px;">
-                      <select id="mon-clothes-select">
-                        <option value="">當天為例假日</option>
-                        <option value="運動服 or 班服">運動服 or 班服</option>
-                        <option value="運動服">運動服</option>
-                        <option value="制服">制服</option>
-                        <option value="班服">班服</option>
-                      </select>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px;">星期二</td>
-                    <td style="padding: 8px;">
-                      <select id="tue-clothes-select">
-                        <option value="">當天為例假日</option>
-                        <option value="運動服 or 班服">運動服 or 班服</option>
-                        <option value="運動服">運動服</option>
-                        <option value="制服">制服</option>
-                        <option value="班服">班服</option>
-                      </select>
-                    </td>
-                  </tr>                
-                  <tr>
-                    <td style="padding: 8px;">星期三</td>
-                    <td style="padding: 8px;">
-                      <select id="wed-clothes-select">
-                        <option value="">當天為例假日</option>
-                        <option value="運動服 or 班服">運動服 or 班服</option>
-                        <option value="運動服">運動服</option>
-                        <option value="制服">制服</option>
-                        <option value="班服">班服</option>
-                      </select>
-                    </td>
-                  </tr>    
-                  <tr>
-                    <td style="padding: 8px;">星期四</td>
-                    <td style="padding: 8px;">
-                      <select id="thur-clothes-select">
-                        <option value="">當天為例假日</option>
-                        <option value="運動服 or 班服">運動服 or 班服</option>
-                        <option value="運動服">運動服</option>
-                        <option value="制服">制服</option>
-                        <option value="班服">班服</option>
-                      </select>
-                    </td>
-                  </tr>    
-                  <tr>
-                    <td style="padding: 8px;">星期五</td>
-                    <td style="padding: 8px;">
-                      <select id="fri-clothes-select">
-                        <option value="">當天為例假日</option>
-                        <option value="運動服 or 班服">運動服 or 班服</option>
-                        <option value="運動服">運動服</option>
-                        <option value="制服">制服</option>
-                        <option value="班服">班服</option>
-                      </select>
-                    </td>
-                  </tr>    
-                </table>
-                <br>
-                <button id="clothes-insert-btn">確認設定</button>
-                <button id="clothes-origin-btn" style="margin-left: 10px; background-color: #7f8c8d;">預設服裝</button>
+              <h3>服裝設定</h3>
+              <p class="hint">預設服裝只設定一次。只有特殊週需要另外建立該週的異動。</p>
+              <label>模式：<select id="clothes-mode"><option value="default">設定每週預設服裝</option><option value="override">設定特殊週異動</option></select></label>
+              <div id="clothes-week-fields" style="display:none;margin-top:12px">
+                <label>該週開始日期：<input type="date" id="clothes-weekstart"></label>&nbsp;&nbsp;
+                <label>該週結束日期：<input type="date" id="clothes-weekend"></label>
               </div>
+              <table style="width:100%;max-width:620px;margin:16px 0">
+                <tr><td>星期一</td><td><select id="mon-clothes-select"><option value="">當天為例假日</option><option>運動服 or 班服</option><option>運動服</option><option>制服</option><option>班服</option></select></td></tr>
+                <tr><td>星期二</td><td><select id="tue-clothes-select"><option value="">當天為例假日</option><option>運動服 or 班服</option><option>運動服</option><option>制服</option><option>班服</option></select></td></tr>
+                <tr><td>星期三</td><td><select id="wed-clothes-select"><option value="">當天為例假日</option><option>運動服 or 班服</option><option>運動服</option><option>制服</option><option>班服</option></select></td></tr>
+                <tr><td>星期四</td><td><select id="thur-clothes-select"><option value="">當天為例假日</option><option>運動服 or 班服</option><option>運動服</option><option>制服</option><option>班服</option></select></td></tr>
+                <tr><td>星期五</td><td><select id="fri-clothes-select"><option value="">當天為例假日</option><option>運動服 or 班服</option><option>運動服</option><option>制服</option><option>班服</option></select></td></tr>
+              </table>
+              <button id="clothes-insert-btn">儲存服裝</button>
             </div>
 
-            <div id="blog-form" class="form-box" style="display: none;">
-              <div id="blog-insert">
-                <h3 id="blog-manager-form-title">新增 Blog</h3>
-                <input type="hidden" id="blog-edit-id">
-                
-                <label>標題：<input id="blog-insert-title" style="width:30%" placeholder="輸入標題"></label>&nbsp;&nbsp;&nbsp;
-                <label>上傳日期：<input type="date" id="blog-insert-postdate"></label><br><br>
-                <label>公告內容：<br><textarea id="blog-insert-detail" rows="6" style="width: 80%; resize: vertical; margin-top: 5px;" placeholder="輸入Blog，按下 Enter 即可換行"></textarea></label><br><br>
-                
-                <button id="blog-insert-btn">確認新增</button>
-                <button id="blog-cancel-edit-btn" style="display: none; margin-left: 10px;">取消修改</button>
+            <div id="schedule-form" class="form-box" style="display:none">
+              <h3>課表設定</h3>
+              <p class="hint">課表以預設課表為基礎；只有發生調課的週才建立特殊週資料。</p>
+              <div id="schedule-default-editor">
+                <h4>預設課表初始化</h4>
+                <div id="schedule-default-grid"></div>
+                <button id="schedule-default-save">儲存預設課表</button>
               </div>
-
-              <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--hr-color);">
-
-              <div id="blog-edit">
-                <h3>現有 Blog 管理</h3>
-                <div style="margin-bottom: 10px;">
-                  <button id="load-blog-list-btn">重新載入</button>
-                </div>
-                <div id="blog-list-container"></div>
+              <hr style="margin:20px 0;border:0;border-top:1px solid var(--hr-color)">
+              <div id="schedule-override-editor">
+                <h4>特殊週調課</h4>
+                <label>該週日期：<input type="date" id="schedule-weekstart"></label>
+                <div id="schedule-override-grid"></div>
+                <button id="schedule-override-save">儲存本週調課</button>
               </div>
             </div>
+            </div>
+
           </div>
         </div>
       </div>
 
       <footer class="site-footer">
-        FDHS 407 線上聯絡簿 | Ver. 3.2.0 純文字部落格與圖片編輯功能
+        FDHS 407 線上聯絡簿 | Ver. 3.3.0 帳號、待辦、服裝、課表與班級部落格大幅修正
       </footer>
     </main>
 
@@ -635,6 +558,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       });
 
       const darkModeToggle = document.getElementById("darkModeToggle");
+      const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
       
       if(prefersDark.matches){
@@ -652,11 +576,15 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         }
       });
 
+      function applyTheme(on){ document.body.classList.toggle('dark-mode',on); darkModeToggle.checked=on; mobileThemeToggle.textContent=on?'☀':'☾'; }
+      mobileThemeToggle.addEventListener('click',()=>applyTheme(!document.body.classList.contains('dark-mode')));
       darkModeToggle.addEventListener("change", function(){
         if(this.checked){
           document.body.classList.add("dark-mode");
+          mobileThemeToggle.textContent='☀';
         }else{
           document.body.classList.remove("dark-mode");
+          mobileThemeToggle.textContent='☾';
         }
       });
 
@@ -698,6 +626,8 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       const datePicker = document.getElementById('date-picker');
       datePicker.value = today;
+      document.getElementById('schedule-date-picker').value=today;
+      document.getElementById('schedule-date-picker').addEventListener('change',e=>loadSchedule(e.target.value));
 
       let currentViewMode = 'daily';
       const btnDaily = document.getElementById('btn-daily-view');
@@ -708,15 +638,13 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       const dataCache = {
         daily: {},
         weekly: {},
-        failure: null
+        failure: null,
+        blog: null
       };
 
       async function initGlobalData() {
-        if (!dataCache.failure) {
-          fetchFailure();
-        } else {
-          renderFailure(dataCache.failure);
-        }
+        if (!dataCache.failure) fetchFailure();
+        else renderFailure(dataCache.failure);
       }
 
       btnDaily.addEventListener('click', () => {
@@ -809,10 +737,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             renderDailyData(dayData, selectedDate);
           }, requestId);
 
-        fetchDailyQuery("服裝", supabaseClient.from("Clothes Status")
-          .select("*")
-          .lte("weekstart", selectedDate)
-          .gte("weekend", selectedDate), result => {
+        fetchDailyQuery("服裝", loadClothesForWeek(weekMonday(selectedDate)), result => {
             dayData.clothes = result?.data || [];
             dayData.clothesError = result?.error || null;
             renderDailyData(dayData, selectedDate);
@@ -844,17 +769,9 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(data.clothesError){ clothesContainer.innerHTML = `載入失敗：${esc(data.clothesError.message || '未知錯誤')}`; }
         else if(!data.clothes || data.clothes.length === 0){ clothesContainer.innerHTML = '<div class="empty">這週還沒有服裝規定</div>'; }
         else {
-          const item = data.clothes[0];
-          const date = new Date(selectedDate + 'T00:00:00');
-          const day = date.getDay();
-          const clothesMap = {1:'mon', 2:'tue', 3:'wed', 4:'thur', 5:'fri'};
-          const dayNames = {1:'星期一', 2:'星期二', 3:'星期三', 4:'星期四', 5:'星期五'};
-          const key = clothesMap[day];
-          const clothes = key ? (item[key] || '放假') : '放假';
-
-          clothesContainer.innerHTML = `
-            <p style="margin:0 0 6px 0; font-size:0.85em; color:gray;"><b>日期：</b> ${esc(selectedDate)}</p>
-            <div style="font-size:1.05em;"><b>${dayNames[day] || '週末'}</b>：${esc(clothes)}</div>`;
+          const item=data.clothes[0];
+          const rows=[['星期一','mon'],['星期二','tue'],['星期三','wed'],['星期四','thur'],['星期五','fri']];
+          clothesContainer.innerHTML=rows.map(([n,k])=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)"><b>${n}</b><span>${esc(item[k]||'放假')}</span></div>`).join('');
         }
 
         const noteContainer = document.getElementById("note-content");
@@ -907,7 +824,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         });
 
         const [clothesRes, hwRes, testRes, noteRes] = await Promise.all([
-          supabaseClient.from("Clothes Status").select("*").lte("weekstart", mondayStr).gte("weekend", mondayStr),
+          loadClothesForWeek(mondayStr),
           supabaseClient.from("Homework Status").select("*").gte("endtime", mondayStr).lte("endtime", fridayStr),
           supabaseClient.from("Test Status").select("*").gte("endtime", mondayStr).lte("endtime", fridayStr),
           supabaseClient.from("Note Status").select("*").lte("starttime", fridayStr).gt("endtime", mondayStr)
@@ -988,6 +905,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             targetForm.style.display = "block";
             
             if(selectedValue === "homework") {
+              setHomeworkDefaultDates();
               const startInput = document.getElementById("homework-filter-start");
               const endInput = document.getElementById("homework-filter-end");
               const fieldSelect = document.getElementById("homework-filter-field");
@@ -997,6 +915,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
               if(typeof loadHomeworkList === "function") loadHomeworkList();
             }
             if(selectedValue === "test") {
+              setTestDefaultDates();
               const startInput = document.getElementById("test-filter-start");
               const endInput = document.getElementById("test-filter-end");
               const fieldSelect = document.getElementById("test-filter-field");
@@ -1016,10 +935,9 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             }
             if(selectedValue === "failure" && typeof loadFailureList === "function") loadFailureList();
             if(selectedValue === "blog") {
-              if(typeof loadBlogManagerList === "function") loadBlogManagerList();
-              if(typeof resetBlogManagerForm === "function") resetBlogManagerForm();
+              if(typeof loadBlogList === "function") loadBlogList();
+              if(typeof resetBlogForm === "function") resetBlogForm();
             }
-            if(selectedValue === "accounts" && typeof loadAccounts === "function") loadAccounts();
           }
         }
       });
@@ -1057,8 +975,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       function resetHomeworkForm(){
         homeworkEditIdInput.value = "";
-        homeworkStartInput.value = "";
-        homeworkEndInput.value = "";
+        setHomeworkDefaultDates();
         homeworkDetailInput.value = "";
         homeworkFormTitle.innerText = "新增作業";
         homeworkInsertBtn.innerText = "確認新增";
@@ -1115,6 +1032,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       const testStartInput = document.getElementById("test-insert-startdate");
       const testEndInput = document.getElementById("test-insert-enddate");
       const testDetailInput = document.getElementById("test-insert-detail");
+      function dateAfter(dateStr,days){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+days);return d.toISOString().split('T')[0]}
+      function setHomeworkDefaultDates(){homeworkStartInput.value=today;homeworkEndInput.value=dateAfter(today,1)}
+      function setTestDefaultDates(){testStartInput.value=today;testEndInput.value=dateAfter(today,1)}
+
 
       if(testInsertBtn){
         testInsertBtn.addEventListener("click", async() =>{
@@ -1137,8 +1058,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       function resetTestForm(){
         testEditIdInput.value = "";
-        testStartInput.value = "";
-        testEndInput.value = "";
+        setTestDefaultDates();
         testDetailInput.value = "";
         testFormTitle.innerText = "新增考試";
         testInsertBtn.innerText = "確認新增";
@@ -1336,158 +1256,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(error) alert("Error：" + error.message); else { alert("已成功刪除缺繳名單!"); loadFailureList(); }
       };
 
-      const clothesInsertBtn = document.getElementById("clothes-insert-btn");
-      if(clothesInsertBtn){
-        clothesInsertBtn.addEventListener("click", async() =>{
-          const clothesmon = document.getElementById("mon-clothes-select").value;
-          const clothestue = document.getElementById("tue-clothes-select").value;
-          const clotheswed = document.getElementById("wed-clothes-select").value;
-          const clothesthur = document.getElementById("thur-clothes-select").value;
-          const clothesfri = document.getElementById("fri-clothes-select").value;
-          const weekstart = document.getElementById("clothes-weekstart").value;
-          const weekend = document.getElementById("clothes-weekend").value;
-
-          const startDateObj = new Date(weekstart);
-          if(startDateObj.getDay() !== 1){ alert("開始日期必須是星期一！"); return; }
-
-          const endDateObj = new Date(weekend);
-          if(endDateObj.getDay() !== 5){ alert("結束日期必須是星期五！"); return; }
-
-          const diffTime = endDateObj.getTime() - startDateObj.getTime();
-          const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-          if(diffDays < 0){ alert("結束日期不能早於開始日期!"); return; }
-          if(diffDays > 4){ alert("開始與結束日期必須在同一週內!"); return; }
-
-          const {data: existingData, error: checkError} = await supabaseClient.from("Clothes Status").select("*").eq("weekstart", weekstart);
-          if(checkError){ alert("Error：" + checkError.message); return; }
-
-          let resultError;
-          if(existingData && existingData.length > 0){
-            const {error: updateError} = await supabaseClient.from("Clothes Status").update({
-              mon: clothesmon, tue: clothestue, wed: clotheswed, thur: clothesthur, fri: clothesfri, weekend: weekend
-            }).eq("weekstart", weekstart);
-            resultError = updateError;
-            if(!resultError) alert("偵測到該週已有紀錄，已自動更新該週服裝!");
-          }else{
-            const {error: insertError} = await supabaseClient.from("Clothes Status").insert([{
-              mon: clothesmon, tue: clothestue, wed: clotheswed, thur: clothesthur, fri: clothesfri, weekstart: weekstart, weekend: weekend
-            }]);
-            resultError = insertError;
-            if(!resultError) alert("服裝設定成功！");
-          }
-
-          if(resultError){
-            alert("Error: " + resultError.message);
-          }else{
-            document.getElementById("mon-clothes-select").value = "";
-            document.getElementById("tue-clothes-select").value = "";
-            document.getElementById("wed-clothes-select").value = "";
-            document.getElementById("thur-clothes-select").value = "";
-            document.getElementById("fri-clothes-select").value = "";
-            document.getElementById("clothes-weekstart").value = "";
-            document.getElementById("clothes-weekend").value = "";
-          }
-        });
-      }
-
-      const clothesOriginBtn = document.getElementById("clothes-origin-btn");
-      if(clothesOriginBtn){
-        clothesOriginBtn.addEventListener("click", () => {
-          document.getElementById("mon-clothes-select").value = "運動服";
-          document.getElementById("tue-clothes-select").value = "運動服";
-          document.getElementById("wed-clothes-select").value = "班服";
-          document.getElementById("thur-clothes-select").value = "制服";
-          document.getElementById("fri-clothes-select").value = "運動服";
-          alert("已自動帶入預設服裝!");
-        });
-      }
-
-      // ---------------------------------------------
-      // Blog Backend Manager Logic (後台 Blog 管理)
-      // ---------------------------------------------
-      const blogManagerInsertBtn = document.getElementById("blog-insert-btn");
-      const blogManagerCancelEditBtn = document.getElementById("blog-cancel-edit-btn");
-      const loadBlogManagerBtn = document.getElementById("load-blog-list-btn");
-      const blogManagerListContainer = document.getElementById("blog-list-container");
-
-      const blogManagerFormTitle = document.getElementById("blog-manager-form-title");
-      const blogManagerEditIdInput = document.getElementById("blog-edit-id");
-      const blogManagerTitleInput = document.getElementById("blog-insert-title");
-      const blogManagerDateInput = document.getElementById("blog-insert-postdate");
-      const blogManagerDetailInput = document.getElementById("blog-insert-detail");
-
-      if(blogManagerInsertBtn){
-        blogManagerInsertBtn.addEventListener("click", async() =>{
-          const blogtitle = blogManagerTitleInput.value;
-          const blogdate = blogManagerDateInput.value;
-          const blogdetail = blogManagerDetailInput.value;
-          const editId = blogManagerEditIdInput.value;
-          if(!blogtitle || !blogdate || !blogdetail){ alert("請完整填寫Blog資訊!"); return; }
-
-          if(editId){
-            const {error} = await supabaseClient.from("Blog Status").update({title: blogtitle, postdate: blogdate, blog: blogdetail}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("Blog修改成功!"); resetBlogManagerForm(); loadBlogManagerList(); }
-          }else{
-            const {error} = await supabaseClient.from("Blog Status").insert([{title: blogtitle, postdate: blogdate, blog: blogdetail}]);
-            if(error) alert("Error: " + error.message); else { alert("Blog新增成功!"); resetBlogManagerForm(); loadBlogManagerList(); }
-          }
-        });
-      }
-      if(blogManagerCancelEditBtn) blogManagerCancelEditBtn.addEventListener("click", resetBlogManagerForm);
-
-      function resetBlogManagerForm(){
-        blogManagerEditIdInput.value = "";
-        blogManagerTitleInput.value = "";
-        const now = new Date();
-        const taiwanTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
-        blogManagerDateInput.value = taiwanTime.toISOString().split('T')[0];
-        blogManagerDetailInput.value = "";
-        blogManagerFormTitle.innerText = "新增 Blog";
-        blogManagerInsertBtn.innerText = "確認新增";
-        blogManagerCancelEditBtn.style.display = "none";
-      }
-
-      async function loadBlogManagerList(){
-        if(!blogManagerListContainer) return;
-        blogManagerListContainer.innerHTML = "載入中...";
-        const {data, error} = await supabaseClient.from("Blog Status").select("*").order("postdate", {ascending: false});
-        if(error){ blogManagerListContainer.innerHTML = "Error：" + error.message; return; }
-        if(!data || data.length === 0){ blogManagerListContainer.innerHTML = "<div>目前沒有 Blog 資料</div>"; return; }
-
-        let html = `<table><thead><tr><th>標題</th><th>上傳日期</th><th style="width: 45%;">內容</th><th>操作</th></tr></thead><tbody>`;
-        data.forEach(item => {
-          const safeTitle = item.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const safeBlog = item.blog.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          html += `<tr><td>${item.title}</td><td style="text-align: center;">${item.postdate}</td><td style="white-space: pre-wrap;">${esc(item.blog).substring(0, 100)}...</td><td style="text-align: center;"><button onclick="prepareEditBlogManager('${item.id}', \`${safeTitle}\`, '${item.postdate}', \`${safeBlog}\`)">修改</button><button onclick="deleteBlogManager('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button></td></tr>`;
-        });
-        html += `</tbody></table>`;
-        blogManagerListContainer.innerHTML = html;
-      }
-      if(loadBlogManagerBtn) loadBlogManagerBtn.addEventListener("click", loadBlogManagerList);
-
-      window.prepareEditBlogManager = function(id, title, date, blog){
-        blogManagerEditIdInput.value = id;
-        blogManagerTitleInput.value = title;
-        blogManagerDateInput.value = date;
-        blogManagerDetailInput.value = blog;
-        blogManagerFormTitle.innerText = "修改 Blog";
-        blogManagerInsertBtn.innerText = "確認修改";
-        blogManagerCancelEditBtn.style.display = "inline-block";
-        window.scrollTo({top: blogManagerFormTitle.offsetTop, behavior: 'smooth'});
-      };
-
-      window.deleteBlogManager = async function(id){
-        if(!confirm("確定要刪除這筆 Blog 嗎?")) return;
-        const {error} = await supabaseClient.from("Blog Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除 Blog!"); loadBlogManagerList(); }
-      };
-
-
-      /* ===== v3：帳號、身分組、公告、待辦、部落格 ===== */
+      
       const $ = id => document.getElementById(id);
       const ROLE = {admin: '管理員', teacher: '導師', monitor: '班長', officer: '幹部', student: '學生'};
-      const FORM_NAMES = {homework: '作業', test: '考試', note: '注意事項', failure: '缺繳名單', clothes: '服裝', announce: '緊急通告', accounts: '帳號管理'};
+      const FORM_NAMES = {homework: '作業', test: '考試', note: '注意事項', failure: '缺繳名單', clothes: '服裝', schedule: '課表', announce: '緊急通告', accounts: '帳號管理'};
       let me = null;
       const isStaff = () => !!me && ['admin', 'teacher', 'monitor'].includes(me.role);
       const isWriter = () => isStaff() || (!!me && me.role === 'officer');
@@ -1501,26 +1273,27 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         return `<span class="av ${cls}">${esc(((p && (p.title || p.real_name || p.username)) || '?').slice(0, 1))}</span>`;
       }
 
-      /* --- 畫面切換 --- */
-      const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile', 'reset'];
+      
+      const VIEWS = ['contact', 'todo', 'blog', 'schedule', 'manager', 'auth', 'profile'];
       let registering = false;
       function showView(v){
-        if(me && me.must_change && v !== 'reset') v = 'reset';
-        if((v === 'todo' || v === 'blog') && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
+        if(v === 'todo' && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'profile' && !me && !registering){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'manager' && !isWriter()){ v = me ? 'contact' : 'auth'; }
+        if(v === 'schedule' && !me){ $('auth-msg').textContent='請先登入才能查看課表'; v='auth'; }
         VIEWS.forEach(n => $('view-' + n + '-container').style.display = (n === v) ? 'block' : 'none');
-        ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
+        ['contact', 'todo', 'blog', 'schedule', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
         if(v === 'todo') loadTodos();
         if(v === 'blog') loadBlog();
+        if(v === 'schedule') loadSchedule(datePicker.value);
         if(v === 'manager') initManager();
         if(v === 'profile') fillProfile();
         if(v === 'contact') fetchAnnounce();
       }
-      ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
+      ['contact', 'todo', 'blog', 'schedule', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
       $('account-btn').addEventListener('click', () => showView(me ? 'profile' : 'auth'));
 
-      /* --- 登入 / 註冊 --- */
+      
       $('view-auth-container').addEventListener('click', e => {
         const t = e.target.dataset.tab;
         if(!t) return;
@@ -1547,30 +1320,34 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const {error} = await supabaseClient.auth.signInWithPassword({email, password: $('login-pass').value});
         if(error){ alert('登入失敗：帳號或密碼不正確'); return; }
         $('login-pass').value = '';
+        localStorage.setItem('site_login_at',String(Date.now()));
         setTimeout(() => showView('contact'), 400);
       });
       $('login-pass').addEventListener('keydown', e => { if(e.key === 'Enter') $('login-go').click(); });
       $('profile-skip').addEventListener('click', () => { try{ sessionStorage.setItem('skipProfile', '1'); }catch(e){} showView('contact'); });
-      $('logout-btn').addEventListener('click', () => supabaseClient.auth.signOut());
-      $('reset-logout').addEventListener('click', () => supabaseClient.auth.signOut());
-      $('reset-save').addEventListener('click', async () => {
-        const p = $('reset-pass').value;
-        if(p.length < 6){ alert('密碼至少需要 6 碼'); return; }
-        if(p !== $('reset-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
-        const {error} = await supabaseClient.auth.updateUser({password: p});
-        if(error){ alert('設定失敗：' + error.message); return; }
-        $('reset-pass').value = ''; $('reset-pass2').value = '';
-        await refreshMe();
-        alert('密碼已更新');
-        showView('contact');
-      });
+      $('logout-btn').addEventListener('click', () => {localStorage.removeItem('site_login_at');supabaseClient.auth.signOut();});
 
+      let birthdayCelebrated=false;
+      async function celebrateBirthday(){
+        if(birthdayCelebrated||!me?.birthday||me.birthday.slice(5)!==today.slice(5))return;
+        birthdayCelebrated=true;
+        alert('🎂 生日快樂！');
+        const layer=document.createElement('div');layer.className='birthday-card';
+        for(let i=0;i<80;i++){const c=document.createElement('span');c.className='confetti';c.style.left=Math.random()*100+'%';c.style.setProperty('--dx',((Math.random()-.5)*260)+'px');c.style.animationDelay=Math.random()*.7+'s';layer.appendChild(c)}
+        document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);
+      }
       async function refreshMe(){
         const {data: {session}} = await supabaseClient.auth.getSession();
+        if(session){let loginAt=Number(localStorage.getItem('site_login_at')||0);if(!loginAt){loginAt=Date.now();localStorage.setItem('site_login_at',String(loginAt));}if(Date.now()-loginAt>7*24*60*60*1000){localStorage.removeItem('site_login_at');await supabaseClient.auth.signOut();me=null;alert('登入已超過 7 天，請重新登入。');return;}}
         me = null;
         if(session){
           const {data} = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
-          me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email, must_change: !!(data && data.must_change_password)};
+          me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email};
+          if(me.banned){
+            await supabaseClient.auth.signOut();
+            me = null;
+            alert('此帳號已被管理員封鎖，無法使用網站。');
+          }
         }
         const displayName = me ? (me.title || me.real_name || me.username || '完成註冊') : '';
         $('account-btn').innerHTML = me
@@ -1578,57 +1355,43 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           : `<span class="av">＋</span><span class="name">登入 / 註冊</span>`;
         $('nav-manager').classList.toggle('hidden', !isWriter());
         $('nav-todo').classList.toggle('hidden', !me);
+        updateBlogComposer();
+        await celebrateBirthday();
       }
       supabaseClient.auth.onAuthStateChange((ev) => {
         setTimeout(async () => {
           await refreshMe();
-          if(me && me.must_change){ showView('reset'); return; }
           if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
 
-      /* --- 緊急通告 --- */
-      async function currentAnnounce(){
-        const {data} = await supabaseClient.from('announcements').select('*').order('created_at', {ascending: false}).limit(1);
-        return (data && data[0]) || null;
-      }
+      
       async function fetchAnnounce(){
-        const a = await currentAnnounce();
-        $('announce-bar').innerHTML = a ? `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>` : '';
+        const {data, error} = await supabaseClient.from('announcements')
+          .select('*')
+          .order('created_at', {ascending: false})
+          .limit(1);
+        if(error){
+          $('announce-bar').innerHTML = '';
+          return;
+        }
+        $('announce-bar').innerHTML = (data || []).map(a => `<div class="alert"><b>緊急通告</b><div class="note-text">${esc(a.content)}</div></div>`).join('');
       }
-      async function loadAnnounceList(){
-        const a = await currentAnnounce();
-        $('announce-list').innerHTML = a
-          ? `<div class="alert" style="margin-bottom:10px"><b>目前通告</b><div class="note-text">${esc(a.content)}</div></div><button id="announce-clear" style="background-color:#e74c3c">清除通告</button>`
-          : '<div class="empty">目前沒有通告</div>';
-        $('announce-text').value = a ? a.content : '';
-      }
-      $('announce-add').addEventListener('click', async () => {
-        const content = $('announce-text').value.trim();
-        if(!content){ alert('請輸入通告內容'); return; }
-        const {data, error} = await supabaseClient.from('announcements').insert({content, starttime: today, endtime: '2099-12-31'}).select('id').single();
-        if(error){ alert('Error：' + error.message); return; }
-        await supabaseClient.from('announcements').delete().lt('id', data.id);
-        alert('通告已更新');
-        loadAnnounceList(); fetchAnnounce();
-      });
-      $('announce-list').addEventListener('click', async e => {
-        if(e.target.id !== 'announce-clear' || !confirm('確定要清除目前的通告嗎?')) return;
-        await supabaseClient.from('announcements').delete().gt('id', 0);
-        loadAnnounceList(); fetchAnnounce();
-      });
 
-      /* --- 個人資料 --- */
+      
       function fillProfile(){
         const first = registering || !me?.username;
         $('profile-title').textContent = registering ? '註冊帳號' : (first ? '完成註冊資料' : '個人資料');
         $('profile-msg').textContent = registering ? '請填寫以下資料建立帳號。' : (first ? '請設定帳號名稱與個人資料。' : `${me.email} 身分組：${ROLE[me.role] || '學生'}`);
         $('profile-username').value = me?.username || '';
         $('profile-real').value = me?.real_name || '';
+        $('profile-birthday').value = me?.birthday || '';
         $('profile-nick').value = me?.title || '';
         $('profile-pass').value = '';
         $('profile-pass').placeholder = registering ? '設定密碼（至少 6 碼）' : (first ? '設定密碼（至少 6 碼）' : '不修改請留空');
+        $('profile-pass-confirm-wrap').style.display=registering?'block':'none';
+        $('profile-pass-confirm').value='';
         $('profile-email-wrap').style.display = registering ? 'block' : 'none';
         $('profile-email').value = me?.email || '';
         $('profile-av').innerHTML = me ? avatar(me, 'lg') : '<span class="av lg">＋</span>';
@@ -1636,7 +1399,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         $('logout-btn').style.display = registering ? 'none' : 'inline-block';
         $('profile-save').textContent = registering ? '建立帳號' : '儲存';
         $('profile-file').value = '';
-        $('profile-pass2').value = '';
       }
       $('profile-file').addEventListener('change', e => {
         const f = e.target.files[0];
@@ -1645,23 +1407,33 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('profile-save').addEventListener('click', async () => {
         const username = $('profile-username').value.trim();
         const real = $('profile-real').value.trim();
+        const birthday = $('profile-birthday').value || null;
         const pass = $('profile-pass').value;
+        const passConfirm = $('profile-pass-confirm').value;
         const email = $('profile-email').value.trim();
         if(!username || !real){ alert('請填寫帳號名稱與真實姓名'); return; }
+        if(registering && !birthday){ alert('請填寫生日'); return; }
+        if(registering && (!pass || pass.length<6)){ alert('密碼至少需要 6 碼'); return; }
+        if(registering && pass!==passConfirm){ alert('兩次輸入的密碼不一致'); return; }
         if(username.includes('@') || /\s/.test(username)){ alert('帳號名稱不能包含 @ 或空白'); return; }
 
         if(registering){
           if(!email){ alert('請輸入 Email'); return; }
-          if(pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
-          if(pass !== $('profile-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
-          const {data: taken} = await supabaseClient.rpc('email_for_username', {u: username});
-          if(taken){ alert('這個帳號名稱已被使用'); return; }
-          const {data, error} = await supabaseClient.auth.signUp({email, password: pass, options: {data: {username, real_name: real, title: $('profile-nick').value.trim() || null}}});
+          const {data, error} = await supabaseClient.auth.signUp({email, password: pass});
           if(error){ alert('註冊失敗：' + error.message); return; }
+          if(!data.user){ alert('註冊失敗：無法建立帳號'); return; }
+          localStorage.setItem('site_login_at',String(Date.now()));
+          me = {id: data.user.id, email: data.user.email, role: 'student'};
           registering = false;
-          $('profile-pass').value = ''; $('profile-pass2').value = '';
-          if(!data.session){ alert('註冊成功！請到信箱點擊驗證連結後，再用帳號名稱登入。'); showView('auth'); return; }
+          let profileSaved = false;
+          for(let i = 0; i < 5; i++){
+            const {error: pe} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null, birthday}).eq('id', me.id);
+            if(!pe){ profileSaved = true; break; }
+            await new Promise(r => setTimeout(r, 300));
+          }
+          if(!profileSaved){ alert('帳號已建立，但個人資料儲存失敗，請稍後再從個人資料頁補上。'); }
           await refreshMe();
+          $('profile-pass').value = ''; $('profile-pass-confirm').value='';
           alert('註冊成功！');
           showView('contact');
           return;
@@ -1669,8 +1441,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
         if(!me){ alert('請先登入'); return; }
         if(!me.username && pass.length < 6){ alert('請設定至少 6 碼的密碼'); return; }
-        if(pass && pass.length < 6){ alert('密碼至少需要 6 碼'); return; }
-        if(pass && pass !== $('profile-pass2').value){ alert('兩次輸入的密碼不一致'); return; }
         let avatar_url = me.avatar_url || null;
         const f = $('profile-file').files[0];
         if(f){
@@ -1684,91 +1454,85 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           const {error} = await supabaseClient.auth.updateUser({password: pass});
           if(error){ alert('密碼設定失敗：' + error.message); return; }
         }
-        const {error} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null, avatar_url}).eq('id', me.id);
+        const {error} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null, birthday, avatar_url}).eq('id', me.id);
         if(error){ alert(error.code === '23505' ? '這個帳號名稱已被使用' : '儲存失敗：' + error.message); return; }
         await refreshMe();
         alert('已儲存');
         showView('contact');
       });
-
+      
+      function weekMonday(dateStr){const d=new Date(dateStr+'T00:00:00');const day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1));return d.toISOString().split('T')[0]}
+      function weekFriday(mon){return dateAfter(mon,4)}
+      async function loadClothesForWeek(mon){
+        const [o,d]=await Promise.all([supabaseClient.from('Clothes Overrides').select('*').eq('weekstart',mon).maybeSingle(),supabaseClient.from('Clothes Default').select('*').eq('id',1).maybeSingle()]);
+        if(o.error&&!d.data)return {data:[],error:o.error};
+        return {data:o.data?[o.data]:d.data?[d.data]:[],error:null};
+      }
+      function scheduleDays(){return [['星期一','mon'],['星期二','tue'],['星期三','wed'],['星期四','thur'],['星期五','fri']]}
+      function scheduleEditorHtml(prefix,data){return `<div class="schedule-table"><table><thead><tr><th>節次</th>${scheduleDays().map(x=>`<th>${x[0]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:9},(_,i)=>`<tr><td>第${i+1}節</td>${scheduleDays().map(([n,k])=>`<td><input data-schedule="${prefix}" data-day="${k}" data-period="${i}" value="${esc((data?.[k]||[])[i]||'')}" placeholder="科目"></td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+      function readScheduleInputs(prefix){const out={};scheduleDays().forEach(([n,k])=>out[k]=Array.from({length:9},(_,i)=>document.querySelector(`[data-schedule="${prefix}"][data-day="${k}"][data-period="${i}"]`)?.value.trim()||''));return out}
+      function normalizeSchedule(row){const out={};scheduleDays().forEach(([n,k])=>{let v=row?.[k];if(Array.isArray(v))out[k]=v;else{try{out[k]=v?JSON.parse(v):Array(9).fill('')}catch{out[k]=Array(9).fill(v||'')}}});return out}
+      async function loadSchedule(dateStr){const mon=weekMonday(dateStr);const [o,d]=await Promise.all([supabaseClient.from('Schedule Overrides').select('*').eq('weekstart',mon).maybeSingle(),supabaseClient.from('Schedule Default').select('*').eq('id',1).maybeSingle()]);const row=o.data||d.data;$('schedule-content').innerHTML=row?scheduleTableHtml(normalizeSchedule(row),mon):'<div class="empty">管理員尚未初始化課表</div>'}
+      function scheduleTableHtml(data,mon){return `<div class="hint" style="margin-bottom:8px">${mon} ～ ${weekFriday(mon)}</div><table><thead><tr><th>節次</th>${scheduleDays().map(x=>`<th>${x[0]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:9},(_,i)=>`<tr><td>第${i+1}節</td>${scheduleDays().map(([n,k])=>`<td class="schedule-cell">${esc(data[k]?.[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+      async function initScheduleManager(){const {data}=await supabaseClient.from('Schedule Default').select('*').eq('id',1).maybeSingle();const base=normalizeSchedule(data||{});$('schedule-default-grid').innerHTML=scheduleEditorHtml('default',base);$('schedule-override-grid').innerHTML=scheduleEditorHtml('override',base);$('schedule-weekstart').value=weekMonday(today)}
+      $('clothes-mode').addEventListener('change',()=>{$('clothes-week-fields').style.display=$('clothes-mode').value==='override'?'block':'none'});
+      $('clothes-insert-btn').addEventListener('click',async()=>{if(!me||!['admin','teacher','monitor'].includes(me.role))return alert('沒有權限');const row={mon:$('mon-clothes-select').value,tue:$('tue-clothes-select').value,wed:$('wed-clothes-select').value,thur:$('thur-clothes-select').value,fri:$('fri-clothes-select').value};let error;if($('clothes-mode').value==='default'){({error}=await supabaseClient.from('Clothes Default').upsert({id:1,...row}))}else{const mon=weekMonday($('clothes-weekstart').value);({error}=await supabaseClient.from('Clothes Overrides').upsert({weekstart:mon,weekend:weekFriday(mon),...row},{onConflict:'weekstart'}))}if(error)alert('服裝儲存失敗：'+error.message);else alert('服裝儲存成功')});
+      $('schedule-default-save').addEventListener('click',async()=>{if(me?.role!=='admin')return alert('只有管理員可以初始化預設課表');const row=readScheduleInputs('default');const {error}=await supabaseClient.from('Schedule Default').upsert({id:1,...row});if(error)alert('預設課表儲存失敗：'+error.message);else{alert('預設課表初始化成功');loadSchedule(datePicker.value)}});
+      $('schedule-override-save').addEventListener('click',async()=>{if(!me||!['admin','teacher','monitor'].includes(me.role))return alert('沒有權限');const mon=weekMonday($('schedule-weekstart').value);const row=readScheduleInputs('override');const {error}=await supabaseClient.from('Schedule Overrides').upsert({weekstart:mon,weekend:weekFriday(mon),...row},{onConflict:'weekstart'});if(error)alert('調課儲存失敗：'+error.message);else{alert('本週調課儲存成功');loadSchedule(datePicker.value)}});
       function initManager(){
         $('login-container').style.display = 'none';
         $('admin-container').style.display = 'block';
         const allow = me.role === 'officer' ? ['homework', 'test', 'note', 'failure']
-          : ['homework', 'test', 'note', 'failure', 'clothes', 'announce'].concat(me.role === 'admin' ? ['accounts', 'blog'] : ['blog']);
+          : ['homework', 'test', 'note', 'failure', 'clothes', 'schedule', 'announce'].concat(me.role === 'admin' ? ['accounts'] : []);
         const sel = $('status-select');
-        sel.innerHTML = '<option value="">-- 請選擇項目 --</option>' + allow.map(k => `<option value="${k}">${FORM_NAMES[k] || (k==='blog'?'Blog 管理':'')}</option>`).join('');
+        sel.innerHTML = '<option value="">-- 請選擇項目 --</option>' + allow.map(k => `<option value="${k}">${FORM_NAMES[k]}</option>`).join('');
         document.querySelectorAll('.form-box').forEach(b => b.style.display = 'none');
+        $('schedule-default-editor').style.display=me.role==='admin'?'block':'none';
+        $('schedule-override-editor').style.display=['admin','teacher','monitor'].includes(me.role)?'block':'none';
         ['homework', 'test', 'note'].forEach(t => {
           if(!$(t + '-filter-start').value) $(t + '-filter-start').value = today;
           if(!$(t + '-filter-end').value) $(t + '-filter-end').value = today;
         });
+        if(!$('announce-start').value) $('announce-start').value = today;
+        if(!$('announce-end').value) $('announce-end').value = today;
       }
+      $('status-select').addEventListener('change', e => {
+        if(e.target.value === 'announce') loadAnnounceList();
+        if(e.target.value === 'accounts') loadAccounts();
+        if(e.target.value === 'schedule') initScheduleManager();
+      });
 
-      let accountsCache = [];
-      const getTemps = () => { try{ return JSON.parse(sessionStorage.getItem('tempPw') || '{}'); }catch(e){ return {}; } };
-      const setTemps = o => { try{ sessionStorage.setItem('tempPw', JSON.stringify(o)); }catch(e){} };
       async function loadAccounts(){
         $('accounts-list').textContent = '載入中...';
-        const pr = await supabaseClient.from('profiles').select('*').order('created_at');
-        if(pr.error){ $('accounts-list').textContent = 'Error：' + pr.error.message; return; }
-        accountsCache = pr.data;
-        const temps = getTemps();
-        let changed = false;
-        pr.data.forEach(p => { if(temps[p.id] && !p.must_change_password){ delete temps[p.id]; changed = true; } });
-        if(changed) setTemps(temps);
-        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>暱稱</th><th>身分組</th><th>操作</th></tr></thead><tbody>` +
-          pr.data.map(p => {
-            const self = p.id === me.id;
-            const roleSel = `<select ${self ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
-              Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select>`;
-            const tp = temps[p.id];
-            const ops = self ? '' :
-              `<button class="ghost" onclick="resetPw('${p.id}')">重設密碼</button> <button class="ghost" style="color:#e74c3c" onclick="delUser('${p.id}')">刪除帳號</button>` +
-              (tp ? `<div class="temp-pw"><span class="tag">待改密碼</span> 臨時密碼 <code>${esc(tp)}</code> <button class="ghost" onclick="copyPw('${p.id}', this)">複製</button></div>`
-                  : (p.must_change_password ? '<div class="temp-pw"><span class="tag">待改密碼</span></div>' : ''));
-            return `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td>${roleSel}</td><td>${ops}</td></tr>`;
-          }).join('') + `</tbody></table>`;
+        const {data, error} = await supabaseClient.from('profiles').select('*').order('created_at');
+        if(error){ $('accounts-list').textContent = 'Error：' + error.message; return; }
+        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>生日</th><th>身分組</th><th>帳號狀態</th></tr></thead><tbody>` +
+          data.map(p => `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td>${esc(p.birthday || '')}</td><td><select ${p.id === me.id ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
+          Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select></td><td>` +
+          (p.id === me.id ? '<span>目前帳號</span>' : `<button class="ghost" onclick="toggleBan('${p.id}', ${p.banned ? 'false' : 'true'})">${p.banned ? '解除封鎖' : 'Ban 帳號'}</button>`) +
+          `</td></tr>`).join('') + `</tbody></table>`;
       }
-      window.copyPw = async (id, btn) => {
-        const t = getTemps()[id];
-        if(!t) return;
-        try{ await navigator.clipboard.writeText(t); }catch(e){ prompt('請手動複製：', t); return; }
-        const old = btn.textContent;
-        btn.textContent = '已複製';
-        setTimeout(() => btn.textContent = old, 1500);
-      };
-      window.resetPw = async id => {
-        const p = accountsCache.find(x => x.id === id);
-        const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
-        if(!confirm(`要重設「${name}」的密碼嗎？\n請先確認對方身分。舊密碼會立刻失效。`)) return;
-        const {data, error} = await supabaseClient.functions.invoke('reset-password', {body: {user_id: id}});
-        if(error || !data || !data.temp){
-          let msg = error ? error.message : ((data && data.error) || '未知錯誤');
-          try{ if(error && error.context) msg = (await error.context.json()).error || msg; }catch(_){}
-          alert('重設失敗：' + msg);
-          return;
-        }
-        const t = getTemps(); t[id] = data.temp; setTemps(t);
-        loadAccounts();
-      };
-      window.delUser = async id => {
-        const p = accountsCache.find(x => x.id === id);
-        const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
-        if(!confirm(`確定要刪除「${name}」的帳號嗎？\n登入帳號、個人資料與待辦都會被刪除，無法復原。\n（他發過的部落格會保留，作者顯示為「匿名」。）`)) return;
-        const {error} = await supabaseClient.rpc('admin_delete_user', {uid: id});
-        if(error){ alert('刪除失敗：' + error.message); return; }
-        const t = getTemps(); delete t[id]; setTemps(t);
-        loadAccounts();
-      };
       window.setRole = async (id, role) => {
+        if(!me || me.role !== 'admin') return alert('沒有權限');
         const {error} = await supabaseClient.from('profiles').update({role}).eq('id', id);
-        alert(error ? '更新失敗：' + error.message : '身分組已更新');
+        if(error){ alert('更新失敗：' + error.message); return; }
+        loadAccounts();
       };
 
-      /* --- 我的待辦 --- */
+      window.toggleBan = async (id, banned) => {
+        if(!me || me.role !== 'admin') return alert('沒有權限');
+        if(id === me.id) return alert('不能封鎖自己的帳號');
+        const action = banned ? '封鎖' : '解除封鎖';
+        if(!confirm(`確定要${action}這個帳號嗎？`)) return;
+        const {error} = await supabaseClient.from('profiles').update({banned}).eq('id', id);
+        if(error){ alert(`${action}失敗：` + error.message); return; }
+        loadAccounts();
+      };
+
+      
       let todos = [], srcItems = [];
       async function loadTodos(){
+        await supabaseClient.from('todos').delete().eq('done',true).lt('done_at',new Date(Date.now()-60000).toISOString());
         const [t, h, e] = await Promise.all([
           supabaseClient.from('todos').select('*').order('done').order('due', {ascending: true, nullsFirst: false}).order('created_at'),
           supabaseClient.from('Homework Status').select('*').gte('endtime', today).order('endtime'),
@@ -1789,7 +1553,11 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       }
       $('view-todo-container').addEventListener('change', async e => {
         if(!e.target.dataset.id) return;
-        await supabaseClient.from('todos').update({done: e.target.checked}).eq('id', e.target.dataset.id);
+        const id=e.target.dataset.id;
+        if(!e.target.checked){ await supabaseClient.from('todos').update({done:false,done_at:null}).eq('id',id); loadTodos(); return; }
+        const {error}=await supabaseClient.from('todos').update({done:true,done_at:new Date().toISOString()}).eq('id',id);
+        if(error){alert('更新待辦失敗：'+error.message);return;}
+        setTimeout(async()=>{await supabaseClient.from('todos').delete().eq('id',id);loadTodos();},60000);
         loadTodos();
       });
       $('view-todo-container').addEventListener('click', async e => {
@@ -1812,138 +1580,32 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       });
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
-      /* --- 班級部落格 --- */
-      let currentBlogData = [];
+      
+      function canEditBlog(p){return !!me&&(me.role==='admin'||p.author_id===me.id)}
 
+      function updateBlogComposer(){$('blog-composer').style.display=me?'block':'none'}
       async function loadBlog(){
-        $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
-        const {data, error} = await supabaseClient.from('Blog Status').select('*, profiles(username, real_name, title, avatar_url)')
-          .order('postdate', {ascending: false}).order('id', {ascending: false}).limit(50);
-        if(error){ $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
-        
-        currentBlogData = data || [];
-
-        $('blog-feed').innerHTML = currentBlogData.map(p => {
-          const a = p.profiles;
-          const canEdit = me && (p.author_id === me.id);
-          const canDel = me && (p.author_id === me.id || me.role === 'admin');
-          
-          // 將整段文字透過 esc() 變成純文字，並擋下所有 XSS 攻擊
-          let safeBlog = esc(p.blog);
-          
-          // 專門抓取 ![圖片](網址) 語法並轉換成安全的 <img> 標籤顯示
-          // 限定網址必須是安全的，不允許含有引號或空格，防止不當注入
-          safeBlog = safeBlog.replace(/!\[圖片\]\((https:\/\/[^\s")]+)\)/g, '<img src="$1" style="max-width: 100%; border-radius: 8px; margin: 10px 0; display: block; max-height: 400px; object-fit: contain;" alt="圖片">');
-
-          return `<article class="post">
-            <header>
-              ${avatar(a)}
-              <div class="grow">
-                <b>${esc((a && (a.title || a.real_name || a.username)) || '匿名')}</b>
-                ${a && a.title ? `<span class="tag">${esc(a.title)}</span>` : ''}
-                <div class="due" style="margin:0">${p.postdate}</div>
-              </div>
-              ${canEdit ? `<button class="ghost" data-editpost="${p.id}">編輯</button>` : ''}
-              ${canDel ? `<button class="ghost" data-delpost="${p.id}">刪除</button>` : ''}
-            </header>
-            <h4>${esc(p.title)}</h4>
-            <!-- 使用 note-text 類別 (擁有 white-space: pre-wrap) 來保留換行 -->
-            <div class="note-text" style="margin-top:10px;">${safeBlog}</div>
-          </article>`;
-        }).join('') || '<div class="empty">還沒有人分享，當第一個吧</div>';
+        $('blog-feed').innerHTML='<div class="empty">載入中...</div>';
+        const {data,error}=await supabaseClient.from('Blog Status').select('*').order('postdate',{ascending:false}).order('id',{ascending:false}).limit(50);
+        if(error){$('blog-feed').innerHTML='<div class="empty">載入失敗：'+esc(error.message)+'</div>';return}
+        const ids=[...new Set((data||[]).map(p=>p.author_id).filter(Boolean))];
+        const {data:profiles}=ids.length?await supabaseClient.from('profiles').select('id,username,real_name,title,avatar_url').in('id',ids):{data:[]};
+        const profileMap=new Map((profiles||[]).map(p=>[p.id,p]));
+        $('blog-feed').innerHTML=(data||[]).map(p=>{const a=profileMap.get(p.author_id),edit=canEditBlog(p);return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a&&(a.title||a.real_name||a.username))||'匿名')}</b>${a?.title?`<span class="tag">${esc(a.title)}</span>`:''}<div class="due" style="margin:0">${esc(p.postdate||'')}</div></div>${edit?`<button class="ghost" data-editpost="${p.id}">編輯</button><button class="ghost" data-delpost="${p.id}">刪除</button>`:''}</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`}).join('')||'<div class="empty">還沒有人分享，當第一個吧</div>';
+        updateBlogComposer();
       }
-
-      // 文章操作 (刪除、進入編輯模式)
-      $('blog-feed').addEventListener('click', async e => {
-        const delId = e.target.dataset.delpost;
-        if(delId){
-          if(!confirm('確定要刪除這篇部落格嗎?')) return;
-          await supabaseClient.from('Blog Status').delete().eq('id', delId);
-          loadBlog();
-          return;
-        }
-
-        const editId = e.target.dataset.editpost;
-        if(editId){
-          const post = currentBlogData.find(x => String(x.id) === editId);
-          if(!post) return;
-          $('blog-composer-id').value = post.id;
-          $('blog-new-title').value = post.title;
-          $('blog-new-body').value = post.blog;
-          $('blog-composer-title').textContent = '編輯部落格';
-          $('blog-new-post').textContent = '儲存修改';
-          $('blog-cancel-edit').style.display = 'inline-block';
-          window.scrollTo({top: $('view-blog-container').offsetTop, behavior: 'smooth'});
-        }
+      function resetBlogComposer(){$('blog-edit-id').value='';$('blog-new-title').value='';$('blog-new-date').value=today;$('blog-new-body').value='';$('blog-composer-title').textContent='寫一篇';$('blog-new-post').textContent='發佈';$('blog-cancel-edit').style.display='none';}
+      $('blog-cancel-edit').addEventListener('click',resetBlogComposer);
+      $('blog-feed').addEventListener('click',async e=>{
+        const editId=e.target.dataset.editpost,delId=e.target.dataset.delpost;
+        if(editId){const {data}=await supabaseClient.from('Blog Status').select('*').eq('id',editId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');$('blog-edit-id').value=data.id;$('blog-new-title').value=data.title||'';$('blog-new-date').value=data.postdate||today;$('blog-new-body').value=data.blog||'';$('blog-composer-title').textContent='編輯班級部落格';$('blog-new-post').textContent='儲存修改';$('blog-cancel-edit').style.display='inline-block';$('blog-composer').scrollIntoView({behavior:'smooth'});return}
+        if(delId){if(!confirm('確定要刪除這篇日記嗎?'))return;const {data}=await supabaseClient.from('Blog Status').select('author_id').eq('id',delId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');const {error}=await supabaseClient.from('Blog Status').delete().eq('id',delId);if(error)alert('刪除失敗：'+error.message);else loadBlog()}
       });
-
-      // 取消編輯
-      $('blog-cancel-edit').addEventListener('click', () => {
-        $('blog-composer-id').value = '';
-        $('blog-new-title').value = '';
-        $('blog-new-body').value = '';
-        $('blog-composer-title').textContent = '寫一篇';
-        $('blog-new-post').textContent = '發佈';
-        $('blog-cancel-edit').style.display = 'none';
-      });
-
-      // 發佈與儲存修改
-      $('blog-new-post').addEventListener('click', async () => {
-        const title = $('blog-new-title').value.trim();
-        const body = $('blog-new-body').value.trim();
-        const editId = $('blog-composer-id').value;
-        
-        if(!title || !body){ alert('請填寫標題與內容'); return; }
-        
-        if(editId) {
-          const {error} = await supabaseClient.from('Blog Status').update({title, blog: body}).eq('id', editId);
-          if(error){ alert('修改失敗：' + error.message); return; }
-          alert('部落格已成功修改！');
-        } else {
-          const {error} = await supabaseClient.from('Blog Status').insert({title, blog: body, postdate: today});
-          if(error){ alert('發佈失敗：' + error.message); return; }
-        }
-        
-        $('blog-cancel-edit').click(); // 清空表單並恢復預設狀態
-        loadBlog();
-      });
-
-      // 上傳圖片並插入自訂圖片語法
-      $('blog-new-image').addEventListener('change', async e => {
-        const f = e.target.files[0];
-        if(!f) return;
-        if(f.size > 5 * 1024 * 1024){ alert('圖片請小於 5MB'); return; }
-        
-        $('blog-image-uploading').style.display = 'inline-block';
-        
-        const ext = f.name.split('.').pop();
-        const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-        const path = `${me.id}/${filename}`;
-        
-        //上傳到名為 'blog_images' 的 Bucket 中
-        const {error: ue} = await supabaseClient.storage.from('blog_images').upload(path, f, {contentType: f.type});
-        
-        $('blog-image-uploading').style.display = 'none';
-        
-        if(ue){
-          alert('圖片上傳失敗：' + ue.message + '\n\n【開發者提醒】請確定系統管理員已在 Supabase 建立一個名為「blog_images」的公開 Storage Bucket，並允許使用者寫入。');
-          e.target.value = '';
-          return;
-        }
-        
-        const imgUrl = supabaseClient.storage.from('blog_images').getPublicUrl(path).data.publicUrl;
-        
-        // 取得 textarea 目前的游標位置來插入語法
-        const body = $('blog-new-body');
-        const cursorPosition = body.selectionStart;
-        const textBefore = body.value.substring(0, cursorPosition);
-        const textAfter = body.value.substring(cursorPosition);
-        // 繼續使用相同的結構標記圖片，我們會在顯示時將它專門轉換回來
-        const imgMarkdown = `\n![圖片](${imgUrl})\n`;
-        
-        body.value = textBefore + imgMarkdown + textAfter;
-        body.focus();
-        e.target.value = '';
+      $('blog-new-post').addEventListener('click',async()=>{
+        if(!me)return alert('請先登入');const title=$('blog-new-title').value.trim(),body=$('blog-new-body').value.trim(),postdate=$('blog-new-date').value||today,editId=$('blog-edit-id').value;if(!title||!body)return alert('請填寫標題與內容');let error;
+        if(editId){const {data}=await supabaseClient.from('Blog Status').select('author_id').eq('id',editId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');({error}=await supabaseClient.from('Blog Status').update({title,blog:body,postdate}).eq('id',editId))}
+        else{({error}=await supabaseClient.from('Blog Status').insert({title,blog:body,postdate,author_id:me.id}))}
+        if(error)return alert('儲存失敗：'+error.message);resetBlogComposer();loadBlog();
       });
 
       fetchAnnounce();
