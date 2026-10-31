@@ -40,7 +40,7 @@ aside.collapsed{left:-232px}
 #sidebar-toggle-btn.collapsed{left:14px}
 
 #mobile-theme-toggle{display:none;position:fixed;top:14px;right:14px;z-index:120;width:42px;height:42px;padding:0;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.18);align-items:center;justify-content:center;font-size:18px}
-.schedule-table{width:100%;overflow:auto}.schedule-table table{min-width:720px}.schedule-cell{white-space:pre-wrap;line-height:1.45}.birthday-card{position:fixed;inset:0;z-index:2000;pointer-events:none;overflow:hidden}.confetti{position:absolute;top:-20px;width:9px;height:15px;background:var(--pri);animation:fall 2.8s linear forwards}@keyframes fall{to{transform:translate3d(var(--dx),110vh,0) rotate(720deg)}}
+.birthday-card{position:fixed;inset:0;z-index:2000;pointer-events:none;overflow:hidden}.confetti{position:absolute;top:-20px;width:9px;height:15px;background:var(--pri);animation:fall 2.8s linear forwards}@keyframes fall{to{transform:translate3d(var(--dx),110vh,0) rotate(720deg)}}
 main{flex:1;min-height:100vh;margin-left:232px;max-width:calc(100% - 232px);padding:32px 36px;display:flex;flex-direction:column;transition:margin-left .3s ease,max-width .3s ease}
 main.expanded{margin-left:0;max-width:100%;padding-left:64px}
 .main-content-body{flex:1}
@@ -167,6 +167,23 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
   .todo-add input:first-child{flex:1 1 100%}
   .auth-card{margin:12px auto;padding:22px 16px}
 }
+body.force-reset #sidebar .nav-menu,
+body.force-reset #account-btn,
+body.force-reset #sidebar-toggle-btn{display:none !important}
+.side-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.pomo-tabs{display:flex;gap:2px;padding:3px;margin-bottom:14px;background:var(--soft);border-radius:10px}
+.pomo-tab{flex:1;padding:6px 4px;font-size:.85rem;font-weight:500;color:var(--muted);background:transparent;border:0;border-radius:8px}
+.pomo-tab:hover{filter:none;color:var(--text)}
+.pomo-tab.active{color:var(--text);background:var(--box);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:700}
+.pomo-time{margin:6px 0 4px;text-align:center;font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.pomo-bar{height:6px;margin:6px 0 14px;background:var(--soft);border-radius:99px;overflow:hidden}
+.pomo-bar>div{height:100%;width:0;background:var(--pri);transition:width .5s linear}
+.pomo-actions{display:flex;gap:8px;justify-content:center}
+.pomo-actions button{min-width:76px}
+.pomo-meta{margin-top:12px;text-align:center;font-size:.85rem;color:var(--muted)}
+.pomo-set{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;font-size:.8rem;color:var(--muted)}
+.pomo-set input{width:64px;padding:4px 6px;font-size:.85rem;text-align:center}
+.pomo-hint{margin:0 0 8px;text-align:center;font-size:.78rem;color:var(--muted);line-height:1.5}
 </style>
   </head>
   
@@ -182,7 +199,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           <button class="nav-btn hidden" id="nav-manager">後台管理</button>
           <button class="nav-btn" id="nav-blog">班級部落格</button>
           <button class="nav-btn hidden" id="nav-todo">我的待辦</button>
-          <button class="nav-btn" id="nav-schedule">課表</button>          
         </div>
       </div>
 
@@ -272,9 +288,32 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
               <div class="todo-add"><input id="todo-text" placeholder="新增待辦事項"><input type="date" id="todo-due"><button id="todo-add">新增</button></div>
               <div id="todo-list"></div>
             </div>
-            <div class="section-box" style="grid-column: span 1;">
-              <h3>可加入的作業與考試</h3>
-              <div id="todo-source"></div>
+            <div class="side-col">
+              <div class="section-box" style="min-height:0">
+                <h3>可加入的作業與考試</h3>
+                <div id="todo-source"></div>
+              </div>
+              <div class="section-box" id="pomo-box" style="min-height:0">
+                <h3>番茄鐘</h3>
+                <div class="pomo-tabs" role="tablist">
+                  <button class="pomo-tab active" data-mode="focus">專注</button>
+                  <button class="pomo-tab" data-mode="short">短休息</button>
+                  <button class="pomo-tab" data-mode="long">長休息</button>
+                </div>
+                <div class="pomo-time" id="pomo-time" aria-live="off">25:00</div>
+                <div class="pomo-bar"><div id="pomo-progress"></div></div>
+                <div class="pomo-actions">
+                  <button id="pomo-start">開始</button>
+                  <button id="pomo-reset" class="ghost">重設</button>
+                  <button id="pomo-skip" class="ghost">跳過</button>
+                </div>
+                <div class="pomo-meta" id="pomo-meta"></div>
+                <div class="pomo-set">
+                  <label>專注（分鐘）<input type="number" id="pomo-set-focus" min="1" max="120" step="1" value="25"></label>
+                  <label>短休（分鐘）<input type="number" id="pomo-set-short" min="1" max="60" step="1" value="5"></label>
+                  <label>長休（分鐘）<input type="number" id="pomo-set-long" min="1" max="60" step="1" value="15"></label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -291,11 +330,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             <button id="blog-cancel-edit" class="ghost" style="display:none">取消編輯</button>
           </div>
           <div id="blog-feed"></div>
-        </div>
-
-        <div id="view-schedule-container" style="display: none;">
-          <div class="header-container"><div><h1>本週課表</h1></div><label style="font-size:.9em">日期：<input type="date" id="schedule-date-picker"></label></div>
-          <div class="section-box schedule-table" id="schedule-content">載入中...</div>
         </div>
 
         <div id="view-auth-container" style="display: none;">
@@ -322,13 +356,24 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
             <label>帳號名稱<input id="profile-username" autocomplete="username"></label>
             <label>真實姓名<input id="profile-real"></label>
             <label>生日<input type="date" id="profile-birthday"></label>
-            <label>稱謂（暱稱）<input id="profile-nick" placeholder="例如：同學、小組長"></label>
+            <label>暱稱<input id="profile-nick" placeholder="建議 幹部+真名"></label>
             <label>密碼<input type="password" id="profile-pass" autocomplete="new-password"></label>
             <label id="profile-pass-confirm-wrap">確認密碼<input type="password" id="profile-pass-confirm" autocomplete="new-password"></label>
             <label id="profile-email-wrap" style="display:none">Email<input type="email" id="profile-email" autocomplete="email"></label>
             <button id="profile-save">儲存</button>
             <button id="profile-skip" class="ghost">稍後再填</button>
             <button id="logout-btn" class="ghost">登出</button>
+          </div>
+        </div>
+
+        <div id="view-reset-container" style="display: none;">
+          <div class="auth-card">
+            <h2>設定新密碼</h2>
+            <p class="hint">你目前使用的是管理員提供的臨時密碼，請先設定自己的新密碼才能繼續使用。</p>
+            <label>新密碼<input type="password" id="reset-pass" autocomplete="new-password"></label>
+            <label>確認新密碼<input type="password" id="reset-pass2" autocomplete="new-password"></label>
+            <button id="reset-save">儲存新密碼</button>
+            <button id="reset-logout" class="ghost">登出</button>
           </div>
         </div>
 
@@ -352,7 +397,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
                 <option value="note">注意事項</option>
                 <option value="failure">缺繳名單</option>
                 <option value="clothes">服裝</option>
-                <option value="schedule">課表</option>
               </select>
             </div>
 
@@ -369,7 +413,13 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="accounts-form" class="form-box" style="display: none;">
               <h3>帳號與身分組</h3>
-              <div id="accounts-list"></div>
+              <div id="accounts-list"></div><div id="admin-reset-password-box" class="form-box" style="margin-top:15px">
+  <h4>管理員密碼</h4>
+  <p class="hint">可將後臺管理密碼重設為新的 6 位數密碼。</p>
+  <input type="password" id="admin-new-password" inputmode="numeric" maxlength="6" placeholder="新的 6 位數密碼">
+  <input type="password" id="admin-new-password-confirm" inputmode="numeric" maxlength="6" placeholder="再次輸入新的 6 位數密碼">
+  <button id="admin-reset-password-btn">重設管理員密碼</button>
+</div>
             </div>
 
             <div id="homework-form" class="form-box" style="display: none;">
@@ -493,7 +543,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
             <div id="clothes-form" class="form-box" style="display: none;">
               <h3>服裝設定</h3>
-              <label>模式：<select id="clothes-mode"><option value="default">設定每週預設服裝</option><option value="override">設定特殊週異動</option></select></label>
+              <label id="clothes-mode-label">模式：<select id="clothes-mode"><option value="default">設定每週預設服裝</option><option value="override">設定特殊週異動</option></select></label>
               <div id="clothes-week-fields" style="display:none;margin-top:12px">
                 <label>該週開始日期：<input type="date" id="clothes-weekstart"></label>&nbsp;&nbsp;
                 <label>該週結束日期：<input type="date" id="clothes-weekend"></label>
@@ -508,21 +558,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
               <button id="clothes-insert-btn">儲存服裝</button>
             </div>
 
-            <div id="schedule-form" class="form-box" style="display:none">
-              <h3>課表設定</h3>
-              <div id="schedule-default-editor">
-                <h4>預設課表初始化</h4>
-                <div id="schedule-default-grid"></div>
-                <button id="schedule-default-save">儲存預設課表</button>
-              </div>
-              <hr style="margin:20px 0;border:0;border-top:1px solid var(--hr-color)">
-              <div id="schedule-override-editor">
-                <h4>特殊週調課</h4>
-                <label>該週日期：<input type="date" id="schedule-weekstart"></label>
-                <div id="schedule-override-grid"></div>
-                <button id="schedule-override-save">儲存本週調課</button>
-              </div>
-            </div>
             </div>
 
           </div>
@@ -530,7 +565,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       </div>
 
       <footer class="site-footer">
-        FDHS 407 線上聯絡簿 | Ver. 3.3.0 帳號、待辦、服裝、課表與班級部落格大幅修正
+        FDHS 407 線上聯絡簿 | Ver. 3.3.0 資料讀寫優化
       </footer>
     </main>
 
@@ -622,8 +657,6 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       const datePicker = document.getElementById('date-picker');
       datePicker.value = today;
-      document.getElementById('schedule-date-picker').value=today;
-      document.getElementById('schedule-date-picker').addEventListener('change',e=>loadSchedule(e.target.value));
 
       let currentViewMode = 'daily';
       const btnDaily = document.getElementById('btn-daily-view');
@@ -631,17 +664,69 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       const dailyContainer = document.getElementById('daily-view-container');
       const weeklyContainer = document.getElementById('weekly-view-container');
 
-      const dataCache = {
-        daily: {},
-        weekly: {},
-        failure: null,
-        blog: null
-      };
+      const dataCache = { daily: {}, weekly: {}, failure: null, blog: null };
+      const queryCache = new Map();
+      const DEFAULT_CACHE_TTL = 30 * 1000;
 
-      async function initGlobalData() {
-        if (!dataCache.failure) fetchFailure();
-        else renderFailure(dataCache.failure);
+      // 相同查詢在有效時間內直接讀快取；同時發生的相同查詢則共用同一個 Promise。
+      function cachedQuery(key, queryFactory, ttl = DEFAULT_CACHE_TTL, force = false) {
+        const existing = queryCache.get(key);
+        if (!force && existing) {
+          if (existing.promise) return existing.promise;
+          if (existing.expiresAt > Date.now()) {
+            return Promise.resolve({ data: existing.data, error: null });
+          }
+        }
+
+        const entry = { promise: null, data: null, expiresAt: 0 };
+        const promise = Promise.resolve()
+          .then(queryFactory)
+          .then(result => {
+            if (queryCache.get(key) === entry) {
+              if (result?.error) queryCache.delete(key);
+              else {
+                entry.data = result?.data ?? null;
+                entry.expiresAt = Date.now() + ttl;
+                entry.promise = null;
+              }
+            }
+            return result || { data: null, error: { message: '資料庫沒有回傳結果' } };
+          })
+          .catch(error => {
+            if (queryCache.get(key) === entry) queryCache.delete(key);
+            return { data: null, error: { message: error?.message || '資料讀取失敗' } };
+          });
+
+        entry.promise = promise;
+        queryCache.set(key, entry);
+        return promise;
       }
+
+      function invalidateQueryCache(...prefixes) {
+        for (const key of queryCache.keys()) {
+          if (prefixes.some(prefix => key.startsWith(prefix))) queryCache.delete(key);
+        }
+      }
+
+      function invalidateStatusCache(type) {
+        const prefixes = {
+          homework: ['daily:homework:', 'weekly:homework:', 'todo:source:homework:'],
+          test: ['daily:test:', 'weekly:test:', 'todo:source:test:'],
+          note: ['daily:note:', 'weekly:note:'],
+          failure: ['global:failure:'],
+          clothes: ['clothes:week:'],
+          blog: ['blog:posts:', 'blog:profiles:'],
+          announce: ['global:announce:']
+        };
+        invalidateQueryCache(...(prefixes[type] || []));
+      }
+
+      function initGlobalData() {
+        return fetchFailure();
+      }
+
+      let dailyRequestId = 0;
+      let weeklyRequestId = 0;
 
       btnDaily.addEventListener('click', () => {
         currentViewMode = 'daily';
@@ -661,93 +746,82 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         fetchWeeklyData(datePicker.value);
       });
 
-      datePicker.addEventListener('change', (e) =>{
+      datePicker.addEventListener('change', e => {
         const selectedDate = e.target.value;
-        if(currentViewMode === 'daily') fetchAllData(selectedDate);
+        if (currentViewMode === 'daily') fetchAllData(selectedDate);
         else fetchWeeklyData(selectedDate);
       });
 
-      let dailyRequestId = 0;
-
-      function fetchDailyQuery(label, query, onDone, requestId){
-        let finished = false;
-        const finish = (result) => {
-          if(finished || requestId !== dailyRequestId) return;
-          finished = true;
-          onDone(result);
-        };
-
-        const timer = setTimeout(() => {
-          finish({data: [], error: {message: `${label}讀取逾時，請稍後再試`}});
-        }, 10000);
-
-        Promise.resolve(query)
-          .then(result => {
+      function withReadTimeout(promise, label, timeoutMs = 12000) {
+        return new Promise(resolve => {
+          let settled = false;
+          const timer = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            for (const [key, entry] of queryCache.entries()) {
+              if (entry.promise === promise) queryCache.delete(key);
+            }
+            resolve({ data: null, error: { message: `${label}讀取逾時，請稍後再試` } });
+          }, timeoutMs);
+          Promise.resolve(promise).then(result => {
+            if (settled) return;
+            settled = true;
             clearTimeout(timer);
-            finish(result || {data: [], error: {message: `${label}沒有回傳資料`}});
-          })
-          .catch(error => {
+            resolve(result);
+          }).catch(error => {
+            if (settled) return;
+            settled = true;
             clearTimeout(timer);
-            finish({data: [], error: {message: error?.message || `${label}讀取失敗`}});
+            resolve({ data: null, error: { message: error?.message || `${label}讀取失敗` } });
           });
+        });
       }
 
-      function fetchAllData(selectedDate){
+      async function fetchAllData(selectedDate) {
+        if (!selectedDate) return;
         const requestId = ++dailyRequestId;
-        const hwContainer = document.getElementById("homework-content");
-        const testContainer = document.getElementById("test-content");
-        const clothesContainer = document.getElementById("clothes-content");
-        const noteContainer = document.getElementById("note-content");
+        const containers = [
+          document.getElementById('homework-content'),
+          document.getElementById('test-content'),
+          document.getElementById('clothes-content'),
+          document.getElementById('note-content')
+        ];
+        if (containers.some(el => !el)) return;
+        containers.forEach(el => { el.innerHTML = '載入中...'; });
 
-        if(!hwContainer || !testContainer || !clothesContainer || !noteContainer) return;
+        const monday = weekMonday(selectedDate);
+        const [hwRes, testRes, clothesRes, noteRes] = await Promise.all([
+          withReadTimeout(cachedQuery(`daily:homework:${selectedDate}`, () =>
+            supabaseClient.from('Homework Status')
+              .select('id, starttime, endtime, details')
+              .lte('starttime', selectedDate)
+              .gt('endtime', selectedDate)
+              .order('endtime', { ascending: true })
+          ), '作業'),
+          withReadTimeout(cachedQuery(`daily:test:${selectedDate}`, () =>
+            supabaseClient.from('Test Status')
+              .select('id, starttime, endtime, details')
+              .lte('starttime', selectedDate)
+              .gt('endtime', selectedDate)
+              .order('endtime', { ascending: true })
+          ), '考試'),
+          withReadTimeout(loadClothesForWeek(monday), '服裝'),
+          withReadTimeout(cachedQuery(`daily:note:${selectedDate}`, () =>
+            supabaseClient.from('Note Status')
+              .select('id, starttime, endtime, details')
+              .lte('starttime', selectedDate)
+              .gte('endtime', selectedDate)
+              .order('endtime', { ascending: true })
+          ), '注意事項')
+        ]);
 
-        hwContainer.innerHTML = "載入中...";
-        testContainer.innerHTML = "載入中...";
-        clothesContainer.innerHTML = "載入中...";
-        noteContainer.innerHTML = "載入中...";
-
-        const dayData = {
-          homework: [], homeworkError: null,
-          test: [], testError: null,
-          clothes: [], clothesError: null,
-          note: [], noteError: null
-        };
-
-        fetchDailyQuery("作業", supabaseClient.from("Homework Status")
-          .select("*")
-          .lte("starttime", selectedDate)
-          .gt("endtime", selectedDate)
-          .order("endtime", {ascending: true}), result => {
-            dayData.homework = result?.data || [];
-            dayData.homeworkError = result?.error || null;
-            renderDailyData(dayData, selectedDate);
-          }, requestId);
-
-        fetchDailyQuery("考試", supabaseClient.from("Test Status")
-          .select("*")
-          .lte("starttime", selectedDate)
-          .gt("endtime", selectedDate)
-          .order("endtime", {ascending: true}), result => {
-            dayData.test = result?.data || [];
-            dayData.testError = result?.error || null;
-            renderDailyData(dayData, selectedDate);
-          }, requestId);
-
-        fetchDailyQuery("服裝", loadClothesForWeek(weekMonday(selectedDate)), result => {
-            dayData.clothes = result?.data || [];
-            dayData.clothesError = result?.error || null;
-            renderDailyData(dayData, selectedDate);
-          }, requestId);
-
-        fetchDailyQuery("注意事項", supabaseClient.from("Note Status")
-          .select("*")
-          .lte("starttime", selectedDate)
-          .gte("endtime", selectedDate)
-          .order("endtime", {ascending: true}), result => {
-            dayData.note = result?.data || [];
-            dayData.noteError = result?.error || null;
-            renderDailyData(dayData, selectedDate);
-          }, requestId);
+        if (requestId !== dailyRequestId) return;
+        renderDailyData({
+          homework: hwRes.data || [], homeworkError: hwRes.error || null,
+          test: testRes.data || [], testError: testRes.error || null,
+          clothes: clothesRes.data || [], clothesError: clothesRes.error || null,
+          note: noteRes.data || [], noteError: noteRes.error || null
+        }, selectedDate);
       }
 
       function renderDailyData(data, selectedDate) {
@@ -776,89 +850,120 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         else { noteContainer.innerHTML = `<ol>` + data.note.map(item =>`<li><div class="note-text">${esc(item.details)}</div></li>`).join('') + `</ol>`; }
       }
 
-      async function fetchFailure(){
-        const {data, error} = await supabaseClient.from("Failure Status").select("*");
-        if(error || !data){ return; }
-        dataCache.failure = data;
-        renderFailure(data);
+      let failureRequestId = 0;
+      async function fetchFailure(force = false) {
+        const requestId = ++failureRequestId;
+        const containers = [
+          document.getElementById('failure-content'),
+          document.getElementById('weekly-failure-content')
+        ].filter(Boolean);
+        containers.forEach(el => { el.innerHTML = '<div class="muted">缺繳名單載入中...</div>'; });
+
+        const { data, error } = await cachedQuery('global:failure:list', () =>
+          supabaseClient.from('Failure Status')
+            .select('id, details, failurelist')
+            .order('id', { ascending: true }),
+          60 * 1000,
+          force
+        );
+        if (requestId !== failureRequestId) return;
+        if (error) {
+          const message = `缺繳名單讀取失敗：${esc(error.message || '未知錯誤')}`;
+          containers.forEach(el => { el.innerHTML = `<div class="empty">${message}</div>`; });
+          return;
+        }
+        dataCache.failure = Array.isArray(data) ? data : [];
+        renderFailure(dataCache.failure);
       }
 
       function renderFailure(data) {
         const container = document.getElementById("failure-content");
         const weeklyFailureContainer = document.getElementById("weekly-failure-content");
-        const html = (!data || data.length === 0) ? '<div class="empty">目前沒有人缺繳</div>' : `<ol>` + data.map(item =>`<li><b>${esc(item.details)}</b>：${esc(item.failurelist)}</li>`).join('') + `</ol>`;
+        const rows = Array.isArray(data) ? data : [];
+        const html = rows.length === 0 ? '<div class="empty">目前沒有人缺繳</div>' : `<ol>` + rows.map(item => `<li><b>${esc(item.details || '未填寫項目')}</b>：${esc(item.failurelist || '未填寫座號')}</li>`).join('') + `</ol>`;
         if(container) container.innerHTML = html;
         if(weeklyFailureContainer) weeklyFailureContainer.innerHTML = html;
       }
 
-      async function fetchWeeklyData(selectedDate){
+      async function fetchWeeklyData(selectedDate) {
+        if (!selectedDate) return;
+        const requestId = ++weeklyRequestId;
         const cardsContainer = document.getElementById('weekly-cards-container');
         const headerTitle = document.getElementById('weekly-header-title');
-        cardsContainer.innerHTML = '<div style="text-align: center; color: gray; padding: 20px; grid-column: 1 / -1;">載入中...</div>';
+        const noteContainer = document.getElementById('weekly-note-content');
+        if (!cardsContainer || !headerTitle || !noteContainer) return;
+        cardsContainer.innerHTML = '<div style="text-align:center;color:gray;padding:20px;grid-column:1/-1">載入中...</div>';
+        noteContainer.innerHTML = '載入中...';
 
-        const d = new Date(selectedDate);
-        const day = d.getDay();
-        const diffToMon = d.getDate() - day + (day === 0 ? -6 : 1);
-        const mondayObj = new Date(d.setDate(diffToMon));
-        const mondayStr = mondayObj.toISOString().split('T')[0];
-
-        const fridayObj = new Date(mondayObj);
-        fridayObj.setDate(mondayObj.getDate() + 4);
-        const fridayStr = fridayObj.toISOString().split('T')[0];
-
+        const mondayStr = weekMonday(selectedDate);
+        const fridayStr = weekFriday(mondayStr);
         headerTitle.textContent = `一週總覽 (${mondayStr} ~ ${fridayStr})`;
-
         const weekDays = [
-          {name: "星期一", key: "mon"}, {name: "星期二", key: "tue"},
-          {name: "星期三", key: "wed"}, {name: "星期四", key: "thur"}, {name: "星期五", key: "fri"}
+          { name: '星期一', key: 'mon' }, { name: '星期二', key: 'tue' },
+          { name: '星期三', key: 'wed' }, { name: '星期四', key: 'thur' },
+          { name: '星期五', key: 'fri' }
         ];
-        
-        const evaluatedDays = weekDays.map((wd, i) => {
-          const tempDate = new Date(mondayObj);
-          tempDate.setDate(mondayObj.getDate() + i);
-          return { ...wd, date: tempDate.toISOString().split('T')[0] };
-        });
+        const evaluatedDays = weekDays.map((wd, i) => ({ ...wd, date: dateAfter(mondayStr, i) }));
 
         const [clothesRes, hwRes, testRes, noteRes] = await Promise.all([
-          loadClothesForWeek(mondayStr),
-          supabaseClient.from("Homework Status").select("*").gte("endtime", mondayStr).lte("endtime", fridayStr),
-          supabaseClient.from("Test Status").select("*").gte("endtime", mondayStr).lte("endtime", fridayStr),
-          supabaseClient.from("Note Status").select("*").lte("starttime", fridayStr).gt("endtime", mondayStr)
+          withReadTimeout(loadClothesForWeek(mondayStr), '服裝'),
+          withReadTimeout(cachedQuery(`weekly:homework:${mondayStr}`, () =>
+            supabaseClient.from('Homework Status')
+              .select('id, starttime, endtime, details')
+              .gte('endtime', mondayStr).lte('endtime', fridayStr)
+              .order('endtime', { ascending: true })
+          ), '作業'),
+          withReadTimeout(cachedQuery(`weekly:test:${mondayStr}`, () =>
+            supabaseClient.from('Test Status')
+              .select('id, starttime, endtime, details')
+              .gte('endtime', mondayStr).lte('endtime', fridayStr)
+              .order('endtime', { ascending: true })
+          ), '考試'),
+          withReadTimeout(cachedQuery(`weekly:note:${mondayStr}`, () =>
+            supabaseClient.from('Note Status')
+              .select('id, starttime, endtime, details')
+              .lte('starttime', fridayStr).gt('endtime', mondayStr)
+              .order('endtime', { ascending: true })
+          ), '注意事項')
         ]);
+        if (requestId !== weeklyRequestId) return;
 
-        const clothesItem = (clothesRes.data && clothesRes.data.length > 0) ? clothesRes.data[0] : null;
-        const hwData = hwRes.data || [];
-        const testData = testRes.data || [];
+        const clothesItem = clothesRes.data?.[0] || null;
+        const hwByDate = new Map(evaluatedDays.map(day => [day.date, []]));
+        const testByDate = new Map(evaluatedDays.map(day => [day.date, []]));
+        (hwRes.data || []).forEach(item => hwByDate.get(item.endtime)?.push(item));
+        (testRes.data || []).forEach(item => testByDate.get(item.endtime)?.push(item));
 
-        let cardsHtml = '';
-        evaluatedDays.forEach(wd => {
-          const dayHw = hwData.filter(item => item.endtime === wd.date);
-          const dayTest = testData.filter(item => item.endtime === wd.date);
-          const dayClothes = clothesItem ? (clothesItem[wd.key] || "放假") : "尚無規定";
-
-          cardsHtml += `
-            <div class="day-card${wd.date === today ? ' today' : ''}">
-              <h4>${wd.name} <span class="day-date">${wd.date}</span></h4>
-              <div class="day-content-section"><strong>服裝：</strong> ${dayClothes}</div>
-              <div class="day-content-section">
-                <strong>作業：</strong>
-                ${dayHw.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayHw.map(h => `<li>${esc(h.details)}</li>`).join('') + `</ul>` : '<span style="color:gray;">無</span>'}
+        cardsContainer.innerHTML = evaluatedDays.map(day => {
+          const dayHw = hwByDate.get(day.date) || [];
+          const dayTest = testByDate.get(day.date) || [];
+          const clothes = clothesItem ? (clothesItem[day.key] || '放假') : '尚無規定';
+          return `
+            <div class="day-card${day.date === today ? ' today' : ''}">
+              <h4>${day.name} <span class="day-date">${day.date}</span></h4>
+              <div class="day-content-section"><strong>服裝：</strong> ${esc(clothes)}</div>
+              <div class="day-content-section"><strong>作業：</strong>
+                ${dayHw.length ? `<ul style="padding-left:15px;margin:2px 0">${dayHw.map(item => `<li>${esc(item.details)}</li>`).join('')}</ul>` : '<span style="color:gray">無</span>'}
               </div>
-              <div class="day-content-section">
-                <strong>考試：</strong>
-                ${dayTest.length > 0 ? `<ul style="padding-left:15px; margin:2px 0;">` + dayTest.map(t => `<li>${esc(t.details)}</li>`).join('') + `</ul>` : '<span style="color:gray;">無</span>'}
+              <div class="day-content-section"><strong>考試：</strong>
+                ${dayTest.length ? `<ul style="padding-left:15px;margin:2px 0">${dayTest.map(item => `<li>${esc(item.details)}</li>`).join('')}</ul>` : '<span style="color:gray">無</span>'}
               </div>
-            </div>
-          `;
-        });
+            </div>`;
+        }).join('');
 
-        cardsContainer.innerHTML = cardsHtml;
-
-        const noteContainer = document.getElementById("weekly-note-content");
-        const noteData = noteRes.data || [];
-        if(noteData.length === 0){ noteContainer.innerHTML = '<div class="empty">本週沒有注意事項</div>'; }
-        else { noteContainer.innerHTML = `<ol>` + noteData.map(item => `<li><div class="note-text">${esc(item.details)}</div></li>`).join('') + `</ol>`; }
-
+        if (noteRes.error) {
+          noteContainer.innerHTML = `<div class="empty">注意事項讀取失敗：${esc(noteRes.error.message || '未知錯誤')}</div>`;
+        } else {
+          const notes = noteRes.data || [];
+          noteContainer.innerHTML = notes.length
+            ? `<ol>${notes.map(item => `<li><div class="note-text">${esc(item.details)}</div></li>`).join('')}</ol>`
+            : '<div class="empty">本週沒有注意事項</div>';
+        }
+        if (clothesRes.error && !clothesItem) {
+          cardsContainer.querySelectorAll('.day-content-section').forEach((el, i) => {
+            if (i % 3 === 0) el.innerHTML = `<strong>服裝：</strong> <span class="hint">讀取失敗：${esc(clothesRes.error.message)}</span>`;
+          });
+        }
         initGlobalData();
       }
 
@@ -868,7 +973,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
       async function handleLogin(){
         const inputPwd = passwordBlank.value;
-        const {data, error} = await supabaseClient.from("Manager's Password").select("*").eq("password", inputPwd);
+        const {data, error} = await supabaseClient.from("Manager's Password").select("password").eq("password", inputPwd).limit(1);
 
         if(error){ alert("System: " + error.message); return; }
 
@@ -960,10 +1065,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
           if(editId){
             const {error} = await supabaseClient.from("Homework Status").update({starttime: startdate, endtime: enddate, details: detail}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("作業修改成功!"); resetHomeworkForm(); loadHomeworkList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('homework'); alert("作業修改成功!"); resetHomeworkForm(); loadHomeworkList(); }
           }else{
             const {error} = await supabaseClient.from("Homework Status").insert([{starttime: startdate, endtime: enddate, details: detail}]);
-            if(error) alert("Error: " + error.message); else { alert("作業新增成功!"); resetHomeworkForm(); loadHomeworkList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('homework'); alert("作業新增成功!"); resetHomeworkForm(); loadHomeworkList(); }
           }
         });
       }
@@ -984,7 +1089,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const field = document.getElementById("homework-filter-field").value;
         const startDateVal = document.getElementById("homework-filter-start").value;
         const endDateVal = document.getElementById("homework-filter-end").value;
-        let query = ownOnly(supabaseClient.from("Homework Status").select("*"));
+        let query = ownOnly(supabaseClient.from("Homework Status").select("id, starttime, endtime, details"));
         if(startDateVal) query = query.gte(field, startDateVal);
         if(endDateVal) query = query.lte(field, endDateVal);
         const {data, error} = await query.order("endtime", {ascending: true});
@@ -1015,7 +1120,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       window.deleteHomework = async function(id){
         if(!confirm("確定要刪除這筆作業嗎?")) return;
         const {error} = await supabaseClient.from("Homework Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除作業!"); loadHomeworkList(); }
+        if(error) alert("Error：" + error.message); else { invalidateStatusCache('homework'); alert("已成功刪除作業!"); loadHomeworkList(); }
       };
 
       const testInsertBtn = document.getElementById("test-insert-btn");
@@ -1028,7 +1133,12 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       const testStartInput = document.getElementById("test-insert-startdate");
       const testEndInput = document.getElementById("test-insert-enddate");
       const testDetailInput = document.getElementById("test-insert-detail");
-      function dateAfter(dateStr,days){const d=new Date(dateStr+'T00:00:00');d.setDate(d.getDate()+days);return d.toISOString().split('T')[0]}
+      function dateAfter(dateStr, days) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        date.setDate(date.getDate() + days);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      }
       function setHomeworkDefaultDates(){homeworkStartInput.value=today;homeworkEndInput.value=dateAfter(today,1)}
       function setTestDefaultDates(){testStartInput.value=today;testEndInput.value=dateAfter(today,1)}
 
@@ -1043,10 +1153,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
           if(editId){
             const {error} = await supabaseClient.from("Test Status").update({starttime: startdate, endtime: enddate, details: detail}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("考試修改成功!"); resetTestForm(); loadTestList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('test'); alert("考試修改成功!"); resetTestForm(); loadTestList(); }
           }else{
             const {error} = await supabaseClient.from("Test Status").insert([{starttime: startdate, endtime: enddate, details: detail}]);
-            if(error) alert("Error: " + error.message); else { alert("考試新增成功!"); resetTestForm(); loadTestList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('test'); alert("考試新增成功!"); resetTestForm(); loadTestList(); }
           }
         });
       }
@@ -1067,7 +1177,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const field = document.getElementById("test-filter-field").value;
         const startDateVal = document.getElementById("test-filter-start").value;
         const endDateVal = document.getElementById("test-filter-end").value;
-        let query = ownOnly(supabaseClient.from("Test Status").select("*"));
+        let query = ownOnly(supabaseClient.from("Test Status").select("id, starttime, endtime, details"));
         if(startDateVal) query = query.gte(field, startDateVal);
         if(endDateVal) query = query.lte(field, endDateVal);
         const {data, error} = await query.order("endtime", {ascending: true});
@@ -1098,7 +1208,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       window.deleteTest = async function(id){
         if(!confirm("確定要刪除這筆考試嗎?")) return;
         const {error} = await supabaseClient.from("Test Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除考試!"); loadTestList(); }
+        if(error) alert("Error：" + error.message); else { invalidateStatusCache('test'); alert("已成功刪除考試!"); loadTestList(); }
       };
 
       const noteInsertBtn = document.getElementById("note-insert-btn");
@@ -1122,10 +1232,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
           if(editId){
             const {error} = await supabaseClient.from("Note Status").update({starttime: startdate, endtime: enddate, details: detail}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("注意事項修改成功!"); resetNoteForm(); loadNoteList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('note'); alert("注意事項修改成功!"); resetNoteForm(); loadNoteList(); }
           }else{
             const {error} = await supabaseClient.from("Note Status").insert([{starttime: startdate, endtime: enddate, details: detail}]);
-            if(error) alert("Error: " + error.message); else { alert("注意事項新增成功!"); resetNoteForm(); loadNoteList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('note'); alert("注意事項新增成功!"); resetNoteForm(); loadNoteList(); }
           }
         });
       }
@@ -1147,7 +1257,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         const field = document.getElementById("note-filter-field").value;
         const startDateVal = document.getElementById("note-filter-start").value;
         const endDateVal = document.getElementById("note-filter-end").value;
-        let query = ownOnly(supabaseClient.from("Note Status").select("*"));
+        let query = ownOnly(supabaseClient.from("Note Status").select("id, starttime, endtime, details"));
         if(startDateVal) query = query.gte(field, startDateVal);
         if(endDateVal) query = query.lte(field, endDateVal);
         const {data, error} = await query.order("endtime", {ascending: true});
@@ -1178,7 +1288,7 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       window.deleteNote = async function(id){
         if(!confirm("確定要刪除這筆注意事項嗎?")) return;
         const {error} = await supabaseClient.from("Note Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除注意事項!"); loadNoteList(); }
+        if(error) alert("Error：" + error.message); else { invalidateStatusCache('note'); alert("已成功刪除注意事項!"); loadNoteList(); }
       };
 
       const failureInsertBtn = document.getElementById("failure-insert-btn");
@@ -1200,10 +1310,10 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
 
           if(editId){
             const {error} = await supabaseClient.from("Failure Status").update({details: failurename, failurelist: failureseat}).eq("id", editId);
-            if(error) alert("Error: " + error.message); else { alert("缺繳名單修改成功!"); resetFailureForm(); loadFailureList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('failure'); alert("缺繳名單修改成功!"); resetFailureForm(); loadFailureList(); fetchFailure(true); }
           }else{
             const {error} = await supabaseClient.from("Failure Status").insert([{details: failurename, failurelist: failureseat}]);
-            if(error) alert("Error: " + error.message); else { alert("缺繳名單新增成功!"); resetFailureForm(); loadFailureList(); }
+            if(error) alert("Error: " + error.message); else { invalidateStatusCache('failure'); alert("缺繳名單新增成功!"); resetFailureForm(); loadFailureList(); fetchFailure(true); }
           }
         });
       }
@@ -1221,15 +1331,19 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       async function loadFailureList(){
         if(!failureListContainer) return;
         failureListContainer.innerHTML = "載入中...";
-        const {data, error} = await ownOnly(supabaseClient.from("Failure Status").select("*"));
-        if(error){ failureListContainer.innerHTML = "Error：" + error.message; return; }
-        if(!data || data.length === 0){ failureListContainer.innerHTML = "<div>目前沒有缺繳名單資料</div>"; return; }
-
+        let query = supabaseClient.from("Failure Status").select("id, details, failurelist").order("id", {ascending:true});
+        query = ownOnly(query);
+        const {data, error} = await query;
+        if(error){ failureListContainer.innerHTML = `<div class="empty">缺繳名單讀取失敗：${esc(error.message || '未知錯誤')}</div>`; return; }
+        const rows = Array.isArray(data) ? data : [];
+        if(rows.length === 0){ failureListContainer.innerHTML = "<div>目前沒有缺繳名單資料</div>"; return; }
         let html = `<table><thead><tr><th>缺繳項目</th><th>缺繳座號</th><th>操作</th></tr></thead><tbody>`;
-        data.forEach(item => {
-          const safeDetails = item.details.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          const safeSeat = item.failurelist.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-          html += `<tr><td>${esc(item.details)}</td><td style="text-align: center;">${esc(item.failurelist)}</td><td style="text-align: center;"><button onclick="prepareEditFailure('${item.id}', \`${safeDetails}\`, \`${safeSeat}\`)">修改</button><button onclick="deleteFailure('${item.id}')" style="background-color: #e74c3c; margin-left: 5px;">刪除</button></td></tr>`;
+        rows.forEach(item => {
+          const name = String(item.details ?? '');
+          const seat = String(item.failurelist ?? '');
+          const safeName = name.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/'/g, "\\'");
+          const safeSeat = seat.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/'/g, "\\'");
+          html += `<tr><td>${esc(name)}</td><td style="text-align:center">${esc(seat)}</td><td style="text-align:center"><button onclick="prepareEditFailure('${esc(item.id)}', \`${safeName}\`, \`${safeSeat}\`)">修改</button><button onclick="deleteFailure('${esc(item.id)}')" style="background-color:#e74c3c;margin-left:5px">刪除</button></td></tr>`;
         });
         html += `</tbody></table>`;
         failureListContainer.innerHTML = html;
@@ -1249,14 +1363,21 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       window.deleteFailure = async function(id){
         if(!confirm("確定要刪除這筆缺繳名單嗎?")) return;
         const {error} = await supabaseClient.from("Failure Status").delete().eq("id", id);
-        if(error) alert("Error：" + error.message); else { alert("已成功刪除缺繳名單!"); loadFailureList(); }
+        if(error) alert("Error：" + error.message); else { invalidateStatusCache('failure'); alert("已成功刪除缺繳名單!"); loadFailureList(); fetchFailure(true); }
       };
 
       
       const $ = id => document.getElementById(id);
       const ROLE = {admin: '管理員', teacher: '導師', monitor: '班長', officer: '幹部', student: '學生'};
-      const FORM_NAMES = {homework: '作業', test: '考試', note: '注意事項', failure: '缺繳名單', clothes: '服裝', schedule: '課表', announce: '緊急通告', accounts: '帳號管理'};
+      const FORM_NAMES = {homework: '作業', test: '考試', note: '注意事項', failure: '缺繳名單', clothes: '服裝', announce: '緊急通告', accounts: '帳號管理'};
       let me = null;
+      let accountsCache = [];
+      const getTemps = () => {
+        try { return JSON.parse(sessionStorage.getItem('tempPw') || '{}'); } catch(e) { return {}; }
+      };
+      const setTemps = value => {
+        try { sessionStorage.setItem('tempPw', JSON.stringify(value)); } catch(e) {}
+      };
       const isStaff = () => !!me && ['admin', 'teacher', 'monitor'].includes(me.role);
       const isWriter = () => isStaff() || (!!me && me.role === 'officer');
       const ownOnly = q => (me && me.role === 'officer') ? q.eq('created_by', me.id) : q;
@@ -1270,23 +1391,29 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       }
 
       
-      const VIEWS = ['contact', 'todo', 'blog', 'schedule', 'manager', 'auth', 'profile'];
+      const VIEWS = ['contact', 'todo', 'blog', 'manager', 'auth', 'profile', 'reset'];
       let registering = false;
+      let lastTempLoginPw = '';
       function showView(v){
+        if(me && me.must_change) v = 'reset';
+        document.body.classList.toggle('force-reset', !!(me && me.must_change));
         if(v === 'todo' && !me){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
         if(v === 'profile' && !me && !registering){ $('auth-msg').textContent = '請先登入才能使用此功能'; v = 'auth'; }
+         if(v === 'reset' && (!me || !me.must_change)){ v = me ? 'contact' : 'auth'; }
         if(v === 'manager' && !isWriter()){ v = me ? 'contact' : 'auth'; }
-        if(v === 'schedule' && !me){ $('auth-msg').textContent='請先登入才能查看課表'; v='auth'; }
         VIEWS.forEach(n => $('view-' + n + '-container').style.display = (n === v) ? 'block' : 'none');
-        ['contact', 'todo', 'blog', 'schedule', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
+        ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).classList.toggle('active', n === v));
         if(v === 'todo') loadTodos();
         if(v === 'blog') loadBlog();
-        if(v === 'schedule') loadSchedule(datePicker.value);
         if(v === 'manager') initManager();
         if(v === 'profile') fillProfile();
-        if(v === 'contact') fetchAnnounce();
+        if (v === 'contact') {
+          fetchAnnounce();
+          if (currentViewMode === 'daily') fetchAllData(datePicker.value);
+          else fetchWeeklyData(datePicker.value);
+        }
       }
-      ['contact', 'todo', 'blog', 'schedule', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
+      ['contact', 'todo', 'blog', 'manager'].forEach(n => $('nav-' + n).addEventListener('click', () => showView(n)));
       $('account-btn').addEventListener('click', () => showView(me ? 'profile' : 'auth'));
 
       
@@ -1313,38 +1440,76 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
           email = data;
         }
         if(!email){ alert('登入失敗：帳號或密碼不正確'); return; }
-        const {error} = await supabaseClient.auth.signInWithPassword({email, password: $('login-pass').value});
+        const typedPw = $('login-pass').value;
+        const {error} = await supabaseClient.auth.signInWithPassword({email, password: typedPw});
         if(error){ alert('登入失敗：帳號或密碼不正確'); return; }
+        lastTempLoginPw = typedPw;
         $('login-pass').value = '';
         localStorage.setItem('site_login_at',String(Date.now()));
-        setTimeout(() => showView('contact'), 400);
+        await refreshMe();
+        if(me?.must_change){ showView('reset'); }
+        else { lastTempLoginPw = ''; showView('contact'); }
       });
       $('login-pass').addEventListener('keydown', e => { if(e.key === 'Enter') $('login-go').click(); });
       $('profile-skip').addEventListener('click', () => { try{ sessionStorage.setItem('skipProfile', '1'); }catch(e){} showView('contact'); });
-      $('logout-btn').addEventListener('click', () => {localStorage.removeItem('site_login_at');supabaseClient.auth.signOut();});
+      $('logout-btn').addEventListener('click', () => {lastTempLoginPw='';localStorage.removeItem('site_login_at');supabaseClient.auth.signOut();});
 
       let birthdayCelebrated=false;
       async function celebrateBirthday(){
         if(birthdayCelebrated||!me?.birthday||me.birthday.slice(5)!==today.slice(5))return;
         birthdayCelebrated=true;
-        alert('🎂 生日快樂！');
+        alert('生日快樂！');
         const layer=document.createElement('div');layer.className='birthday-card';
         for(let i=0;i<80;i++){const c=document.createElement('span');c.className='confetti';c.style.left=Math.random()*100+'%';c.style.setProperty('--dx',((Math.random()-.5)*260)+'px');c.style.animationDelay=Math.random()*.7+'s';layer.appendChild(c)}
         document.body.appendChild(layer);setTimeout(()=>layer.remove(),3500);
       }
+      $('reset-logout').addEventListener('click', () => {
+        localStorage.removeItem('site_login_at');
+        supabaseClient.auth.signOut();
+      });
+      $('reset-save').addEventListener('click', async () => {
+        if(!me || !me.must_change) return;
+        const p = $('reset-pass').value;
+        const q = $('reset-pass2').value;
+        if(p.length < 6){ alert('密碼至少需要 6 碼'); return; }
+        if(p !== q){ alert('兩次輸入的密碼不一致'); return; }
+        if(lastTempLoginPw && p === lastTempLoginPw){ alert('新密碼不能與臨時密碼相同'); return; }
+        const {error} = await supabaseClient.auth.updateUser({password: p});
+        if(error){ alert('設定失敗：' + error.message); return; }
+        const {error: pe} = await supabaseClient.from('profiles').update({
+          must_change_password: false,
+          temp_password_expires_at: null
+        }).eq('id', me.id);
+        if(pe){ alert('密碼已更新，但帳號狀態更新失敗，請重新登入後再試：' + pe.message); return; }
+        lastTempLoginPw = '';
+        $('reset-pass').value = '';
+        $('reset-pass2').value = '';
+        await refreshMe();
+        alert('密碼已更新');
+        showView('contact');
+      });
+
       async function refreshMe(){
         const {data: {session}} = await supabaseClient.auth.getSession();
         if(session){let loginAt=Number(localStorage.getItem('site_login_at')||0);if(!loginAt){loginAt=Date.now();localStorage.setItem('site_login_at',String(loginAt));}if(Date.now()-loginAt>7*24*60*60*1000){localStorage.removeItem('site_login_at');await supabaseClient.auth.signOut();me=null;alert('登入已超過 7 天，請重新登入。');return;}}
         me = null;
         if(session){
-          const {data} = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+          const {data} = await supabaseClient.from('profiles').select('id, username, real_name, birthday, title, role, avatar_url, must_change_password, temp_password_expires_at, banned').eq('id', session.user.id).maybeSingle();
           me = {role: 'student', ...(data || {}), id: session.user.id, email: session.user.email};
-          if(me.banned){
+          me.must_change = me.must_change_password === true;
+          if(me.must_change_password && me.temp_password_expires_at && new Date(me.temp_password_expires_at).getTime() <= Date.now()){
             await supabaseClient.auth.signOut();
             me = null;
-            alert('此帳號已被管理員封鎖，無法使用網站。');
+            localStorage.removeItem('site_login_at');
+            alert('臨時密碼已超過 24 小時，請管理員重新產生臨時密碼。');
+          }
+          if(me?.banned){
+            await supabaseClient.auth.signOut();
+            me = null;
+            alert('此帳號已被管理員封鎖，無法登入網站');
           }
         }
+        document.body.classList.toggle('force-reset', !!(me && me.must_change));
         const displayName = me ? (me.title || me.real_name || me.username || '完成註冊') : '';
         $('account-btn').innerHTML = me
           ? `${avatar(me)}<span class="name">${esc(displayName)}</span>`
@@ -1357,17 +1522,22 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       supabaseClient.auth.onAuthStateChange((ev) => {
         setTimeout(async () => {
           await refreshMe();
-          if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
+          if(me?.must_change){ showView('reset'); }
+           else if(me && !me.username && (ev === 'SIGNED_IN' || ev === 'INITIAL_SESSION') && !sessionStorage.getItem('skipProfile')) showView('profile');
           else if(ev === 'SIGNED_OUT') showView('contact');
         }, 0);
       });
 
       
-      async function fetchAnnounce(){
-        const {data, error} = await supabaseClient.from('announcements')
-          .select('*')
-          .order('created_at', {ascending: false})
-          .limit(1);
+      async function fetchAnnounce(force = false) {
+        const { data, error } = await cachedQuery('global:announce:latest', () =>
+          supabaseClient.from('announcements')
+            .select('content, created_at')
+            .order('created_at', { ascending: false })
+            .limit(1),
+          60 * 1000,
+          force
+        );
         if(error){
           $('announce-bar').innerHTML = '';
           return;
@@ -1396,9 +1566,12 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         $('profile-save').textContent = registering ? '建立帳號' : '儲存';
         $('profile-file').value = '';
       }
+      let profilePreviewUrl = null;
       $('profile-file').addEventListener('change', e => {
         const f = e.target.files[0];
-        if(f) $('profile-av').innerHTML = `<img class="av lg" src="${URL.createObjectURL(f)}" alt="">`;
+        if (profilePreviewUrl) URL.revokeObjectURL(profilePreviewUrl);
+        profilePreviewUrl = f ? URL.createObjectURL(f) : null;
+        if (profilePreviewUrl) $('profile-av').innerHTML = `<img class="av lg" src="${profilePreviewUrl}" alt="">`;
       });
       $('profile-save').addEventListener('click', async () => {
         const username = $('profile-username').value.trim();
@@ -1452,39 +1625,57 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         }
         const {error} = await supabaseClient.from('profiles').update({username, real_name: real, title: $('profile-nick').value.trim() || null, birthday, avatar_url}).eq('id', me.id);
         if(error){ alert(error.code === '23505' ? '這個帳號名稱已被使用' : '儲存失敗：' + error.message); return; }
+        invalidateQueryCache('blog:profiles:');
         await refreshMe();
         alert('已儲存');
         showView('contact');
       });
       
-      function weekMonday(dateStr){const d=new Date(dateStr+'T00:00:00');const day=d.getDay();d.setDate(d.getDate()-(day===0?6:day-1));return d.toISOString().split('T')[0]}
-      function weekFriday(mon){return dateAfter(mon,4)}
-      async function loadClothesForWeek(mon){
-        const [o,d]=await Promise.all([supabaseClient.from('Clothes Overrides').select('*').eq('weekstart',mon).maybeSingle(),supabaseClient.from('Clothes Default').select('*').eq('id',1).maybeSingle()]);
-        if(o.error&&!d.data)return {data:[],error:o.error};
-        return {data:o.data?[o.data]:d.data?[d.data]:[],error:null};
+      function weekMonday(dateStr) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        const weekday = date.getDay();
+        date.setDate(date.getDate() - (weekday === 0 ? 6 : weekday - 1));
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       }
-      function scheduleDays(){return [['星期一','mon'],['星期二','tue'],['星期三','wed'],['星期四','thur'],['星期五','fri']]}
-      function scheduleEditorHtml(prefix,data){return `<div class="schedule-table"><table><thead><tr><th>節次</th>${scheduleDays().map(x=>`<th>${x[0]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:9},(_,i)=>`<tr><td>第${i+1}節</td>${scheduleDays().map(([n,k])=>`<td><input data-schedule="${prefix}" data-day="${k}" data-period="${i}" value="${esc((data?.[k]||[])[i]||'')}" placeholder="科目"></td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
-      function readScheduleInputs(prefix){const out={};scheduleDays().forEach(([n,k])=>out[k]=Array.from({length:9},(_,i)=>document.querySelector(`[data-schedule="${prefix}"][data-day="${k}"][data-period="${i}"]`)?.value.trim()||''));return out}
-      function normalizeSchedule(row){const out={};scheduleDays().forEach(([n,k])=>{let v=row?.[k];if(Array.isArray(v))out[k]=v;else{try{out[k]=v?JSON.parse(v):Array(9).fill('')}catch{out[k]=Array(9).fill(v||'')}}});return out}
-      async function loadSchedule(dateStr){const mon=weekMonday(dateStr);const [o,d]=await Promise.all([supabaseClient.from('Schedule Overrides').select('*').eq('weekstart',mon).maybeSingle(),supabaseClient.from('Schedule Default').select('*').eq('id',1).maybeSingle()]);const row=o.data||d.data;$('schedule-content').innerHTML=row?scheduleTableHtml(normalizeSchedule(row),mon):'<div class="empty">管理員尚未初始化課表</div>'}
-      function scheduleTableHtml(data,mon){return `<div class="hint" style="margin-bottom:8px">${mon} ～ ${weekFriday(mon)}</div><table><thead><tr><th>節次</th>${scheduleDays().map(x=>`<th>${x[0]}</th>`).join('')}</tr></thead><tbody>${Array.from({length:9},(_,i)=>`<tr><td>第${i+1}節</td>${scheduleDays().map(([n,k])=>`<td class="schedule-cell">${esc(data[k]?.[i]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
-      async function initScheduleManager(){const {data}=await supabaseClient.from('Schedule Default').select('*').eq('id',1).maybeSingle();const base=normalizeSchedule(data||{});$('schedule-default-grid').innerHTML=scheduleEditorHtml('default',base);$('schedule-override-grid').innerHTML=scheduleEditorHtml('override',base);$('schedule-weekstart').value=weekMonday(today)}
+      function weekFriday(mon) { return dateAfter(mon, 4); }
+      async function loadClothesForWeek(mon, force = false) {
+        return cachedQuery(`clothes:week:${mon}`, async () => {
+          const [overrideRes, defaultRes] = await Promise.all([
+            supabaseClient.from('Clothes Overrides')
+              .select('weekstart, weekend, mon, tue, wed, thur, fri')
+              .eq('weekstart', mon).maybeSingle(),
+            supabaseClient.from('Clothes Default')
+              .select('id, mon, tue, wed, thur, fri')
+              .eq('id', 1).maybeSingle()
+          ]);
+          if (overrideRes.error && !defaultRes.data) return { data: [], error: overrideRes.error };
+          if (defaultRes.error && !overrideRes.data) return { data: [], error: defaultRes.error };
+          return { data: overrideRes.data ? [overrideRes.data] : defaultRes.data ? [defaultRes.data] : [], error: null };
+        }, 60 * 1000, force);
+      }
       $('clothes-mode').addEventListener('change',()=>{$('clothes-week-fields').style.display=$('clothes-mode').value==='override'?'block':'none'});
-      $('clothes-insert-btn').addEventListener('click',async()=>{if(!me||!['admin','teacher','monitor'].includes(me.role))return alert('沒有權限');const row={mon:$('mon-clothes-select').value,tue:$('tue-clothes-select').value,wed:$('wed-clothes-select').value,thur:$('thur-clothes-select').value,fri:$('fri-clothes-select').value};let error;if($('clothes-mode').value==='default'){({error}=await supabaseClient.from('Clothes Default').upsert({id:1,...row}))}else{const mon=weekMonday($('clothes-weekstart').value);({error}=await supabaseClient.from('Clothes Overrides').upsert({weekstart:mon,weekend:weekFriday(mon),...row},{onConflict:'weekstart'}))}if(error)alert('服裝儲存失敗：'+error.message);else alert('服裝儲存成功')});
-      $('schedule-default-save').addEventListener('click',async()=>{if(me?.role!=='admin')return alert('只有管理員可以初始化預設課表');const row=readScheduleInputs('default');const {error}=await supabaseClient.from('Schedule Default').upsert({id:1,...row});if(error)alert('預設課表儲存失敗：'+error.message);else{alert('預設課表初始化成功');loadSchedule(datePicker.value)}});
-      $('schedule-override-save').addEventListener('click',async()=>{if(!me||!['admin','teacher','monitor'].includes(me.role))return alert('沒有權限');const mon=weekMonday($('schedule-weekstart').value);const row=readScheduleInputs('override');const {error}=await supabaseClient.from('Schedule Overrides').upsert({weekstart:mon,weekend:weekFriday(mon),...row},{onConflict:'weekstart'});if(error)alert('調課儲存失敗：'+error.message);else{alert('本週調課儲存成功');loadSchedule(datePicker.value)}});
+      $('clothes-insert-btn').addEventListener('click',async()=>{if(!me||!['admin','teacher','monitor'].includes(me.role))return alert('沒有權限');if($('clothes-mode').value==='default'&&me.role!=='admin')return alert('只有管理員可以修改預設服裝');const row={mon:$('mon-clothes-select').value,tue:$('tue-clothes-select').value,wed:$('wed-clothes-select').value,thur:$('thur-clothes-select').value,fri:$('fri-clothes-select').value};let error;if($('clothes-mode').value==='default'){({error}=await supabaseClient.from('Clothes Default').upsert({id:1,...row}))}else{const mon=weekMonday($('clothes-weekstart').value);({error}=await supabaseClient.from('Clothes Overrides').upsert({weekstart:mon,weekend:weekFriday(mon),...row},{onConflict:'weekstart'}))}if(error)alert('服裝儲存失敗：'+error.message);else{invalidateStatusCache('clothes');alert('服裝儲存成功')}});
+      function setupClothesByRole(){
+        const admin = me.role === 'admin';
+        const cm = $('clothes-mode');
+        cm.innerHTML = (admin ? '<option value="default">設定每週預設服裝</option>' : '') + '<option value="override">設定特殊週異動</option>';
+        cm.value = admin ? 'default' : 'override';
+        $('clothes-mode-label').style.display = admin ? '' : 'none';
+        $('clothes-hint').textContent = admin ? '' : '預設服裝由管理員設定。你可以為特殊週建立該週的服裝異動。';
+        $('clothes-hint').style.display = admin ? 'none' : '';
+        cm.dispatchEvent(new Event('change'));
+        if(!$('clothes-weekstart').value) $('clothes-weekstart').value = weekMonday(today);
+      }
       function initManager(){
         $('login-container').style.display = 'none';
         $('admin-container').style.display = 'block';
         const allow = me.role === 'officer' ? ['homework', 'test', 'note', 'failure']
-          : ['homework', 'test', 'note', 'failure', 'clothes', 'schedule', 'announce'].concat(me.role === 'admin' ? ['accounts'] : []);
+          : ['homework', 'test', 'note', 'failure', 'clothes', 'announce'].concat(me.role === 'admin' ? ['accounts'] : []);
         const sel = $('status-select');
         sel.innerHTML = '<option value="">-- 請選擇項目 --</option>' + allow.map(k => `<option value="${k}">${FORM_NAMES[k]}</option>`).join('');
         document.querySelectorAll('.form-box').forEach(b => b.style.display = 'none');
-        $('schedule-default-editor').style.display=me.role==='admin'?'block':'none';
-        $('schedule-override-editor').style.display=['admin','teacher','monitor'].includes(me.role)?'block':'none';
+        if(me.role!=='officer') setupClothesByRole();
         ['homework', 'test', 'note'].forEach(t => {
           if(!$(t + '-filter-start').value) $(t + '-filter-start').value = today;
           if(!$(t + '-filter-end').value) $(t + '-filter-end').value = today;
@@ -1495,24 +1686,85 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('status-select').addEventListener('change', e => {
         if(e.target.value === 'announce') loadAnnounceList();
         if(e.target.value === 'accounts') loadAccounts();
-        if(e.target.value === 'schedule') initScheduleManager();
       });
 
+      $('admin-reset-password-btn').addEventListener('click',async()=>{if(me?.role!=='admin')return alert('只有管理員可以重設密碼');const p=$('admin-new-password').value.trim(),q=$('admin-new-password-confirm').value.trim();if(!/^\d{6}$/.test(p))return alert('密碼必須是 6 位數字');if(p!==q)return alert('兩次輸入的密碼不一致');const {error}=await supabaseClient.from("Manager's Password").update({password:p});if(error)alert('密碼重設失敗：'+error.message);else{alert('管理員密碼已重設');$('admin-new-password').value='';$('admin-new-password-confirm').value=''}});
+
+function renderAccountsList(){
+        const data = accountsCache;
+        const temps = getTemps();
+        const nowMs = Date.now();
+        Object.keys(temps).forEach(id => {
+          if(temps[id]?.expiresAt && temps[id].expiresAt <= nowMs) delete temps[id];
+        });
+        setTemps(temps);
+        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>生日</th><th>身分組</th><th>帳號狀態</th><th>操作</th></tr></thead><tbody>` +
+          data.map(p => {
+            const self = p.id === me.id;
+            const roleSel = `<select ${self ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
+              Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select>`;
+            const tp = temps[p.id];
+            const tempInfo = tp ? `<div class="temp-pw"><span class="tag">待改密碼</span> 臨時密碼 <code>${esc(tp.temp)}</code> <span class="due">有效至 ${new Date(tp.expiresAt).toLocaleString('zh-TW', {hour12:false})}</span> <button class="ghost" onclick="copyPw('${p.id}', this)">複製</button></div>` : (p.must_change_password ? '<div class="temp-pw"><span class="tag">待改密碼</span></div>' : '');
+            const status = self ? '<span>目前帳號</span>' : `<button class="ghost" onclick="toggleBan('${p.id}', ${p.banned ? 'false' : 'true'})">${p.banned ? '解除封鎖' : 'Ban 帳號'}</button>`;
+            const reset = self ? '' : `<button class="ghost" onclick="resetPw('${p.id}')">重設密碼</button>${tempInfo}`;
+            return `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td>${esc(p.birthday || '')}</td><td>${roleSel}</td><td>${status}</td><td>${reset}</td></tr>`;
+          }).join('') + `</tbody></table>`;
+      }
       async function loadAccounts(){
         $('accounts-list').textContent = '載入中...';
-        const {data, error} = await supabaseClient.from('profiles').select('*').order('created_at');
-        if(error){ $('accounts-list').textContent = 'Error：' + error.message; return; }
-        $('accounts-list').innerHTML = `<table><thead><tr><th>姓名</th><th>帳號</th><th>稱謂</th><th>生日</th><th>身分組</th><th>帳號狀態</th></tr></thead><tbody>` +
-          data.map(p => `<tr><td>${esc(p.real_name || '（未完成註冊）')}</td><td>${esc(p.username || '')}</td><td>${esc(p.title || '')}</td><td>${esc(p.birthday || '')}</td><td><select ${p.id === me.id ? 'disabled' : ''} onchange="setRole('${p.id}', this.value)">` +
-          Object.keys(ROLE).map(r => `<option value="${r}" ${p.role === r ? 'selected' : ''}>${ROLE[r]}</option>`).join('') + `</select></td><td>` +
-          (p.id === me.id ? '<span>目前帳號</span>' : `<button class="ghost" onclick="toggleBan('${p.id}', ${p.banned ? 'false' : 'true'})">${p.banned ? '解除封鎖' : 'Ban 帳號'}</button>`) +
-          `</td></tr>`).join('') + `</tbody></table>`;
+        const { data, error } = await supabaseClient.from('profiles')
+          .select('id, real_name, username, title, birthday, role, banned, must_change_password, created_at')
+          .order('created_at');
+        if (error) { $('accounts-list').textContent = 'Error：' + error.message; return; }
+        accountsCache = data || [];
+        renderAccountsList();
       }
       window.setRole = async (id, role) => {
         if(!me || me.role !== 'admin') return alert('沒有權限');
         const {error} = await supabaseClient.from('profiles').update({role}).eq('id', id);
         if(error){ alert('更新失敗：' + error.message); return; }
-        loadAccounts();
+        const account = accountsCache.find(item => item.id === id);
+        if (account) account.role = role;
+        renderAccountsList();
+      };
+
+      window.copyPw = async (id, btn) => {
+        const entry = getTemps()[id];
+        if(!entry?.temp) return;
+        try{ await navigator.clipboard.writeText(entry.temp); }catch(e){ prompt('請手動複製：', entry.temp); return; }
+        const old = btn.textContent;
+        btn.textContent = '已複製';
+        setTimeout(() => btn.textContent = old, 1500);
+      };
+      window.resetPw = async id => {
+        if(!me || me.role !== 'admin') return alert('沒有權限');
+        const p = accountsCache.find(x => x.id === id);
+        const name = p ? (p.real_name || p.username || '此帳號') : '此帳號';
+        if(!confirm(`要重設「${name}」的密碼嗎？\n舊密碼會立刻失效，新的 6 位數臨時密碼有效 24 小時，首次登入後必須設定新密碼。`)) return;
+        const {data, error} = await supabaseClient.functions.invoke('reset-password', {body: {user_id: id}});
+        if(error || !data || !data.temp){
+          let msg = error ? error.message : ((data && data.error) || '未知錯誤');
+          try{ if(error && error.context) msg = (await error.context.json()).error || msg; }catch(_){}
+          alert('重設失敗：' + msg);
+          return;
+        }
+        const expiresAt = data.expires_at ? new Date(data.expires_at).getTime() : Date.now() + 24 * 60 * 60 * 1000;
+        const temps = getTemps();
+        temps[id] = {temp: data.temp, expiresAt};
+        setTemps(temps);
+        // 確保該帳號確實被標記為「待改密碼」（Edge Function 若已寫入則不會重複失敗）
+        const {data: chk} = await supabaseClient.from('profiles').select('must_change_password').eq('id', id).maybeSingle();
+        if(!chk || chk.must_change_password !== true){
+          const {error: pe} = await supabaseClient.from('profiles').update({
+            must_change_password: true,
+            temp_password_expires_at: new Date(expiresAt).toISOString()
+          }).eq('id', id);
+          if(pe){ alert('臨時密碼已產生，但無法將帳號標記為「待改密碼」：' + pe.message + '\n臨時密碼：' + data.temp); loadAccounts(); return; }
+        }
+        const account = accountsCache.find(item => item.id === id);
+        if (account) account.must_change_password = true;
+        alert(`臨時密碼：${data.temp}\n有效期限至：${new Date(expiresAt).toLocaleString('zh-TW', {hour12:false})}`);
+        renderAccountsList();
       };
 
       window.toggleBan = async (id, banned) => {
@@ -1522,18 +1774,39 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
         if(!confirm(`確定要${action}這個帳號嗎？`)) return;
         const {error} = await supabaseClient.from('profiles').update({banned}).eq('id', id);
         if(error){ alert(`${action}失敗：` + error.message); return; }
-        loadAccounts();
+        const account = accountsCache.find(item => item.id === id);
+        if (account) account.banned = banned;
+        renderAccountsList();
       };
 
       
       let todos = [], srcItems = [];
-      async function loadTodos(){
-        await supabaseClient.from('todos').delete().eq('done',true).lt('done_at',new Date(Date.now()-60000).toISOString());
+      let todoLoadRequestId = 0;
+      let lastTodoCleanupAt = 0;
+      async function loadTodos() {
+        const requestId = ++todoLoadRequestId;
+        const nowMs = Date.now();
+        if (nowMs - lastTodoCleanupAt >= 60 * 1000) {
+          lastTodoCleanupAt = nowMs;
+          // 清理作業與三項讀取同時進行，不讓 DELETE 額外卡住待辦清單顯示。
+          supabaseClient.from('todos').delete().eq('done', true)
+            .lt('done_at', new Date(nowMs - 60 * 1000).toISOString())
+            .then(({ error }) => { if (error) lastTodoCleanupAt = 0; });
+        }
         const [t, h, e] = await Promise.all([
-          supabaseClient.from('todos').select('*').order('done').order('due', {ascending: true, nullsFirst: false}).order('created_at'),
-          supabaseClient.from('Homework Status').select('*').gte('endtime', today).order('endtime'),
-          supabaseClient.from('Test Status').select('*').gte('endtime', today).order('endtime')
+          supabaseClient.from('todos')
+            .select('id, text, due, done, done_at, source, source_id, created_at')
+            .order('done').order('due', { ascending: true, nullsFirst: false }).order('created_at'),
+          cachedQuery(`todo:source:homework:${today}`, () =>
+            supabaseClient.from('Homework Status')
+              .select('id, endtime, details').gte('endtime', today).order('endtime', { ascending: true })
+          ),
+          cachedQuery(`todo:source:test:${today}`, () =>
+            supabaseClient.from('Test Status')
+              .select('id, endtime, details').gte('endtime', today).order('endtime', { ascending: true })
+          )
         ]);
+        if (requestId !== todoLoadRequestId) return;
         todos = t.data || [];
         const have = new Set(todos.filter(x => x.source).map(x => x.source + ':' + x.source_id));
         srcItems = [...(h.data || []).map(x => ({...x, s: 'homework', l: '作業'})), ...(e.data || []).map(x => ({...x, s: 'test', l: '考試'}))]
@@ -1577,34 +1850,212 @@ body.dark-mode .alert{color:#fecaca;background:#2a1517;border-color:#5b2226;bord
       $('todo-text').addEventListener('keydown', e => { if(e.key === 'Enter') $('todo-add').click(); });
 
       
-      function canEditBlog(p){return !!me&&(me.role==='admin'||p.author_id===me.id)}
+      function canEditBlog(p) { return !!me && !!p && (me.role === 'admin' || p.author_id === me.id); }
+      let blogPostsById = new Map();
 
-      function updateBlogComposer(){$('blog-composer').style.display=me?'block':'none'}
-      async function loadBlog(){
-        $('blog-feed').innerHTML='<div class="empty">載入中...</div>';
-        const {data,error}=await supabaseClient.from('Blog Status').select('*').order('postdate',{ascending:false}).order('id',{ascending:false}).limit(50);
-        if(error){$('blog-feed').innerHTML='<div class="empty">載入失敗：'+esc(error.message)+'</div>';return}
-        const ids=[...new Set((data||[]).map(p=>p.author_id).filter(Boolean))];
-        const {data:profiles}=ids.length?await supabaseClient.from('profiles').select('id,username,real_name,title,avatar_url').in('id',ids):{data:[]};
+      function updateBlogComposer() { $('blog-composer').style.display = me ? 'block' : 'none'; }
+      async function loadBlog() {
+        $('blog-feed').innerHTML = '<div class="empty">載入中...</div>';
+        const { data, error } = await cachedQuery('blog:posts:latest50', () =>
+          supabaseClient.from('Blog Status')
+            .select('id, title, blog, postdate, author_id')
+            .order('postdate', { ascending: false }).order('id', { ascending: false }).limit(50),
+          20 * 1000
+        );
+        if (error) { $('blog-feed').innerHTML = '<div class="empty">載入失敗：' + esc(error.message) + '</div>'; return; }
+        const posts = data || [];
+        blogPostsById = new Map(posts.map(post => [String(post.id), post]));
+        const ids = [...new Set(posts.map(post => post.author_id).filter(Boolean))];
+        const profileKey = `blog:profiles:${ids.slice().sort().join(',')}`;
+        const { data: profiles } = ids.length ? await cachedQuery(profileKey, () =>
+          supabaseClient.from('profiles').select('id, username, real_name, title, avatar_url').in('id', ids),
+          60 * 1000
+        ) : { data: [] };
         const profileMap=new Map((profiles||[]).map(p=>[p.id,p]));
         $('blog-feed').innerHTML=(data||[]).map(p=>{const a=profileMap.get(p.author_id),edit=canEditBlog(p);return `<article class="post"><header>${avatar(a)}<div class="grow"><b>${esc((a&&(a.title||a.real_name||a.username))||'匿名')}</b>${a?.title?`<span class="tag">${esc(a.title)}</span>`:''}<div class="due" style="margin:0">${esc(p.postdate||'')}</div></div>${edit?`<button class="ghost" data-editpost="${p.id}">編輯</button><button class="ghost" data-delpost="${p.id}">刪除</button>`:''}</header><h4>${esc(p.title)}</h4><div class="note-text">${esc(p.blog)}</div></article>`}).join('')||'<div class="empty">還沒有人分享，當第一個吧</div>';
         updateBlogComposer();
       }
       function resetBlogComposer(){$('blog-edit-id').value='';$('blog-new-title').value='';$('blog-new-date').value=today;$('blog-new-body').value='';$('blog-composer-title').textContent='寫一篇';$('blog-new-post').textContent='發佈';$('blog-cancel-edit').style.display='none';}
       $('blog-cancel-edit').addEventListener('click',resetBlogComposer);
-      $('blog-feed').addEventListener('click',async e=>{
-        const editId=e.target.dataset.editpost,delId=e.target.dataset.delpost;
-        if(editId){const {data}=await supabaseClient.from('Blog Status').select('*').eq('id',editId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');$('blog-edit-id').value=data.id;$('blog-new-title').value=data.title||'';$('blog-new-date').value=data.postdate||today;$('blog-new-body').value=data.blog||'';$('blog-composer-title').textContent='編輯班級部落格';$('blog-new-post').textContent='儲存修改';$('blog-cancel-edit').style.display='inline-block';$('blog-composer').scrollIntoView({behavior:'smooth'});return}
-        if(delId){if(!confirm('確定要刪除這篇日記嗎?'))return;const {data}=await supabaseClient.from('Blog Status').select('author_id').eq('id',delId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');const {error}=await supabaseClient.from('Blog Status').delete().eq('id',delId);if(error)alert('刪除失敗：'+error.message);else loadBlog()}
+      $('blog-feed').addEventListener('click', async e => {
+        const editId = e.target.dataset.editpost;
+        const delId = e.target.dataset.delpost;
+        if (editId) {
+          const post = blogPostsById.get(String(editId));
+          if (!post || !canEditBlog(post)) return alert('沒有權限或文章已更新，請重新載入');
+          $('blog-edit-id').value = post.id;
+          $('blog-new-title').value = post.title || '';
+          $('blog-new-date').value = post.postdate || today;
+          $('blog-new-body').value = post.blog || '';
+          $('blog-composer-title').textContent = '編輯班級部落格';
+          $('blog-new-post').textContent = '儲存修改';
+          $('blog-cancel-edit').style.display = 'inline-block';
+          $('blog-composer').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+        if (delId) {
+          if (!confirm('確定要刪除這篇日記嗎?')) return;
+          const post = blogPostsById.get(String(delId));
+          if (!post || !canEditBlog(post)) return alert('沒有權限或文章已更新，請重新載入');
+          const { error } = await supabaseClient.from('Blog Status').delete().eq('id', delId);
+          if (error) alert('刪除失敗：' + error.message);
+          else { invalidateStatusCache('blog'); loadBlog(); }
+        }
       });
-      $('blog-new-post').addEventListener('click',async()=>{
-        if(!me)return alert('請先登入');const title=$('blog-new-title').value.trim(),body=$('blog-new-body').value.trim(),postdate=$('blog-new-date').value||today,editId=$('blog-edit-id').value;if(!title||!body)return alert('請填寫標題與內容');let error;
-        if(editId){const {data}=await supabaseClient.from('Blog Status').select('author_id').eq('id',editId).maybeSingle();if(!data||!canEditBlog(data))return alert('沒有權限');({error}=await supabaseClient.from('Blog Status').update({title,blog:body,postdate}).eq('id',editId))}
-        else{({error}=await supabaseClient.from('Blog Status').insert({title,blog:body,postdate,author_id:me.id}))}
-        if(error)return alert('儲存失敗：'+error.message);resetBlogComposer();loadBlog();
+      $('blog-new-post').addEventListener('click', async () => {
+        if (!me) return alert('請先登入');
+        const title = $('blog-new-title').value.trim();
+        const body = $('blog-new-body').value.trim();
+        const postdate = $('blog-new-date').value || today;
+        const editId = $('blog-edit-id').value;
+        if (!title || !body) return alert('請填寫標題與內容');
+        let result;
+        if (editId) {
+          const post = blogPostsById.get(String(editId));
+          if (!post || !canEditBlog(post)) return alert('沒有權限或文章已更新，請重新載入');
+          result = await supabaseClient.from('Blog Status').update({ title, blog: body, postdate }).eq('id', editId);
+        } else {
+          result = await supabaseClient.from('Blog Status').insert({ title, blog: body, postdate, author_id: me.id });
+        }
+        if (result.error) return alert('儲存失敗：' + result.error.message);
+        invalidateStatusCache('blog');
+        resetBlogComposer();
+        loadBlog();
       });
 
+
+      // ===== 番茄鐘 =====
+      (function(){
+        const MODES = {focus: '專注', short: '短休息', long: '長休息'};
+        const mins = {focus: 25, short: 5, long: 15};
+        try {
+          const saved = JSON.parse(localStorage.getItem('pomo_mins') || 'null');
+          if(saved) Object.keys(mins).forEach(k => {
+            const value = Number(saved[k]);
+            if(Number.isFinite(value) && value >= 1) mins[k] = value;
+          });
+        } catch(e) {}
+        let mode = 'focus';
+        let remain = mins.focus * 60 * 1000;
+        let endAt = 0;
+        let timer = null;
+        let doneFocus = 0;
+        let focusInCycle = 0;
+        const baseTitle = document.title;
+        const el = id => document.getElementById(id);
+        const duration = key => mins[key] * 60 * 1000;
+        const fmt = ms => {
+          const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+          return String(Math.floor(totalSeconds / 60)).padStart(2, '0') + ':' +
+            String(totalSeconds % 60).padStart(2, '0');
+        };
+        function render(){
+          const total = duration(mode);
+          el('pomo-time').textContent = fmt(remain);
+          el('pomo-progress').style.width = Math.max(0, Math.min(100, 100 - remain / total * 100)) + '%';
+          el('pomo-start').textContent = timer ? '暫停' : (remain < total ? '繼續' : '開始');
+          el('pomo-meta').textContent = `${MODES[mode]}中 · 已完成 ${doneFocus} 次專注 · 本輪 ${focusInCycle}/3`;
+          document.querySelectorAll('.pomo-tab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+          document.title = timer ? `${fmt(remain)} ${MODES[mode]} - ${baseTitle}` : baseTitle;
+        }
+        function beep(){
+          try{
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [0, .3, .6].forEach(d => {
+              const o = ctx.createOscillator(), g = ctx.createGain();
+              o.frequency.value = 880;
+              o.connect(g);
+              g.connect(ctx.destination);
+              g.gain.setValueAtTime(.2, ctx.currentTime + d);
+              g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + d + .25);
+              o.start(ctx.currentTime + d);
+              o.stop(ctx.currentTime + d + .25);
+            });
+          }catch(e){}
+        }
+        function stop(){
+          if(timer){ clearInterval(timer); timer = null; }
+        }
+        function setMode(m){
+          stop();
+          mode = m;
+          remain = duration(m);
+          render();
+        }
+        function advanceAfterFocus(){
+          focusInCycle++;
+          if(focusInCycle >= 3){
+            focusInCycle = 0;
+            setMode('long');
+          } else {
+            setMode('short');
+          }
+        }
+        function nextMode(countSkippedFocus = false){
+          if(mode === 'focus'){
+            if(countSkippedFocus) doneFocus++;
+            advanceAfterFocus();
+          } else {
+            setMode('focus');
+          }
+        }
+        function tick(){
+          remain = endAt - Date.now();
+          if(remain <= 0){
+            stop();
+            remain = 0;
+            const finishedMode = mode;
+            if(finishedMode === 'focus') doneFocus++;
+            beep();
+            render();
+            setTimeout(() => {
+              if(finishedMode === 'focus'){
+                alert(focusInCycle + 1 >= 3
+                  ? '專注完成！接下來是長休息。'
+                  : '專注完成！接下來是短休息。');
+                advanceAfterFocus();
+              } else {
+                alert('休息結束！準備開始下一次專注。');
+                setMode('focus');
+              }
+            }, 50);
+            return;
+          }
+          render();
+        }
+        el('pomo-start').addEventListener('click', () => {
+          if(timer){
+            stop();
+            remain = Math.max(0, endAt - Date.now());
+            render();
+            return;
+          }
+          if(remain <= 0) remain = duration(mode);
+          endAt = Date.now() + remain;
+          timer = setInterval(tick, 250);
+          render();
+        });
+        el('pomo-reset').addEventListener('click', () => setMode(mode));
+        el('pomo-skip').addEventListener('click', () => nextMode(mode === 'focus'));
+        document.querySelectorAll('.pomo-tab').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+        ['focus', 'short', 'long'].forEach(k => {
+          const inp = el('pomo-set-' + k);
+          inp.value = mins[k];
+          inp.addEventListener('change', () => {
+            const raw = Number(inp.value);
+            const value = Math.min(Number(inp.max), Math.max(1, Math.floor(Number.isFinite(raw) && raw > 0 ? raw : mins[k])));
+            inp.value = value;
+            mins[k] = value;
+            try{ localStorage.setItem('pomo_mins', JSON.stringify(mins)); }catch(e){}
+            if(k === mode && !timer) setMode(mode);
+            else render();
+          });
+        });
+        render();
+      })();
+
       fetchAnnounce();
+      initGlobalData();
 
       new MutationObserver(() => {
         document.querySelectorAll('#admin-container table').forEach(t => {
